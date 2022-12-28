@@ -214,7 +214,7 @@ $  radosgw-admin user create --uid test-ssd-placement-target --display-name test
         {
             "user": "test-ssd-placement-target",
             "access_key": "PIC2A85DZPEJVNKK8MZT",
-            "secret_key": "BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy"
+            "secret_key": "SECRETKEY"
         }
     ],
     "swift_keys": [],
@@ -259,7 +259,7 @@ $  radosgw-admin user modify --uid test-ssd-placement-target --placement-id ssd 
         {
             "user": "test-ssd-placement-target",
             "access_key": "PIC2A85DZPEJVNKK8MZT",
-            "secret_key": "BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy"
+            "secret_key": "SECRETKEY"
         }
     ],
     "swift_keys": [],
@@ -295,7 +295,7 @@ mkdir ~/s3cmd-credentials
 $ cat << EOF > ~/s3cmd-credentials/test-ssd-placement-target.conf
 [default]
 access_key = PIC2A85DZPEJVNKK8MZT
-secret_key = BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy
+secret_key = SECRETKEY
 host_base = s3zone1.example.com:80
 host_bucket = s3zone1.example.com:80
 use_https = False
@@ -452,7 +452,7 @@ $  radosgw-admin user create --uid test-placement-target-no-tag --display-name t
         {
             "user": "test-placement-target-no-tag",
             "access_key": "DZR9KE6TYN92KIVGJZX4",
-            "secret_key": "nBKWn83pz5O0aEfT741FLa0Azq7ua3cNzAoOhl2z"
+            "secret_key": "SECRETKEY2FAR"
         }
     ],
     "swift_keys": [],
@@ -473,7 +473,7 @@ target:
 $ cat << EOF > ~/s3cmd-credentials/test-placement-target-no-tag.conf
 [default]
 access_key =DZR9KE6TYN92KIVGJZX4 
-secret_key = nBKWn83pz5O0aEfT741FLa0Azq7ua3cNzAoOhl2z
+secret_key = SECRETKEY2FAR
 host_base = s3zone1.example.com:80
 host_bucket = s3zone1.example.com:80
 use_https = False
@@ -502,7 +502,7 @@ $ cat << EOF > ~/create-s3-bucket-ssd-placement-target.py import boto3 from boto
 
 s3_endpoint="http://proxy01:8000"
 s3_access_key="PIC2A85DZPEJVNKK8MZT"
-s3_secret_key="BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy"
+s3_secret_key="SECRETKEY"
 s3client = boto3.client('s3', use_ssl=False, verify=False, endpoint_url=s3_endpoint, aws_access_key_id=s3_access_key, aws_secret_access_key=s3_secret_key)
 location = {'LocationConstraint': ":ssd"}
 s3client.create_bucket(Bucket="boto3-ssd-placement-target",CreateBucketConfiguration=location)
