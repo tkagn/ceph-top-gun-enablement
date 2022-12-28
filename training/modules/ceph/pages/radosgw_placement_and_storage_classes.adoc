@@ -1,0 +1,784 @@
+== Ceph RadosGW placement targets
+
+Placement targets control which pools are associated with a particular
+bucket. A bucket’s placement target is selected on creation, and cannot
+be modified.
+
+The zonegroup configuration contains a list of placement targets with an
+initial target named `default-placement`. The zone configuration then
+maps each zonegroup placement target name onto its local storage. This
+zone placement information includes the `index_pool` name for the bucket
+index, the `data_extra_pool` name for metadata about incomplete
+multipart uploads, and a `data_pool` name for each storage class.
+
+[TIP]
+====
+More info about this topic in the
+https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/4/html/object_gateway_configuration_and_administration_guide/rgw-administration-rgw#creating-storage-policies-rgw[Red
+Hat official documentation] or in the
+https://docs.ceph.com/en/latest/radosgw/placement/[Ceph upstream
+documentation].
+====
+
+=== Getting current placement targets configuration
+
+The zonegroup placement configuration can be queried with:
+
+....
+$  radosgw-admin zonegroup get
+{
+    "id": "0f8491ad-001a-494e-acd3-80463b0d1757",
+    "name": "multisite_zonegroup",
+    "api_name": "multisite_zonegroup",
+    ...
+    "placement_targets": [
+        {
+            "name": "default-placement",
+            "tags": [],
+            "storage_classes": [
+                "STANDARD"
+            ]
+        }
+    ],
+    "default_placement": "default-placement",
+    ...
+....
+
+The zone placement configuration can be queried with:
+
+....
+$  radosgw-admin zone get
+{
+    "id": "e2409d45-9e3d-4545-ac63-f6038f0bf8b1",
+    "name": "zone1",
+    "domain_root": "zone1.rgw.meta:root",
+    ...
+    "placement_pools": [
+        {
+            "key": "default-placement",
+            "val": {
+                "index_pool": "zone1.rgw.buckets.index",
+                "storage_classes": {
+                    "STANDARD": {
+                        "data_pool": "zone1.rgw.buckets.data"
+                    }
+                },
+                "data_extra_pool": "zone1.rgw.buckets.non-ec",
+                "index_type": 0
+            }
+        }
+    ],
+    ...
+....
+
+== Adding a placement target
+
+=== Creating new pools
+
+[TIP]
+====
+Before creating the pools we have to add the new hosts/OSDs and
+create a different CRUSH rule.
+====
+
+First thing we need to do is to create new pools where the objects are
+going to be stored. We can use the following commands:
+
+* *zone1:*
+
+....
+$  ceph osd pool create zone1.rgw.ssd.buckets.data 32 32 replicated
+$  ceph osd pool create zone1.rgw.ssd.buckets.index 8 8 replicated
+$  ceph osd pool create zone1.rgw.ssd.buckets.non-ec 8 8 replicated
+$  ceph osd pool application enable zone1.rgw.ssd.buckets.data rgw
+$  ceph osd pool application enable zone1.rgw.ssd.buckets.non-ec rgw
+$  ceph osd pool application enable zone1.rgw.ssd.buckets.index rgw
+....
+
+NOTE: Because this is just for testing we don't have a crush rule that would
+point to different disks, we are using the per-default replicated crush rule
+that uses our standard hdd class osds
+
+
+=== Create a new placement target
+
+To create a new placement target named `ssd`, start by adding it to the
+zonegroup in the master zone:
+
+....
+$  radosgw-admin zonegroup placement add --rgw-zonegroup multisite_zonegroup --placement-id ssd
+....
+
+Then provide the zone placement info for that target in the master zone:
+
+....
+$  radosgw-admin zone placement add --rgw-zone zone1 --placement-id ssd --data-pool zone1.rgw.ssd.buckets.data --index-pool zone1.rgw.ssd.buckets.index --data-extra-pool zone1.rgw.ssd.buckets.non-ec
+....
+
+Commit the changes we have performed in the master zone to aware all
+Ceph RadosGW:
+
+....
+$  radosgw-admin period update --commit
+....
+
+==== Verify the new placement target
+
+The zonegroup placement configuration can be queried with:
+
+....
+$  radosgw-admin zonegroup get
+{
+    "id": "0f8491ad-001a-494e-acd3-80463b0d1757",
+    "name": "multisite_zonegroup",
+    "api_name": "multisite_zonegroup",
+    ...
+    "placement_targets": [
+        {
+            "name": "default-placement",
+            "tags": [],
+            "storage_classes": [
+                "STANDARD"
+            ]
+        },
+        {
+            "name": "ssd",
+            "tags": [],
+            "storage_classes": [
+                "STANDARD"
+            ]
+        }
+    ],
+    "default_placement": "default-placement",
+    ...
+....
+
+The zone placement configuration can be queried in the master zone with:
+
+....
+$  radosgw-admin zone get
+{
+    "id": "e2409d45-9e3d-4545-ac63-f6038f0bf8b1",
+    "name": "zone1",
+    "domain_root": "zone1.rgw.meta:root",
+    ...
+    "placement_pools": [
+        {
+            "key": "default-placement",
+            "val": {
+                "index_pool": "zone1.rgw.buckets.index",
+                "storage_classes": {
+                    "STANDARD": {
+                        "data_pool": "zone1.rgw.buckets.data"
+                    }
+                },
+                "data_extra_pool": "zone1.rgw.buckets.non-ec",
+                "index_type": 0
+            }
+        },
+        {
+            "key": "ssd",
+            "val": {
+                "index_pool": "zone1.rgw.ssd.buckets.index",
+                "storage_classes": {
+                    "STANDARD": {
+                        "data_pool": "zone1.rgw.ssd.buckets.data"
+                    }
+                },
+                "data_extra_pool": "zone1.rgw.ssd.buckets.non-ec",
+                "index_type": 0
+            }
+        }
+    ],
+    ...
+....
+
+
+=== Testing the new placement target
+
+As we have created a new placement target, we are going to verify that
+the objects are stored in the `ssd` placement target.
+
+First thing we have to do is to create a new user:
+
+....
+$  radosgw-admin user create --uid test-ssd-placement-target --display-name test-ssd-placement-target 
+{
+    "user_id": "test-ssd-placement-target",
+    "display_name": "test-ssd-placement-target",
+    "email": "",
+    "suspended": 0,
+    "max_buckets": 1000,
+    "subusers": [],
+    "keys": [
+        {
+            "user": "test-ssd-placement-target",
+            "access_key": "PIC2A85DZPEJVNKK8MZT",
+            "secret_key": "BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy"
+        }
+    ],
+    "swift_keys": [],
+    "caps": [],
+    "op_mask": "read, write, delete",
+    "default_placement": "",
+    "default_storage_class": "",
+    "placement_tags": [],
+    "bucket_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "user_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "temp_url_keys": [],
+    "type": "rgw",
+    "mfa_ids": []
+}
+....
+
+Now we need to modify our recently created user to set the placement
+target we have created before:
+
+....
+$  radosgw-admin user modify --uid test-ssd-placement-target --placement-id ssd --storage-class STANDARD
+{
+    "user_id": "test-ssd-placement-target",
+    "display_name": "test-ssd-placement-target",
+    "email": "",
+    "suspended": 0,
+    "max_buckets": 1000,
+    "subusers": [],
+    "keys": [
+        {
+            "user": "test-ssd-placement-target",
+            "access_key": "PIC2A85DZPEJVNKK8MZT",
+            "secret_key": "BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy"
+        }
+    ],
+    "swift_keys": [],
+    "caps": [],
+    "op_mask": "read, write, delete",
+    "default_placement": "ssd",
+    "default_storage_class": "STANDARD",
+    "placement_tags": [],
+    "bucket_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "user_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "temp_url_keys": [],
+    "type": "rgw",
+    "mfa_ids": []
+}
+....
+
+Now we are going to create a new bucket using `s3cmd` and upload an object:
+
+....
+mkdir ~/s3cmd-credentials
+$ cat << EOF > ~/s3cmd-credentials/test-ssd-placement-target.conf
+[default]
+access_key = PIC2A85DZPEJVNKK8MZT
+secret_key = BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy
+host_base = s3zone1.example.com:80
+host_bucket = s3zone1.example.com:80
+use_https = False
+signature_v2 = True
+#check_ssl_certificate = False
+#check_ssl_hostname = False
+EOF
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf mb s3://test-bucket-ssd-placement-target
+Bucket 's3://test-bucket-ssd-placement-target/' created
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf put /etc/hosts s3://test-bucket-ssd-placement-target/test-file
+upload: '/etc/hosts' -> 's3://test-bucket-ssd-placement-target/test-file'  [1 of 1]
+ 1330 of 1330   100% in    0s    54.41 kB/s  done
+....
+
+In the Ceph cluster, review the bucket's placement target:
+
+....
+$  radosgw-admin bucket stats --bucket test-bucket-ssd-placement-target | jq [.placement_rule]
+[
+  "ssd"
+]
+....
+
+Also, we can verify how the object have been created in the pools for
+the `ssd` placement target:
+
+* Bucket index OMAP files:
+
+....
+$  rados -p zone1.rgw.ssd.buckets.index ls
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.7
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.0
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.3
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.9
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.5
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.1
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.4
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.2
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.10
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.6
+.dir.e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1.8
+....
+
+* The object itself in the bucket data pool:
+
+....
+$  rados -p zone1.rgw.ssd.buckets.data ls
+e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1_test-file
+....
+
+=== Using tags to specify the desired placement target upon bucket creation
+
+With the example we have documented above we will store all the user
+data in the `ssd` placement target for all the buckets of the
+`test-ssd-placement-target` user. In some ocasions, we can allow the
+user to use the placement target they prefer per bucket.
+
+WARNING: A bucket’s placement target is selected on creation, and
+cannot be modified.
+
+In our case, we are going to use the tag `allowed-ssd` to allow users to
+use other placement targets beside the default placement target.
+
+In the first place, we need to modify the zonegroup. We need to export
+the JSON file, modify the `tags` section and then import back the JSON
+file to properly configure our zonegroup:
+
+....
+$  radosgw-admin zonegroup get > /etc/ceph/zonegroup.json
+$ vim /etc/ceph/zonegroup.json
+...
+    "placement_targets": [
+        {
+            "name": "default-placement",
+            "tags": [],
+            "storage_classes": [
+                "STANDARD"
+            ]
+        },
+        {
+            "name": "ssd",
+            "tags": ["allowed-ssd"],
+            "storage_classes": [
+                "STANDARD"
+            ]
+        }
+    ],
+...
+$ radosgw-admin zonegroup set < /etc/ceph/zonegroup.json 
+$ radosgw-admin period update --commit
+....
+
+Once we have modified the zonegroup, we have to modify our user adding
+the `allowed-ssd` tag:
+
+....
+$  radosgw-admin user modify --uid test-ssd-placement-target --placement-id default-placement --storage-class STANDARD --tags allowed-ssd
+{
+    "user_id": "test-ssd-placement-target",
+    "display_name": "test-ssd-placement-target",
+...
+    "default_placement": "default-placement",
+    "default_storage_class": "STANDARD",
+    "placement_tags": [
+        "allowed-ssd"
+    ],
+...
+....
+
+Now that we have added the `allowed-ssd` tag, we can create a bucket in
+the default placement target with `s3cmd`:
+
+....
+fallocate -l 8M /tmp/test-file
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf mb s3://test-tags-default-placement-target
+Bucket 's3://test-tags-default-placement-target/' created
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf put /tmp/test-file s3://test-tags-default-placement-target/test-file
+upload: '/tmp/test-file' -> 's3://test-tags-default-placement-target/test-file'  [1 of 1]
+ 86459 of 86459   100% in    0s     5.27 MB/s  done
+$  radosgw-admin bucket stats --bucket test-tags-default-placement-target | jq [.placement_rule]
+[
+  "default-placement"
+]
+....
+
+Or we can create a bucket in the `ssd` placement target using `s3cmd`:
+
+....
+$ s3cmd-credentials]# s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf mb --region=:ssd s3://test-tags-ssd-placement-target
+Bucket 's3://test-tags-ssd-placement-target/' created
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf put /tmp/test-file s3://test-tags-ssd-placement-target/test-file
+upload: '/tmp/test-file' -> 's3://test-tags-ssd-placement-target/test-file'  [1 of 1]
+ 86459 of 86459   100% in    0s     3.57 MB/s  done
+$  radosgw-admin bucket stats --bucket test-tags-ssd-placement-target | jq [.placement_rule]
+[
+  "ssd"
+]
+....
+
+We are going to create another user without the `allowed-ssd` tag to
+verify that users with no tags cannot specify the `ssd` placement target
+upon bucket creation:
+
+....
+$  radosgw-admin user create --uid test-placement-target-no-tag --display-name test-placement-target-no-tag
+{
+    "user_id": "test-placement-target-no-tag",
+    "display_name": "test-placement-target-no-tag",
+    "email": "",
+    "suspended": 0,
+    "max_buckets": 1000,
+    "subusers": [],
+    "keys": [
+        {
+            "user": "test-placement-target-no-tag",
+            "access_key": "DZR9KE6TYN92KIVGJZX4",
+            "secret_key": "nBKWn83pz5O0aEfT741FLa0Azq7ua3cNzAoOhl2z"
+        }
+    ],
+    "swift_keys": [],
+    "caps": [],
+    "op_mask": "read, write, delete",
+    "default_placement": "",
+    "default_storage_class": "",
+    "placement_tags": [],
+    ...
+}
+....
+
+Configure `s3cmd` with the `test-placement-target-no-tag` user
+credentials and try to create a bucket specifying the `ssd` placement
+target:
+
+....
+$ cat << EOF > ~/s3cmd-credentials/test-placement-target-no-tag.conf
+[default]
+access_key =DZR9KE6TYN92KIVGJZX4 
+secret_key = nBKWn83pz5O0aEfT741FLa0Azq7ua3cNzAoOhl2z
+host_base = s3zone1.example.com:80
+host_bucket = s3zone1.example.com:80
+use_https = False
+signature_v2 = True
+#check_ssl_certificate = False
+#check_ssl_hostname = False
+EOF
+$ s3cmd -c ~/s3cmd-credentials/test-placement-target-no-tag.conf mb --region=:ssd s3://test-bucket-test-placement-target-no-tag
+ERROR: Access to bucket 'test-bucket-test-placement-target-no-tag' was denied
+ERROR: S3 error: 403 (AccessDenied)
+....
+
+If we do not specify the `ssd` placement target, this user can create
+the bucket successfully:
+
+....
+$ s3cmd -c ~/s3cmd-credentials/test-placement-target-no-tag.conf mb s3://test-bucket-test-placement-target-no-tag
+Bucket 's3://test-bucket-test-placement-target-no-tag/' created
+....
+
+Also, we can specify the region or placement target when using Python
+`boto3` AWS SDK as we can see in the following example:
+
+....
+$ cat << EOF > ~/create-s3-bucket-ssd-placement-target.py import boto3 from botocore.exceptions import ClientError
+
+s3_endpoint="http://proxy01:8000"
+s3_access_key="PIC2A85DZPEJVNKK8MZT"
+s3_secret_key="BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy"
+s3client = boto3.client('s3', use_ssl=False, verify=False, endpoint_url=s3_endpoint, aws_access_key_id=s3_access_key, aws_secret_access_key=s3_secret_key)
+location = {'LocationConstraint': ":ssd"}
+s3client.create_bucket(Bucket="boto3-ssd-placement-target",CreateBucketConfiguration=location)
+EOF
+$ python ~/create-s3-bucket-ssd-placement-target.py
+....
+
+We can verify using `s3cmd` how the bucket has been created:
+
+....
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf ls
+2021-08-30 15:24  s3://boto3-ssd-placement-target
+....
+
+Using the `radosgw-admin bucket stats` command in the Ceph cluster we
+can verify the placement target for the bucket
+`boto3-ssd-placement-target` is `ssd`:
+
+....
+$  radosgw-admin bucket stats --bucket boto3-ssd-placement-target | jq [.placement_rule]
+[
+  "ssd"
+]
+....
+
+=== Change default placement target
+
+If we want to change the default placement target for our buckets, we
+can use the following command:
+
+....
+$  radosgw-admin zonegroup placement default --rgw-zonegroup multisite_zonegroup --placement-id ssd
+$  radosgw-admin zonegroup get | jq [.default_placement]
+[
+  "ssd"
+]
+....
+
+== Ceph RadosGW storage classes
+
+Storage classes are used to customize the placement of object data. S3
+Bucket Lifecycle rules can automate the transition of objects between
+storage classes.
+
+Storage classes are defined in terms of placement targets. Each
+zonegroup placement target lists its available storage classes with an
+initial class named `STANDARD`. The zone configuration is responsible
+for providing a `data_pool` pool name for each of the zonegroup’s
+storage classes.
+
+[TIP] 
+====
+More info about this topic in the
+https://docs.ceph.com/en/latest/radosgw/placement/[Ceph upstream
+documentation].
+====
+
+== Adding a storage class
+
+=== Creating new pools
+
+[TIP]
+====
+Before creating the pools we have to add the new hosts/OSDs and
+create a different CRUSH rule.
+====
+
+First thing we need to do is to create new pools where the objects are
+going to be stored. We can use the following commands:
+
+* *Master zone:*
+
+....
+$  ceph osd pool create zone1.rgw.ssd.storage.class.buckets.data 32 32 replicated
+$  ceph osd pool application enable zone1.rgw.ssd.storage.class.buckets.data rgw
+....
+
+==== Create a new storage class
+
+To create a new storage class named `SSD` in the `default-placement`
+target, start by adding it to the zonegroup in the master zone:
+
+....
+$  radosgw-admin zonegroup placement add --rgw-zonegroup multisite_zonegroup --placement-id default-placement --storage-class SSD
+....
+
+Then provide the zone placement info for that storage class in the
+master zone:
+
+....
+$  radosgw-admin zone placement add --rgw-zone zone1 --placement-id default-placement --storage-class SSD --data-pool zone1.rgw.ssd.storage.class.buckets.data [--compression lz4]
+....
+
+Commit the changes we have performed in the master zone to aware all
+Ceph RadosGW:
+
+....
+$  radosgw-admin period update --commit
+....
+
+=== Verify the new storage class
+
+The zonegroup placement configuration can be queried with:
+
+....
+$  radosgw-admin zonegroup get | jq [.placement_targets]
+[
+  [
+    {
+      "name": "default-placement",
+      "tags": [],
+      "storage_classes": [
+        "SSD",
+        "STANDARD"
+      ]
+    },
+    {
+      "name": "ssd",
+      "tags": [
+        "allowed-ssd"
+      ],
+      "storage_classes": [
+        "STANDARD"
+      ]
+    }
+  ]
+]
+....
+
+The zone placement configuration can be queried in the master zone with:
+
+....
+$  radosgw-admin zone get | jq [.placement_pools]
+[
+  [
+    {
+      "key": "default-placement",
+      "val": {
+        "index_pool": "zone1.rgw.buckets.index",
+        "storage_classes": {
+          "SSD": {
+            "data_pool": "zone1.rgw.ssd.storage.class.buckets.data"
+          },
+          "STANDARD": {
+            "data_pool": "zone1.rgw.buckets.data"
+          }
+        },
+        "data_extra_pool": "zone1.rgw.buckets.non-ec",
+        "index_type": 0
+      }
+    },
+    {
+      "key": "ssd",
+      "val": {
+        "index_pool": "zone1.rgw.ssd.buckets.index",
+        "storage_classes": {
+          "STANDARD": {
+            "data_pool": "zone1.rgw.ssd.buckets.data"
+          }
+        },
+        "data_extra_pool": "zone1.rgw.ssd.buckets.non-ec",
+        "index_type": 0
+      }
+    }
+  ]
+]
+....
+
+=== Testing the new storage class
+
+As we have created a new storage class, we are going to verify that the
+objects are stored in the `SSD` storage class. We are going to use the
+credentials of the `test-ssd-placement-target` user created before.
+
+Using `s3cmd` create a new bucket and verify we are using the
+`default-placement` placement target:
+
+....
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf mb s3://test-bucket-storage-class
+Bucket 's3://test-bucket-storage-class/' created
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf put /tmp/test-file s3://test-bucket-storage-class/test-file
+upload: '/tmp/test-file' -> 's3://test-bucket-storage-class/test-file'  [1 of 1]
+ 86459 of 86459   100% in    0s     5.78 MB/s  done
+....
+
+We can verify with `s3cmd` how the object has been uploaded to the
+`STANDARD` storage class:
+
+....
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf info s3://test-bucket-storage-class/test-file
+s3://test-bucket-storage-class/test-file (object):
+   File size: 86459
+   Last mod:  Mon, 30 Aug 2021 16:08:44 GMT
+   MIME type: text/plain
+   Storage:   STANDARD
+   MD5 sum:   5a71d80251cfb7f28fe88438b561c32f
+   SSE:       none
+   Policy:    none
+   CORS:      none
+   ACL:       test-ssd-placement-target: FULL_CONTROL
+   x-amz-meta-s3cmd-attrs: atime:1630323196/ctime:1629128095/gid:0/gname:root/md5:5a71d80251cfb7f28fe88438b561c32f/mode:33188/mtime:1627502240/uid:0/uname:root
+....
+
+In the Ceph cluster, review the bucket's placement target:
+
+....
+$  radosgw-admin bucket stats --bucket test-bucket-storage-class | jq [.placement_rule]
+[
+  "default-placement"
+]
+....
+
+Now, using `s3cmd` we are going to upload an object directly to the
+`SSD` storage class:
+
+....
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf put /tmp/test-file s3://test-bucket-storage-class/test-file-SSD --storage-class=SSD
+upload: '/tmp/test-file' -> 's3://test-bucket-storage-class/test-file-SSD'  [1 of 1]
+ 86459 of 86459   100% in    0s     5.26 MB/s  done
+....
+
+We can verify with `s3cmd` how the object has been uploaded to the `SSD`
+storage class:
+
+....
+$ s3cmd -c ~/s3cmd-credentials/test-ssd-placement-target.conf info s3://test-bucket-storage-class/test-file-SSD 
+s3://test-bucket-storage-class/test-file-SSD (object):
+   File size: 86459
+   Last mod:  Mon, 30 Aug 2021 16:14:24 GMT
+   MIME type: text/plain
+   Storage:   SSD
+   MD5 sum:   5a71d80251cfb7f28fe88438b561c32f
+   SSE:       none
+   Policy:    none
+   CORS:      none
+   ACL:       test-ssd-placement-target: FULL_CONTROL
+   x-amz-meta-s3cmd-attrs: atime:1630323196/ctime:1629128095/gid:0/gname:root/md5:5a71d80251cfb7f28fe88438b561c32f/mode:33188/mtime:1627502240/uid:0/uname:root
+....
+
+
+[TODO]
+
+[WARNING]
+====
+As we have verified, it seems a bug is affecting Lifecycle
+Configuration Policies and RadosGW multi-site configuration, we have
+opened a https://access.redhat.com/support/cases/#/case/03025020[support
+case] for further investigation.
+====
+
+
+== Additional considerations regarding placement targets and storage classes
+
+[WARNING] 
+====
+When using AWS S3 SDKs such as `boto3`, it is important that
+non-default storage class names match those provided by AWS S3, or else
+the SDK will drop the request and raise an exception.
+====
+
+Red Hat has tested the performance of the Lifecycle Configuration
+Policies with the deletion of nearly 84 million objects per day. There
+are two different RadosGW parameters that helps regarding process
+concurrency when dealing with Lifecycle Configuration Policies (but
+beware, these parameters must not be changed without exhaustive
+performance testing):
+
+* `rgw_lc_max_worker`: Impacts the number of buckets processed in
+parallel.
+* `rgw_lc_max_wp_worker`: Impacts the number of operations that each
+`lc-worker` can process in parallel.
+
+[WARNING]
+====
+The Ceph cluster performance totally depends on the hardware
+configuration. In this specific case, having a good amount of all-flash
+devices to store Bluestore WAL/RocksDB really helps to improve the
+overall cluster performance.
+====

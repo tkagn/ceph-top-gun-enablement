@@ -1,0 +1,24 @@
+== RadosGW Object Storage Performance recomendations.
+
+
+=== Co-Located RGW instances to improve throughput.
+
+Related Performance testing available in the following blogpost
+https://www.redhat.com/en/blog/red-hat-ceph-storage-rgw-deployment-strategies-and-sizing-guidance[RGW
+Sizing guidance]
+
+=== If Possible pre-shard buckets before hand.
+
+Related Performance testing available in the following blogpost
+https://www.redhat.com/en/blog/ceph-rgw-dynamic-bucket-sharding-performance-investigation-and-guidance[RGW
+Dynamic Resharding]
+
+
+=== Multisite Deployments use dedicated RGW daemons for Replication
+RGW dedicated for I/O vs. sync
+5 for client IO (5 RGWs in HAproxy config)
+3 for sync (3 RGWs in zone config)
+HA proxy for I/O only, sync enabled RGW
+
+
+

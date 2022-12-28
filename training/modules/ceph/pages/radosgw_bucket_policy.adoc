@@ -1,0 +1,386 @@
+== S3 Bucket Policies
+
+=== Introduction
+An S3 bucket policy is an object that allows you to manage access to specific S3 storage resources. You can specify permissions for each resource to allow or deny actions requested by a principal (a user or role). When you create a new S3 bucket, you should set a policy granting the relevant permissions to the data forwarder’s principal roles.
+
+With S3 bucket policies, you can secure access to objects in your buckets, so that only users with the appropriate permissions can access them. You can even prevent authenticated users without the appropriate permissions from accessing your Amazon S3 resources.
+
+The Ceph Object Gateway supports a subset of the Amazon S3 policy language applied to buckets.
+
+
+=== An Amazon S3 bucket policy contains the following basic elements:
+
+- Statements: a statement is the main element in a policy. It consists of several elements, including principals, resources, actions, and effects. Bucket policies typically contain an array of statements.
+- Permitted principals: a principal is a user, entity, or account with access permissions to resources and actions in a statement.
+- Resources: Amazon S3 resources to which the policy applies include buckets, objects, jobs, and access points. You can identify resources using ARNs.
+- Actions: there are specific, permitted operations for each resource. You can use action keywords to allow or deny operations.
+- Effects: each request by a principal must generate an allow or deny effect. In the absence of an explicit access permission to a resource, the policy will automatically deny the request.
+- Conditions: these determine when the policy applies. You can specify conditions for access policies using AWS-wide or S3-specific keys.
+- Version: this determines the policy’s language version. This element is optional, allowing you to specify a new language version instead of the old default version.
+- ID: this optional element specifies a policy identifier. Policy IDs should be unique, with GUID values.
+- Statement ID: this is an identifier that you can assign to policy statements. You may assign Sid values to every statement in a policy. In AWS services like SNS and SQS, which allow you to specify ID elements, the Sid values are sub-IDs of the policy’s ID. IAM requires the Sid values in a JSON policy to be unique.
+
+
+=== Bucket Policy Lab
+
+Giving external users access to our buckets.
+
+In this lab, we are going to create two new users:
+
+* user1
+* user2
+
+We are going to check how S3 policies work and how we can allow access to our personal buckets to other users.
+
+Let's create both users, *we are going to specify a very short access key and secret for the users to keep it simple*.
+
+....
+[root@bastion ~]# radosgw-admin user create --uid="user1" --display-name="User 1" --access-key=user1 --secret=user1
+{
+    "user_id": "user1",
+    "display_name": "User",
+    "email": "",
+    "suspended": 0,
+    "max_buckets": 1000,
+    "auid": 0,
+    "subusers": [],
+    "keys": [
+        {
+            "user": "user1",
+            "access_key": "user1",
+            "secret_key": "user1"
+        }
+    ],
+    "swift_keys": [],
+    "caps": [],
+    "op_mask": "read, write, delete",
+    "default_placement": "",
+    "placement_tags": [],
+    "bucket_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "user_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "temp_url_keys": [],
+    "type": "rgw"
+}
+....
+
+Now for the user2:
+
+....
+[root@bastion ~]# radosgw-admin user create --uid="user2" --display-name="User 2" --access-key=user2 --secret=user2
+{
+    "user_id": "user2",
+    "display_name": "User",
+    "email": "",
+    "suspended": 0,
+    "max_buckets": 1000,
+    "auid": 0,
+    "subusers": [],
+    "keys": [
+        {
+            "user": "user2",
+            "access_key": "user2",
+            "secret_key": "user2"
+        }
+    ],
+    "swift_keys": [],
+    "caps": [],
+    "op_mask": "read, write, delete",
+    "default_placement": "",
+    "placement_tags": [],
+    "bucket_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "user_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "temp_url_keys": [],
+    "type": "rgw"
+}
+
+....
+
+Lets configure the S3 clients with the users we just created. We are
+going to use the previous config file we had, make a copy of the file
+and edit the credentials with the ones from user1
+
+....
+# cat << EOF > ~/s3cmd-credentials/s3-zone1-user1.cfg
+[default]
+access_key = user1
+secret_key = user1
+host_base = proxy01:8000
+host_bucket = proxy01:8000
+use_https = False
+signature_v2 = True
+#check_ssl_certificate = False
+#check_ssl_hostname = False
+EOF
+....
+
+We can use sed to create the config file for user2.
+
+....
+# cat << EOF > ~/s3cmd-credentials/s3-zone1-user2.cfg
+[default]
+access_key = user2
+secret_key = user2
+host_base = proxy01:8000
+host_bucket = proxy01:8000
+use_https = False
+signature_v2 = True
+#check_ssl_certificate = False
+#check_ssl_hostname = False
+EOF
+....
+
+Using _user1_ user credentials, we are going to create a new bucket:
+
+....
+# s3cmd -c ~/s3cmd-credentials/s3-zone1-user1.cfg mb s3://test-s3-policies
+Bucket 's3://test-s3-policies/' created
+....
+
+[TIP]
+====
+If you completed the placement & Storage Class module before this one, you
+may get a 403 error, what can be causing it?. Check the default zonegroup
+placement.
+====
+
+Verify that we can upload new objects to our recently created bucket:
+
+....
+# s3cmd -c ~/s3cmd-credentials/s3-zone1-user1.cfg put /etc/hostname s3://test-s3-policies/test
+upload: '/etc/hostname' -> 's3://test-s3-policies/test'  [1 of 1]
+ 26 of 26   100% in    0s     2.04 kB/s  done
+....
+
+Using _user2_ credentials, try to list the content of the bucket
+_test-s3-policies_:
+
+....
+# s3cmd -c ~/s3cmd-credentials/s3-zone1-user2.cfg ls s3://test-s3-policies
+ERROR: Access to bucket 'test-s3-policies' was denied
+ERROR: S3 error: 403 (AccessDenied)
+....
+
+To allow other users to access one of our buckets, we need to write a
+new policy in JSON format.
+
+We can specify fine-grain actions. All possible actions are documented
+in http://docs.ceph.com/docs/luminous/radosgw/bucketpolicy/[upstream
+Ceph documentation]
+
+Create a new file with our bucket policy.
+
+....
+# cat << EOF > policy.json
+{
+    "Version": "2012-10-17",
+    "Id": "test-s3-policies",
+    "Statement": [{
+            "Sid": "bucket-owner-full-permission",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": [
+                    "arn:aws:iam:::user/user1"
+                ]
+            },
+            "Action": [
+                "s3:*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::*"
+            ]
+        },
+        {
+            "Sid": "user2-list-bucket",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": [
+                    "arn:aws:iam:::user/user2"
+                ]
+            },
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::*"
+            ]
+        },
+        {
+            "Sid": "user2-read",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": [
+                    "arn:aws:iam:::user/user2"
+                ]
+            },
+            "Action": [
+                "s3:GetObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::test-s3-policies/*"
+            ]
+        }
+    ]
+}
+EOF
+....
+
+Using _user1_ user credentials, set the new policy to _test-s3-policies_
+buckets.
+
+....
+[root@bastion ~]# s3cmd -c ~/s3cmd-credentials/s3-zone1-user1.cfg setpolicy policy.json s3://test-s3-policies/
+[root@bastion ~]# 
+....
+
+Using _user2_ credentials, try to list the content of _test-s3-policies_
+buckets.
+
+....
+[root@bastion ~]#  s3cmd -c ~/s3cmd-credentials/s3-zone1-user2.cfg ls s3://test-s3-policies
+2019-04-19 14:57       754   s3://test-s3-policies/test
+....
+
+Using _user2_ credentials, try to read the content of the test file.
+
+....
+[root@bastion ~]#  s3cmd -c ~/s3cmd-credentials/s3-zone1-user2.cfg get s3://test-s3-policies/test /tmp/test
+download: 's3://test-s3-policies/test' -> '/tmp/test'  [1 of 1]
+ 754 of 754   100% in    0s   127.57 kB/s  done
+....
+
+Using _user2_ credentials, try to put a new object _test-file-policies_
+in _test-s3-policies_ bucket.
+
+....
+[root@bastion ~]#  s3cmd -c ~/s3cmd-credentials/s3-zone1-user2.cfg put /etc/GREP_COLORS s3://test-s3-policies/test-file-policies
+upload: '/etc/GREP_COLORS' -> 's3://test-s3-policies/test-file-policies'  [1 of 1]
+ 94 of 94   100% in    0s    13.44 kB/s  done
+ERROR: S3 error: 403 (AccessDenied)
+....
+
+Modify our current bucket policy and allow _user2_ to write and delete
+objects in the _test-s3-policies_ bucket.
+
+....
+[root@bastion ~]# vim policy.json
+{
+    "Version": "2012-10-17",
+    "Id": "test-s3-policies",
+    "Statement": [{
+            "Sid": "bucket-owner-full-permission",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": [
+                    "arn:aws:iam:::user/user1"
+                ]
+            },
+            "Action": [
+                "s3:*"
+            ],
+            "Resource": [
+                "arn:aws:s3:::*"
+            ]
+        },
+        {
+            "Sid": "user2-list-bucket",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": [
+                    "arn:aws:iam:::user/user2"
+                ]
+            },
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::*"
+            ]
+        },
+        {
+            "Sid": "user2-get-put-delete",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": [
+                    "arn:aws:iam:::user/user2"
+                ]
+            },
+            "Action": [
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject"
+            ],
+            "Resource": [
+                "arn:aws:s3:::test-s3-policies/*"
+            ]
+        }
+    ]
+}
+....
+
+We just modified the file `policy.json` and added the actions
+
+`"s3:PutObject"` and ` "s3:DeleteObject"` to the resource
+`"arn:aws:s3:::test-s3-policies/*"` for the user
+`"arn:aws:iam:::user/user2"`.
+
+
+
+Using _user1_ user credentials, set the new policy to _test-s3-policies_
+bucket.
+
+....
+# s3cmd -c ~/s3cmd-credentials/s3-zone1-user1.cfg setpolicy policy.json s3://test-s3-policies/
+....
+
+Using _user2_ credentials, try to list the content of _test-s3-policies_
+bucket.
+
+....
+#  s3cmd -c ~/s3cmd-credentials/s3-zone1-user2.cfg ls s3://test-s3-policies
+2019-04-19 14:57       754   s3://test-s3-policies/test-file-policies
+....
+
+Using _user2_ credentials, try to put a new object _test-file-policies_
+in _test-s3-policies_ bucket.
+
+....
+[root@bastion ~]#  s3cmd -c ~/s3cmd-credentials/s3-zone1-user2.cfg put /etc/GREP_COLORS s3://test-s3-policies/test-file-policies
+upload: '/etc/GREP_COLORS' -> 's3://test-s3-policies/test-file-policies'  [1 of 1]
+ 94 of 94   100% in    0s     7.51 kB/s  done
+....
+
+Using _user2_ credentials, try to delete the object _test-file-policies_
+in _test-s3-policies_ bucket.
+
+....
+[root@bastion ~]#  s3cmd -c ~/s3cmd-credentials/s3-zone1-user2.cfg rm s3://test-s3-policies/test-file-policies
+delete: 's3://test-s3-policies/test-file-policies'
+....
+
+In this Module we have covered a basic example of S3 bucket policies, we have
+more advanced examples on the module `STS Bucket and Role Policies` Check it
+out.

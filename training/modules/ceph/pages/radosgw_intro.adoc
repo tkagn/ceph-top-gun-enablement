@@ -1,0 +1,494 @@
+== Rados Gateway Introduction and Deployment
+
+=== Introducing Object Storage
+
+Object storage stores data as discrete items, each individually called an object. Unlike files in a file
+system, objects are not organized in a tree of directories and subdirectories. Instead, objects are
+stored in a flat namespace. Each object is retrieved by using the object's unique object ID, also
+known as an object key.
+
+Applications do not use normal file-system operations to access object data. Instead, applications
+access a REST API to send and receive objects. Red Hat Ceph Storage supports the two most
+common object APIs, Amazon S3 (Simple Storage Service) and OpenStack Swift (OpenStack
+Object Storage).
+
+Amazon S3 calls the flat namespace for object storage a bucket while OpenStack Swift calls it
+a container. Because a namespace is flat, neither buckets nor containers can be nested. Ceph
+typically uses the term bucket, as does this lecture.
+A single user account can be configured for access to multiple buckets on the same storage
+cluster. Buckets can each have different access permissions and be used to store objects for
+different use cases.
+
+The advantage of object storage is that it is easy to use, expand, and scale. Because each object
+has a unique ID, it can be stored or retrieved without the user knowing the object's location.
+Without the directory hierarchy, relationships between objects are simplified.
+Objects, similar to files, contain a binary data stream and can grow to arbitrarily large sizes.
+Objects also contain metadata about the object data, and natively support extended metadata
+information, typically in the form of key-value pairs. You can also create your own metadata keys
+and store custom information in the object as key values.
+
+=== Introducing RadosGW
+The RADOS Gateway, also called the Object Gateway (RGW), is a service that provides access to
+the Ceph cluster for clients using standard object storage APIs. The RADOS Gateway supports
+both the Amazon S3 and OpenStack Swift APIs.
+
+The core daemon, radosgw, is built on top of the librados library. The daemon provides a web
+service interface, based on the Beast HTTP, WebSocket, and networking protocol library, as a
+front-end to handle API requests.
+
+The radosgw is a client to Ceph Storage that provides object access to other client
+applications. Client applications use standard APIs to communicate with the RADOS Gateway, and
+the RADOS Gateway uses librados module calls to communicate with the Ceph cluster.
+
+The RGW is a separate service that externally connects to a Ceph cluster and provides object storage
+access to its clients. In a production environment, it's recommended that you run more than
+one instance of the RGW, masked by a Load Balancer,
+
+image::rgw-lb.webp[RGW LoadBalancer]
+
+=== RadosGW service deployment with Cephadm
+
+Ceph Object Gateway supports two interfaces:
+
+* _S3-compatibility_, which provides object storage functionality with an interface that is compatible with a large subset of the Amazon S3 RESTful API.
+* _Swift-compatibility_, which provides object storage functionality with an interface that is compatible with a large subset of the OpenStack Swift API.
+
+`cephadm` deploys RGW as a collection of daemons that manage a single-cluster deployment or a particular realm and zone in a multisite deployment.
+Note that with `cephadm`, the RGW daemons are configured via the monitor configuration database instead of via a `ceph.conf` file or the command line. If that configuration is not already in place (usually in the client.rgw.<something> section), then the RGW daemons start up with default settings (for example, binding to port 80).
+
+There are many ways to deploy the RADOS object gateway on of which is through a single command that creates an object gateway across two random servers. You use a step-by-step method to gain a better understanding of the deployment process.
+
+In this section, you create a realm, a zone group, and a zone, and then specify a placement specification with the host name when you deploy the RGW daemons.
+
+image::gateway-realm.png[RGW Realm]
+
+Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_osd` configuration setting is lower than required. When you create more than seven pools each of PGs and PGPs, with the pool size being 32, then you must increase the value of `mon_max_pg_per_osd` from `256` to `512` in order to create the additional pools.
+
+. Update the value of the `mon_max_pg_per_osd` configuration variable to `512`:
++
+[source,sh]
+----
+[ceph: root@ceph-mon01 /]#  ceph config set mon mon_max_pg_per_osd 512
+----
+
+. Create a realm:
++
+[source,sh]
+----
+[ceph: root@ceph-mon01 /]# radosgw-admin realm create --rgw-realm=multisite --default
+----
++
+.Sample Output
+[source,json]
+----
+{
+    "id": "ce31cd75-37c4-4b10-91db-1cda1ca12d95",
+    "name": "multisite",
+    "current_period": "0ad144e7-a880-43ab-8a64-c9deaf581280",
+    "epoch": 1
+}
+----
+
+. Create a zone group:
++
+[source,sh]
+----
+[ceph: root@ceph-mon01 /]# radosgw-admin zonegroup create --rgw-zonegroup=multisite_zonegroup  --master --default
+----
++
+.Sample Output
+[source,json]
+----
+{
+    "id": "2e41dde9-80f4-4ec8-a099-ec0e8a60938d",
+    "name": "multisite_zonegroup",
+    "api_name": "multisite_zonegroup",
+    "is_master": "true",
+    "endpoints": [],
+    "hostnames": [],
+    "hostnames_s3website": [],
+    "master_zone": "",
+    "zones": [],
+    "placement_targets": [],
+    "default_placement": "",
+    "realm_id": "ce31cd75-37c4-4b10-91db-1cda1ca12d95",
+    "sync_policy": {
+        "groups": []
+    }
+}
+----
+
+. Create a zone:
++
+[source,sh]
+----
+[ceph: root@ceph-mon01 /]# radosgw-admin zone create --rgw-zonegroup=multisite_zonegroup --rgw-zone=zone1 --master --default
+----
++
+.Sample Output
+[source,json]
+----
+{
+    "id": "9db08233-a099-4905-a77c-b8964995037b",
+    "name": "zone1",
+    "domain_root": "zone1.rgw.meta:root",
+    "control_pool": "zone1.rgw.control",
+    "gc_pool": "zone1.rgw.log:gc",
+    "lc_pool": "zone1.rgw.log:lc",
+    "log_pool": "zone1.rgw.log",
+    "intent_log_pool": "zone1.rgw.log:intent",
+    "usage_log_pool": "zone1.rgw.log:usage",
+    "roles_pool": "zone1.rgw.meta:roles",
+    "reshard_pool": "zone1.rgw.log:reshard",
+    "user_keys_pool": "zone1.rgw.meta:users.keys",
+    "user_email_pool": "zone1.rgw.meta:users.email",
+    "user_swift_pool": "zone1.rgw.meta:users.swift",
+    "user_uid_pool": "zone1.rgw.meta:users.uid",
+    "otp_pool": "zone1.rgw.otp",
+    "system_key": {
+        "access_key": "",
+        "secret_key": ""
+    },
+    "placement_pools": [
+        {
+            "key": "default-placement",
+            "val": {
+                "index_pool": "zone1.rgw.buckets.index",
+                "storage_classes": {
+                    "STANDARD": {
+                        "data_pool": "zone1.rgw.buckets.data"
+                    }
+                },
+                "data_extra_pool": "zone1.rgw.buckets.non-ec",
+                "index_type": 0
+            }
+        }
+    ],
+    "realm_id": "ce31cd75-37c4-4b10-91db-1cda1ca12d95",
+    "notif_pool": "zone1.rgw.log:notif"
+}
+----
+
+. Commit the changes:
++
+[source,sh]
+----
+[ceph: root@ceph-mon01 /]# radosgw-admin period update --rgw-realm=multisite --commit
+----
++
+.Sample Output
+[source,json]
+----
+{
+    "id": "5fb483c5-b3cd-4f4d-9788-556f89aa613e",
+    "epoch": 1,
+    "predecessor_uuid": "0ad144e7-a880-43ab-8a64-c9deaf581280",
+    "sync_status": [],
+    "period_map": {
+        "id": "5fb483c5-b3cd-4f4d-9788-556f89aa613e",
+        "zonegroups": [
+            {
+                "id": "2e41dde9-80f4-4ec8-a099-ec0e8a60938d",
+                "name": "default",
+                "api_name": "default",
+                "is_master": "true",
+                "endpoints": [],
+                "hostnames": [],
+                "hostnames_s3website": [],
+                "master_zone": "9db08233-a099-4905-a77c-b8964995037b",
+                "zones": [
+                    {
+                        "id": "9db08233-a099-4905-a77c-b8964995037b",
+                        "name": "zone1",
+                        "endpoints": [],
+                        "log_meta": "false",
+                        "log_data": "false",
+                        "bucket_index_max_shards": 11,
+                        "read_only": "false",
+                        "tier_type": "",
+                        "sync_from_all": "true",
+                        "sync_from": [],
+                        "redirect_zone": ""
+                    }
+                ],
+                "placement_targets": [
+                    {
+                        "name": "default-placement",
+                        "tags": [],
+                        "storage_classes": [
+                            "STANDARD"
+                        ]
+                    }
+                ],
+                "default_placement": "default-placement",
+                "realm_id": "ce31cd75-37c4-4b10-91db-1cda1ca12d95",
+                "sync_policy": {
+                    "groups": []
+                }
+            }
+        ],
+        "short_zone_ids": [
+            {
+                "key": "9db08233-a099-4905-a77c-b8964995037b",
+                "val": 299831308
+            }
+        ]
+    },
+    "master_zonegroup": "2e41dde9-80f4-4ec8-a099-ec0e8a60938d",
+    "master_zone": "9db08233-a099-4905-a77c-b8964995037b",
+    "period_config": {
+        "bucket_quota": {
+            "enabled": false,
+            "check_on_raw": false,
+            "max_size": -1,
+            "max_size_kb": 0,
+            "max_objects": -1
+        },
+        "user_quota": {
+            "enabled": false,
+            "check_on_raw": false,
+            "max_size": -1,
+            "max_size_kb": 0,
+            "max_objects": -1
+        }
+    },
+    "realm_id": "ce31cd75-37c4-4b10-91db-1cda1ca12d95",
+    "realm_name": "multisite",
+    "realm_epoch": 2
+}
+----
+
+. Deploy the RGW daemons with the name `multi.zone1`:
++
+[source,sh]
+----
+[ceph: root@ceph-mon01 /]# ceph orch apply rgw multi.zone1 --realm=multisite --zone=zone1 --placement="1 proxy01" --port=8000
+----
++
+.Sample Output
+[source,texinfo]
+----
+Scheduled multi.zone1 update...
+----
+
+[TIP]
+====
+Use the client.rgw.* section in the centralized configuration database to define parameters and characteristics for new RADOS Gateway daemons.
+====
+
+. Verify that the RGW service is available:
++
+[source,sh]
+----
+[ceph: root@ceph-mon01 /]# ceph orch ls
+----
++
+.Sample Output
+[source,texinfo]
+----
+NAME                       PORTS  RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager                          1/1  9m ago     4d   count:1
+crash                                 4/4  9m ago     4d   *
+grafana                               1/1  9m ago     4d   count:1
+mds.fs_name                           2/2  9m ago     3d   count:2
+mgr                                   2/2  9m ago     4d   count:2
+mon                                   4/5  9m ago     4d   count:5
+node-exporter                         4/4  9m ago     4d   *
+osd.all-available-devices             3/7  9m ago     4d   *
+prometheus                            1/1  9m ago     4d   count:1
+multi.zone1                   ?:8080       1/1  5s ago     12s  proxy01.example.com;count:1
+----
+
+. Verify that the RGW process is available:
++
+[source,sh]
+----
+[ceph: root@ceph-mon01 /]# ceph orch ps | grep rgw
+----
++
+.Sample Output
+[source,texinfo]
+----
+ceph orch ps | grep rgw
+rgw.multi.zone1.proxy01.mhawfj   proxy01      *:8000       running (4m)     3m ago   3m    54.9M        -  16.2.8-85.el8cp  b2c997ff1898  4de70934f04e
+----
+
+NOTE: The Ceph orchestrator service names the daemons by using the format rgw.<realm>.<zone>.<host>.<random-string>
+
+. Also verify that the RGW daemons are running:
++
+[source,sh]
+----
+[root@ceph-mon01 ~]# ceph -s
+----
++
+.Sample Output
+[source,texinfo]
+----
+  cluster:
+    id:     7d4ee168-d9b9-11eb-bc7e-2cc260754989
+    health: HEALTH_OK
+  services:
+    mon: 3 daemons, quorum ceph-mon01.example.com,ceph-mon02,ceph-mon03 (age 36m)
+    mgr: ceph-mon02.pxyuuu(active, since 4h), standbys: ceph-mon01.example.com.cntwzr
+    mds: 1/1 daemons up, 1 standby
+    osd: 3 osds: 3 up (since 37m), 3 in (since 4d)
+    rgw: 1 daemons active (1 hosts, 1 zones)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   10 pools, 273 pgs
+    objects: 384 objects, 14 MiB
+    usage:   169 MiB used, 30 GiB / 30 GiB avail
+    pgs:     273 active+clean
+----
+
+
+
+=== Verify Connectivity to RADOS Gateway
+
+. Verify that the RADOS Gateway container is bound to port 8080 on `proxy01`:
++
+[source,sh]
+-----
+[root@proxy01 ~]# netstat -tulpn
+-----
++
+.Sample Output
+[source,texinfo]
+-----
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+:
+tcp        0      0 0.0.0.0:8080              0.0.0.0:*               LISTEN      25250/radosgw
+:
+:
+tcp6       0      0 :::80                   :::*                    LISTEN      25250/radosgw
+-----
+
+. Use cURL to connect to each RADOS Gateway and check for a response on `ceph-mon01`:
++
+[source,sh]
+-----
+[root@ceph-mon01 ceph-ansible]# curl http://192.168.56.24:80
+-----
++
+.Sample Output
+[source,xml]
+-----
+<?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>
+-----
+
+=== Create RADOS Gateway User Accounts
+
+To access Red Hat Ceph Storage over object storage interfaces--that is, via Swift or S3--you must configure a Ceph RADOS Gateway component. In this section, you configure `proxy01` as a Ceph RADOS Gateway and then test S3 and Swift from `ceph-mon01` or from `workstation`.
+
+You begin by logging into `ceph-mon01` to create RADOS Gateway user accounts to be used by S3 and Swift APIs to access Red Hat Ceph Storage via an object storage interface.
+
+. Log in to `ceph-mon01`.
+. Create an RGW user for S3 access:
++
+[source,sh]
+-----
+[root@ceph-mon01 ceph-ansible]# radosgw-admin user create --uid='user1' --display-name='First User' --access-key='S3user1' --secret-key='S3user1key'
+-----
++
+.Sample Output
+[source,json]
+-----
+{
+    "user_id": "user1",
+    "display_name": "First User",
+    "email": "",
+    "suspended": 0,
+    "max_buckets": 1000,
+    "auid": 0,
+    "subusers": [],
+    "keys": [
+        {
+            "user": "user1",
+            "access_key": "S3user1",
+            "secret_key": "S3user1key"
+        }
+    ],
+    "swift_keys": [],
+    "caps": [],
+    "op_mask": "read, write, delete",
+    "default_placement": "",
+    "placement_tags": [],
+    "bucket_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "user_quota": {
+        "enabled": false,
+        "check_on_raw": false,
+        "max_size": -1,
+        "max_size_kb": 0,
+        "max_objects": -1
+    },
+    "temp_url_keys": [],
+    "type": "rgw"
+}
+-----
++
+. View the user information again:
++
+[source,sh]
+-----
+[root@ceph-mon01 ]# radosgw-admin user info --uid='user1'
+-----
+* The output produced is the same as provided by the previous command.
+* The Ceph RGW instances are already configured and running.
+
+=== Accessing S3 Objects Using RADOS Gateway
+
+The Amazon S3 API enables developers to manage object storage resources using an Amazon
+S3 compatible interface. Applications implemented with the S3 API can inter-operate with other
+S3-compatible object storage services besides the RADOS Gateway, and migrate storage from
+other locations to your Ceph storage cluster. In a hybrid cloud environment, you can configure
+your applications to use different authentication keys, regions, and vendor services to mix private
+enterprise and public cloud resources and storage locations seamlessly using the same API.
+The Amazon S3 interface defines the namespace in which objects are stored as a bucket. To
+access and manage objects and buckets using the S3 API, applications use RADOS Gateway
+users for authentication. Each user has an access key that identifies the user and a secret key that
+authenticates the user.
+There are object and metadata size limits to consider when using the Amazon S3 API:
+• An object size is between a minimum of OB and a maximum of 5 TB.
+• The maximum size is 5GB in a single upload operation.
+• Upload objects larger than 100MB by using the multipart upload capability.
+• The maximum metadata size is 16,000 bytes in a single HTTP request.
+
+=== Using Amazon S3 API Clients
+
+image::S3.png[AWS S3]
+
+There are many different S3 clients that you can use to interact with the S3
+API.
+
+* s3cmd
+* https://github.com/bloomreach/s4cmd[s4cmd]
+* https://github.com/peak/s5cmd[s5cmd]
+* AWS CLI
+
+We will be using the AWS CLI during the lab, the nodes have the AWS CLI binary
+available you will just need to configure it, using the configure option, you
+can create a new RGW user or use the previous created user, you will need the
+Access and Secret key.
+
+----
+# aws configure
+AWS Access Key ID [****************07DO]:
+AWS Secret Access Key [****************QUH0]:
+Default region name [Default]:
+----
+
+Once configured you need to use the --endpoint option and point it to your
+configure RGW http endpoint, for example: 
+
+----
+[ceph: root@node /]# aws --endpoint http://ceph-node01:8080 s3 mb s3://demobucket
+----
+

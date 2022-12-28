@@ -1,0 +1,238 @@
+== RadosGW Secure Token Service (STS) 
+
+
+=== introduction.
+
+AWS provides the Security Token Service (STS) to allow secure federation with existing OpenID
+Connect/ OAuth 2.0 compliant identity services such as Keycloak. STS is a standalone REST
+service that provides temporary tokens for an application or user to access an S3 endpoint after
+the user authenticates against an identity provider. 
+
+Ceph provides support for a subset of Amazon Secure Token Service (STS) APIs. Users first authenticate against STS and upon success receive a short lived s3 access and secret key that can be used in subsequent requests.
+
+In Ceph RGW STS can be configured to work with several authentication methods such as LDAP, keystone or OpenID connect.
+
+Workflow of STS shown in the next diagram.
+
+image::STS_overview.png[STS Overview]
+
+We also need to introduce the concept of an Amazon Resource Name (ARN), Permission Policies, Bucket Policy and Roles.
+
+A ARN is used to identify a user, group or a role amongst others. The ARN of a username has the general format of arn:aws:iam:::user1. ARNS are important as they are the required in the permission policy language that S3 uses.
+
+A permission policy instructs what actions are allowed or denied on a set of resources by a set of principals. Principals are identified via an ARN.
+
+Permission policies are used in two instances: bucket policy and role policy.
+
+A bucket policy determines what actions can be performed inside a s3 bucket and is generally used to restrict who can read/write objects. The bucket policy is administered via the S3 API and can be self-managed by end users if they have appropriate permissions defined.
+
+A role is similar to a user and has its own ARN in the general format of arn:aws:iam:::role/rolename. In a bucket policy instead of giving access to users based on their user ARN, a role ARN can be used instead. Users are then able to assume the role based on another permission policy which we refer to as the assume-role-policy-doc. The assume-role-policy-doc grants access to the roles if the user is able to meet its conditions.
+
+If you choose to use the STS protocol be aware that several commercial off the shelf products will not be able to use the STS protocol due to lack of engineering. For example Quay has no option to use STS. Therefore if you will likely need to position local users as a fall back option for such applications.
+
+
+=== RGW local user database using STS.
+RadosGW by default has a local user database to manage authentication and authorization, the user information and credentials are stored in a rados pool, so there is no extra work needed to setup this authentication setup, it works with STS, an admin user can create roles and policies for the roles and then indicate the RGW local users that will be authorized to assume the new role.
+
+image::STS_local.png[STS local]
+
+=== OAUTH(OIDC) + STS authentication.
+
+With OAUTH authentication we use an OIDC service to authenticate against, we need to have an OpenID Connect/ OAuth2 compatible service. Red Hat has tested the integration with RGW of the following OIDC products: Red Hat SSO and keycloak IDPs.
+
+image:::STS_oidc.png[STS OIDC]
+
+=== STS woth Local RGW User Lab
+
+In this module we are going to complete a lab using RGW local users with STS.
+
+By default the STS API is disable in RGW, we need to enable the STS endpoint
+and restart the RGW daemons, the S3 and STS endpoints can be shared on the same
+RGW endpoint.
+
+----
+# ceph config set client.rgw.multi.zone1 rgw_s3_auth_use_sts true
+# ceph config set client.rgw.multi.zone1 rgw_sts_key = "abcdefghijklmnop"
+# ceph orch restart rgw.multi.zone1
+----
+
+Create 3 users, Admin who will own the bucket, and users: user1 and user2, that
+will assume a role to gain access to the admin bucket.
+
+----
+radosgw-admin user create --uid admin --display-name admin --admin --secret-key=admin --access-key=admin
+radosgw-admin user create --uid user1 --display-name user1 --secret-key=user1 --access-key=user1
+radosgw-admin user create --uid user2 --display-name user2 --secret-key=user2 --access-key=user2
+----
+
+configure s3cmd for the admin user, and create bucket + user:
+
+----
+# cat << EOF > ~/s3cmd-credentials/s3cfg-test-user-radosgw-direct-test-admin
+[default]
+access_key = admin
+secret_key = admin
+host_base = proxy01:8000
+host_bucket = proxy01:8000
+use_https = False
+signature_v2 = True
+#check_ssl_certificate = False
+EOF
+
+# s3cmd -c ~/s3cmd-credentials/s3cfg-test-user-radosgw-direct-test-admin mb s3://bucket-data
+Bucket 's3://bucket-data/' created
+# s3cmd -c ~/s3cmd-credentials/s3cfg-test-user-radosgw-direct-test-admin put /etc/hosts s3://bucket-data/hosts
+upload: '/etc/hosts' -> 's3://bucket-data/hosts'  [1 of 1]
+ 492 of 492   100% in    0s    20.96 kB/s  done
+----
+
+We create a role called S3A-user13 that will give user1 and user3 to assume this role
+
+----
+# radosgw-admin role create --role-name=S3A-user13 --path=/ --assume-role-policy-doc=\{\"Version\":\"2012-10-17\",\"Statement\":\[\{\"Effect\":\"Allow\",\"Principal\":\{\"AWS\":\[\"arn:aws:iam:::user/user1\",\"arn:aws:iam:::user/user2\"\]\},\"Action\":\[\"sts:AssumeRole\"\]\}\]\}
+
+# radosgw-admin role list
+[
+    {
+        "RoleId": "194ff4bb-9929-4bb7-8d7f-7181dca456aa",
+        "RoleName": "S3A-user13",
+        "Path": "/",
+        "Arn": "arn:aws:iam:::role/S3A-user13",
+        "CreateDate": "2022-12-23T09:41:08.222Z",
+        "MaxSessionDuration": 3600,
+        "AssumeRolePolicyDocument": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"AWS\":[\"arn:aws:iam:::user/user1\",\"arn:aws:iam:::user/user2\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
+    }
+]
+----
+
+You can also manage roles from the aws client, the user will need the required
+caps to work with roles, in this example when we created the admin user we used
+the `--admin` flag, but you could be more granular and use the specific `roles` cap
+
+----
+# aws --profile admin --endpoint http://proxy01:8000 iam list-roles
+{
+    "Roles": [
+        {
+            "Path": "/",
+            "RoleName": "S3A-user13",
+            "RoleId": "194ff4bb-9929-4bb7-8d7f-7181dca456aa",
+            "Arn": "arn:aws:iam:::role/S3A-user13",
+            "CreateDate": "2022-12-23T09:41:08.222000+00:00",
+            "AssumeRolePolicyDocument": {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "AWS": [
+                                "arn:aws:iam:::user/user1",
+                                "arn:aws:iam:::user/user2"
+                            ]
+                        },
+                        "Action": [
+                            "sts:AssumeRole"
+                        ]
+                    }
+                ]
+            },
+            "MaxSessionDuration": 3600
+        }
+    ]
+}
+----
+
+We are now going to add a policy to the S3A-user13 role, the policy will allow to only list created buckets
+
+----
+cat << EOF > policy.json
+{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:ListBucket"],"Resource":"arn:aws:s3:::*"}]}
+EOF
+
+#  radosgw-admin role-policy put --role-name=S3A-user13 --policy-name=access-list-bucket --policy-doc=$(<policy.json)
+Permission policy attached successfully
+
+#  radosgw-admin role-policy list --role-name=S3A-user13
+[
+    "access-list-bucket"
+]
+
+----
+
+Using user1  credentials we use the aws cli to assue the S3A-user13 user role,
+this will give a temporary authentication token to use
+
+----
+# aws --profile user1 --endpoint http://proxy01:8000 sts assume-role --role-arn arn:aws:iam:::role/S3A-user13 --role-session-name S3A-user13
+{
+    "Credentials": {
+        "AccessKeyId": "cXu2A3ZerKFrhBDQCL2",
+        "SecretAccessKey": "0N628VOMT5ZSLE9Q1WJRHV0NKZMZZWZ1WDIN3XU",
+        "SessionToken": "LpamGS6dXn3d3yiMKJUS6p2GhatKPzgXcGXB9nJi3rQ6hfq9CdhL+uZOakceomeXr1I8hIYv6GUsZVcwWiKv2NbRDdhDCaxbCKp4egfCcd9wnQ8q5HQxIr/hWR965f9Q3kSst0vy3HBPHzLqhusdPFWfpHvAcAfqL0kdEsWT1kmbDnHz0cjqWM2DgE9CQFXUYAyQVmiOBiRrnLzjqHI9bEl/pc97jQgreHuk+80s5CZfxSt3D/auW/yJVdDSxMwCITgqiWj9HzSOYbZJiFEdtUVkQvSMBtdxhclubBbnOYgXvs16F0aTlqYEfJ6wOYVWXfq8u2XKd+JodVtkQuGEYQ==",
+        "Expiration": "2022-12-23T11:08:13.562974+00:00"
+    },
+    "AssumedRoleUser": {
+        "Arn": "arn:aws:sts:::assumed-role/S3A-user13/S3A-user13"
+    },
+    "PackedPolicySize": 0
+}
+----
+
+NOTE: Session token is Opaque to end useri, it's Encrypted using AES 128, it
+contains Authentication, Authorization information, Information about roles
+(permission policy) and Users. 
+
+
+We will create a new aws cli profile with the credentials provided by the sts
+assume role command, this credentials will give user1 access to list 
+bucket bucket-data per the policy we added to the S3A-user13 role
+
+
+----
+cat .aws/credentials
+[sts]
+aws_access_key_id = cXu2A3ZerKFrhBDQCL2
+aws_secret_access_key = 0N628VOMT5ZSLE9Q1WJRHV0NKZMZZWZ1WDIN3XU
+aws_session_token = LpamGS6dXn3d3yiMKJUS6p2GhatKPzgXcGXB9nJi3rQ6hfq9CdhL+uZOakceomeXr1I8hIYv6GUsZVcwWiKv2NbRDdhDCaxbCKp4egfCcd9wnQ8q5HQxIr/hWR965f9Q3kSst0vy3HBPHzLqhusdPFWfpHvAcAfqL0kdEsWT1kmbDnHz0cjqWM2DgE9CQFXUYAyQVmiOBiRrnLzjqHI9bEl/pc97jQgreHuk+80s5CZfxSt3D/auW/yJVdDSxMwCITgqiWj9HzSOYbZJiFEdtUVkQvSMBtdxhclubBbnOYgXvs16F0aTlqYEfJ6wOYVWXfq8u2XKd+JodVtkQuGEYQ==
+
+# aws --profile sts --endpoint http://proxy01:8000 s3 ls s3://bucket-data
+2022-12-23 04:38:53       1330 hosts
+----
+
+But with the same credentials we can't delete or upload objects to the bucket
+as the role policy only allowed "s3:ListBucket" 
+
+----
+# aws --profile sts --endpoint http://proxy01:8000 s3 rm s3://bucket-data/hosts
+delete failed: s3://bucket-data/hosts An error occurred (AccessDenied) when calling the DeleteObject operation: Unknown
+# aws --profile sts --endpoint http://proxy01:8000 s3 cp /etc/hosts s3://bucket-data/file1
+upload failed: ../etc/hosts to s3://bucket-data/file1 An error occurred (AccessDenied) when calling the PutObject operation: Unknown
+----
+
+We can add a second policy to the role, that will Allow uploading and downloading objects to bucket-data
+
+----
+# cat << EOF > policy2.json
+{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Action":["s3:PutObject","s3:GetObject","s3:DeleteObject"],"Resource":"arn:aws:s3:::bucket-data/*"}]}
+EOF
+----
+
+We add this second policy to the S3A-user13 role:
+
+----
+# radosgw-admin role-policy put --role-name=S3A-user13 --policy-name=access-put-bucket --policy-doc=$(<policy2.json)
+Permission policy attached successfully
+
+# radosgw-admin role-policy get --role-name=S3A-user13 --policy-name=access-put-bucket
+{
+    "Permission policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Action\":[\"s3:PutObject\",\"s3:GetObject\",\"s3:DeleteObject\"],\"Resource\":\"arn:aws:s3:::bucket-data/*\"}]}"
+----
+
+We are now able to put and delete objects:
+
+----
+# aws --profile sts --endpoint http://proxy01:8000 s3 cp /etc/hosts s3://bucket-data/file1
+upload: ../etc/hosts to s3://bucket-data/file1
+# aws --profile sts --endpoint http://proxy01:8000 s3 rm s3://bucket-data/hosts
+delete: s3://bucket-data/hosts
+----

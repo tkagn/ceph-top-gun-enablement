@@ -1,0 +1,164 @@
+== Providing RadosGW HA.
+
+=== Introduction
+
+To avoid single points of failure in our Ceph RGW deployment we need to provide
+an S3/RGW endpoint that can tolerate the failure of one or more RGW services.
+RGW is a restfull HTTP endpoint, so it can be loadbalanced for HA and increased
+performance in many ways. There are some great examples in this
+https://github.com/mmgaggle/ceph-lb[repo]
+
+Since RHCS 5.1, Ceph provides a cephadm service called ingress that provides an
+HA and loadbalancing stack based on keepalive and haproxy.
+
+The ingress service allows you to create a high availability endpoint for RGW with a minimum set of configuration options. The orchestrator will deploy and manage a combination of haproxy and keepalived to provide load balancing on a floating virtual IP.
+If SSL is used, then SSL must be configured and terminated by the ingress service and not RGW itself.
+
+image::ingress.png[HAproxy Ingress Service]
+
+There are N hosts where the ingress service is deployed. Each host has a haproxy daemon and a keepalived daemon. A virtual IP is automatically configured on only one of these hosts at a time.
+
+Each keepalived daemon checks every few seconds whether the haproxy daemon on the same host is responding. Keepalived will also check that the master keepalived daemon is running without problems. If the “master” keepalived daemon or the active haproxy is not responding, one of the remaining keepalived daemons running in backup mode will be elected as master, and the virtual IP will be moved to that node.
+
+The active haproxy acts like a load balancer, distributing all RGW requests between all the RGW daemons available.
+
+=== Deploying a new RGW daemon
+
+Currently in our lab we have single RGW service/deamon running, we need at
+least two RGW services configured with the same Real/Zonegroup/Zone and running
+on different nodes, to be able to provide HA.
+
+So we are going to increase the count of RGW daemons for service multi.zone1
+that was previously created to 2, and we will deploy the new daemon on
+ceph-node02, just as a reminder we can use the --dry-run parameter with cephadm
+to see what actions will be taken:
+
+----
+[root@ceph-node01 ~]# ceph orch apply rgw multi.zone1 --realm=multisite --zone=zone1 --placement="2 proxy01 ceph-node02" --port=8000  --dry-run
+####################
+SERVICESPEC PREVIEWS
+####################
++---------+-----------------+-------------+-------------+
+|SERVICE  |NAME             |ADD_TO       |REMOVE_FROM  |
++---------+-----------------+-------------+-------------+
+|rgw      |rgw.multi.zone1  |ceph-node02  |             |
++---------+-----------------+-------------+-------------+
+################
+OSDSPEC PREVIEWS
+################
++---------+------+------+------+----+-----+
+|SERVICE  |NAME  |HOST  |DATA  |DB  |WAL  |
++---------+------+------+------+----+-----+
++---------+------+------+------+----+-----+
+[root@ceph-node01 ~]# ceph orch apply rgw multi.zone1 --realm=multisite --zone=zone1 --placement="2 proxy01 ceph-node02" --port=8000
+Scheduled rgw.multi.zone1 update...
+[root@ceph-node01 ~]# ceph orch ps | grep rgw
+rgw.multi.zone1.ceph-node02.lviwfb  ceph-node02  *:8000       running (3m)      3m ago   3m    45.7M        -  16.2.8-85.el8cp  b2c997ff1898  0e3521f3a162  
+rgw.multi.zone1.proxy01.mhawfj      proxy01      *:8000       running (30m)     4m ago  30m    61.9M        -  16.2.8-85.el8cp  b2c997ff1898  4de70934f04e  
+----
+
+Now that we have 2 rgw instances running we can deploy an ingress service to
+provide HA and loadbalancing of out S3 http endpoint, we beed a VIP for
+Keepalived to loadbalance, you can use `ip:` that has been pre-created and it has
+a dns entry `s3zone1.example.com` 
+
+----
+# host s3zone1.example.com
+s3zone1.example.com has address 192.168.56.100
+
+# cat << EOF >  rgw-ingress.yaml 
+service_type: ingress
+service_id: multi.zone1
+placement:
+  hosts:
+    - ceph-node02
+    - ceph-node03
+spec:
+  backend_service: rgw.multi.zone1   
+  virtual_ip: 192.168.56.100/24       
+  frontend_port: 80            
+  monitor_port:  1967
+EOF
+
+# ceph orch apply -i rgw-ingress.yaml --dry-run
+####################
+SERVICESPEC PREVIEWS
+####################
++---------+-----------------------------+-------------------------+-------------+
+|SERVICE  |NAME                         |ADD_TO                   |REMOVE_FROM  |
++---------+-----------------------------+-------------------------+-------------+
+|ingress  |ingress.ingress.multi.zone1  |ceph-node02 ceph-node03  |             |
++---------+-----------------------------+-------------------------+-------------+
+# ceph orch apply -i rgw-ingress.yaml
+Scheduled ingress.ingress.multi.zone1 update...
+----
+
+The services will take a while to get configured and running, we can check with
+the ceph orch ps command:
+
+----
+# ceph orch ps | grep ingress.multi
+haproxy.ingress.multi.zone1.ceph-node02.vyqujm     ceph-node02  *:80,1967    running (23s)    14s ago   7m    6098k        -  2.2.19-7ea3822   6b6ff8a83cd7  f93e7a3ff94d
+haproxy.ingress.multi.zone1.ceph-node03.omzjut     ceph-node03  *:80,1967    running (13s)     8s ago   7m    9537k        -  2.2.19-7ea3822   6b6ff8a83cd7  ce91e7ffc737
+keepalived.ingress.multi.zone1.ceph-node02.yyelgh  ceph-node02               running (6m)     14s ago   6m    11.2M        -  2.1.5            f68c62a66d49  ab0d236e81eb
+keepalived.ingress.multi.zone1.ceph-node03.btvglg  ceph-node03               running (6m)      8s ago   6m    16.7M        -  2.1.5            f68c62a66d49  5abb03a5f2bc
+----
+
+We can curl the VIP to check that it's working
+
+----
+curl http://s3zone1.example.com
+<?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>
+----
+
+The haproxy configuration can checked with:
+
+----
+# cephadm enter --name haproxy.ingress.multi.zone1.ceph-node02.vyqujm cat /var/lib/haproxy/haproxy.cfg
+...
+frontend frontend
+    bind 192.168.56.100:80
+    default_backend backend
+
+backend backend
+    option forwardfor
+    balance static-rr
+    option httpchk HEAD / HTTP/1.0
+    server rgw.multi.zone1.ceph-node02.lviwfb 192.168.56.62:8000 check weight 100
+    server rgw.multi.zone1.proxy01.mhawfj 192.168.56.24:8000 check weight 100
+----
+
+Keepalived config can also be checked with:
+
+----
+# cephadm enter --name keepalived.ingress.multi.zone1.ceph-node02.yyelgh cat /etc/keepalived/keepalived.conf
+...
+vrrp_instance VI_0 {
+  state MASTER
+  priority 100
+  interface eth0
+  virtual_router_id 51
+  advert_int 1
+  authentication {
+      auth_type PASS
+      auth_pass ythfkjlbyqokmslqmuwx
+  }
+  unicast_src_ip 192.168.56.62
+  unicast_peer {
+    192.168.56.63
+  }
+  virtual_ipaddress {
+    192.168.56.100/24 dev eth0
+  }
+...
+----
+
+NOTICE: One thing to take into account with Ingress service and keepalived is that it
+uses the vrrp protocol, so vrrp comunications need to be allowed in the
+network.
+
+Now that we have the Ingress service working, and the Client requests are being
+loadbalanced between both RGW services, you can shutodown a node, and check
+with and s3client that you can still interact with the S3 endpoint, uploading
+some files for example.
+

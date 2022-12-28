@@ -1,0 +1,6 @@
+name: training
+title: Ceph Top-Gun Enablement
+version: master
+nav:
+  - modules/ROOT/nav.adoc
+  - modules/ceph/nav.adoc
