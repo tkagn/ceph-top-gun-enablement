@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_performance.html">
+    <meta name="generator" content="Antora 3.0.1">
+    <link rel="stylesheet" href="../../_/css/site.css">
+    <script>var uiRootPath = '../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
+          <img src="../../_/img/header_logo_reverse.svg" height="40px" alt="Red Hat Data Services">
+      </a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Get Help</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage" target="_blank">OCS Documentation</a>
+            <a class="navbar-item" href="https://bugzilla.redhat.com/describecomponents.cgi?product=Red%20Hat%20OpenShift%20Container%20Storage" target="_blank">Browse Bugs</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Improve Guides</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/blob/master/CONTRIBUTING.adoc" target="_blank">Guidelines</a>
+            <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/issues/new/choose" target="_blank">Open Issue</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">More Infos</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://www.redhat.com/en/blog/channel/red-hat-storage" target="_blank">Our Blog</a>
+            <a class="navbar-item" href="https://www.youtube.com/channel/UCoyG8VyvB-XUxQl1mD3T3Gw" target="_blank">Youtube</a>
+            <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">OCS Technology</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="training" data-version="master">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Ceph Top-Gun Enablement</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="opentlc_lab_env.html">Opentlc Lab Env</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph RadosGW</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_intro.html">RGW Introduction and Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_arch_deep_dive.html">RGW Deep Dive</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_ha.html">RGW High Availability</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_users_quotas.html">RGW Users &amp; Quotas</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_auth.html">RGW Auth &amp; Authz</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_object_versioning.html">RGW S3 Object Versioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_placement_and_storage_classes.html">RGW Placement &amp; Storage Classes</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_life_cycle_management.html">RGW Life Cycle Management</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_bucket_policy.html">RGW S3 Bucket Policy</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_sts_introduction.html">RGW Secure Token Service</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_sts_bucket_role_policy.html">RGW Bucket vs Role Policy</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Troubleshooting</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="trouble-shooting-nearfull-osds.html">Troubleshooting nearfull OSDs</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Stretched</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="#rhcs-stretched-deploy.adoc">Ceph Stretch Mode</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Ceph Top-Gun Enablement</span>
+    <span class="version">master</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Ceph Top-Gun Enablement</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">master</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+</nav>
+  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/radosgw_performance.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<div class="sect1">
+<h2 id="_radosgw_object_storage_performance_recomendations"><a class="anchor" href="#_radosgw_object_storage_performance_recomendations"></a>RadosGW Object Storage Performance recomendations.</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_co_located_rgw_instances_to_improve_throughput"><a class="anchor" href="#_co_located_rgw_instances_to_improve_throughput"></a>Co-Located RGW instances to improve throughput.</h3>
+<div class="paragraph">
+<p>Related Performance testing available in the following blogpost
+<a href="https://www.redhat.com/en/blog/red-hat-ceph-storage-rgw-deployment-strategies-and-sizing-guidance">RGW
+Sizing guidance</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_if_possible_pre_shard_buckets_before_hand"><a class="anchor" href="#_if_possible_pre_shard_buckets_before_hand"></a>If Possible pre-shard buckets before hand.</h3>
+<div class="paragraph">
+<p>Related Performance testing available in the following blogpost
+<a href="https://www.redhat.com/en/blog/ceph-rgw-dynamic-bucket-sharding-performance-investigation-and-guidance">RGW
+Dynamic Resharding</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_multisite_deployments_use_dedicated_rgw_daemons_for_replication"><a class="anchor" href="#_multisite_deployments_use_dedicated_rgw_daemons_for_replication"></a>Multisite Deployments use dedicated RGW daemons for Replication</h3>
+<div class="paragraph">
+<p>RGW dedicated for I/O vs. sync
+5 for client IO (5 RGWs in HAproxy config)
+3 for sync (3 RGWs in zone config)
+HA proxy for I/O only, sync enabled RGW</p>
+</div>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
+      <img src="../../_/img/header_logo.svg" alt="Red Hat Data Services">
+  </a>
+</footer>
+<script id="site-script" src="../../_/js/site.js" data-ui-root-path="../../_"></script>
+<script async src="../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
