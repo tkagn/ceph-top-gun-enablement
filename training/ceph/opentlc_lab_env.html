@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/opentlc_lab_env.html">
+    <meta name="generator" content="Antora 3.0.1">
+    <link rel="stylesheet" href="../../_/css/site.css">
+    <script>var uiRootPath = '../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
+          <img src="../../_/img/header_logo_reverse.svg" height="40px" alt="Red Hat Data Services">
+      </a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Get Help</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage" target="_blank">OCS Documentation</a>
+            <a class="navbar-item" href="https://bugzilla.redhat.com/describecomponents.cgi?product=Red%20Hat%20OpenShift%20Container%20Storage" target="_blank">Browse Bugs</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Improve Guides</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/blob/master/CONTRIBUTING.adoc" target="_blank">Guidelines</a>
+            <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/issues/new/choose" target="_blank">Open Issue</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">More Infos</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://www.redhat.com/en/blog/channel/red-hat-storage" target="_blank">Our Blog</a>
+            <a class="navbar-item" href="https://www.youtube.com/channel/UCoyG8VyvB-XUxQl1mD3T3Gw" target="_blank">Youtube</a>
+            <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">OCS Technology</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="training" data-version="master">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Ceph Top-Gun Enablement</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="opentlc_lab_env.html">Opentlc Lab Env</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph RadosGW</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_intro.html">RGW Introduction and Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_arch_deep_dive.html">RGW Deep Dive</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_ha.html">RGW High Availability</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_users_quotas.html">RGW Users &amp; Quotas</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_auth.html">RGW Auth &amp; Authz</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_object_versioning.html">RGW S3 Object Versioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_placement_and_storage_classes.html">RGW Placement &amp; Storage Classes</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_life_cycle_management.html">RGW Life Cycle Management</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_bucket_policy.html">RGW S3 Bucket Policy</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_sts_introduction.html">RGW Secure Token Service</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_sts_bucket_role_policy.html">RGW Bucket vs Role Policy</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Troubleshooting</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="trouble-shooting-nearfull-osds.html">Troubleshooting nearfull OSDs</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Stretched</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="#rhcs-stretched-deploy.adoc">Ceph Stretch Mode</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Ceph Top-Gun Enablement</span>
+    <span class="version">master</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Ceph Top-Gun Enablement</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">master</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
+    <li><a href="opentlc_lab_env.html">Opentlc Lab Env</a></li>
+  </ul>
+</nav>
+  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/opentlc_lab_env.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<div class="sect1">
+<h2 id="_red_hat_ceph_storage_lab"><a class="anchor" href="#_red_hat_ceph_storage_lab"></a>Red Hat Ceph Storage Lab</h2>
+<div class="sectionbody">
+<div class="ulist">
+<div class="title">Goals</div>
+<ul>
+<li>
+<p>Provision the lab environment</p>
+</li>
+<li>
+<p>Become familiar with the lab environment</p>
+</li>
+<li>
+<p>Review server access considerations</p>
+</li>
+<li>
+<p>Install Red Hat<sup>&#174;</sup> Ceph<sup>&#174;</sup> Storage using the <code>cephadm</code> utility</p>
+</li>
+<li>
+<p>Explore RBD, CephFS, and RADOSGW</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_provision_lab_environment"><a class="anchor" href="#_provision_lab_environment"></a>1. Provision Lab Environment</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_provision_environment"><a class="anchor" href="#_provision_environment"></a>1.1. Provision Environment</h3>
+<div class="paragraph">
+<p>The lab environment consists of 13 virtual servers, one of which is a workstation/bastion host. In this section, you provision the lab environment, which sets up the components required for the lab.</p>
+</div>
+<div class="paragraph">
+<p>The lab environment is a playground provided with instructions on how to set up some of the scenarios. The lab is a guide and does not provide step-by-step instructions, nor does it provide details on implementing best practices. For topics or scenarios that are not covered in this lab, or commands that do not provide the expected output, refer to Red Hat&#8217;s documentation.</p>
+</div>
+<div class="paragraph">
+<p>For example, the lab provides information on how to configure four MONs. A best practice in a production environment is to configure an odd number of MONs, such as three or five. You have the option in this lab to use the <code>cephadm</code> command line tool to configure only three MONs.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Navigate to the <a href="https://labs.opentlc.com" target="_blank" rel="noopener">OPENTLC lab portal</a> and log in with your username and password.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+If you do not remember your username or password, go to the <a href="https://www.opentlc.com/pwm" target="_blank" rel="noopener">OPENTLC Account Management page</a> to obtain a username reminder or reset your password.
+</td>
+</tr>
+</table>
+</div>
+</li>
+<li>
+<p>Navigate to <strong>Services &#8594; Catalogs &#8594; All Services &#8594; OPENTLC Cloud Infrastructure Labs</strong>.</p>
+</li>
+<li>
+<p>On the left side of the screen, select <strong>Ceph 5 Playground</strong>.</p>
+</li>
+<li>
+<p>On the right, click <strong>Order</strong>.</p>
+</li>
+<li>
+<p>On the next page, check the box to confirm that you understand the runtime and expiration dates, then click <strong>Submit</strong> on the bottom right to order your environment.</p>
+</li>
+<li>
+<p>After a few minutes, check your email account for a message from Red Hat confirming that provisioning started.</p>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Do not select <strong>App Control &#8594; Start</strong> after ordering the lab. The lab environment is already building, and selecting <strong>Start</strong> may corrupt it or cause other complications.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>You can select <strong>Status</strong> to view the status of your environment.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_set_up_registry_prerequisites"><a class="anchor" href="#_set_up_registry_prerequisites"></a>1.2. Set Up Registry Prerequisites</h3>
+<div class="paragraph">
+<p>In this section, you verify that you can access <code>registry.redhat.io</code> and retrieve your username and password token.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Navigate to <a href="https://access.redhat.com/terms-based-registry/#/accounts" target="_blank" rel="noopener">https://access.redhat.com/terms-based-registry/#/accounts</a>.</p>
+</li>
+<li>
+<p>Select your account name, and note your username and password from the <strong>Token Information</strong> tab:</p>
+<div class="imageblock unresolved">
+<div class="content">
+<img src="images/Registry-Login-01.png" alt="Registry Login 01">
+</div>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_explore_lab_environment_and_server_list"><a class="anchor" href="#_explore_lab_environment_and_server_list"></a>2. Explore Lab Environment and Server List</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Due to the nature of OpenStack<sup>&#174;</sup> and storage, the lab environment for this course is larger and more complex than most. Elements such as Red Hat Ceph Storage, high availability, shared storage, and others require several servers and enhanced networking. The Ravello lab environment that is provisioned for each student provides all of these requirements.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The lab environment is cloud-based, so you can access it over the Internet from anywhere. However, do not expect the performance to match a dedicated environment.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>+</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>You are able to access any system in your lab environment by using the Novello virtual console, the link to which is provided in the email message you received with information about accessing your lab environment.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>+</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>While you have root access to all of the systems, including the workstation node, and you are able to make any configuration changes necessary, do not enable root login from SSH to the workstation node. The default password is not secure and your machine may be compromised and subsequently deleted without warning.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Verify that your environment is ready for use by connecting to your administration host through SSH using the details provided in the external provisioning email, which includes your username and password:</p>
+<div class="listingblock">
+<div class="title">Example Command</div>
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ssh username@workstation-67a5.dynamic.opentlc.com</code></pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>It may take up to 30 minutes for your lab environment to be ready. If you cannot connect to your administration host, continue to try periodically until your connection succeeds.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>If you are using Windows, use a terminal program such as PuTTY to connect instead of the <code>ssh</code> command shown.</p>
+</li>
+<li>
+<p>To learn more about SSH and keys, read <a href="https://www.opentlc.com/ssh.html" target="_blank" rel="noopener">Setting Up an SSH Key Pair</a>.</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prepare_for_red_hat_ceph_storage_installation"><a class="anchor" href="#_prepare_for_red_hat_ceph_storage_installation"></a>3. Prepare for Red Hat Ceph Storage Installation</h2>
+<div class="sectionbody">
+
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
+      <img src="../../_/img/header_logo.svg" alt="Red Hat Data Services">
+  </a>
+</footer>
+<script id="site-script" src="../../_/js/site.js" data-ui-root-path="../../_"></script>
+<script async src="../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
