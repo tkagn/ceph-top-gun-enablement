@@ -40,7 +40,6 @@ configuration from the RADOS Gateway in the master zone group and master zone.
 Because the master zone in the master zone group handles all metadata updates, operations such
 as creating users must occur in the master zone.
 
-
 . *Multi-zone*
 
 A more advanced configuration consists of one zone group and multiple zones, each zone with one or more ceph-radosgw instances. Each zone is backed by its own Ceph Storage Cluster. Multiple zones in a zone group provides disaster recovery for the zone group should one of the zones experience a significant failure. In Kraken, each zone is active and may receive write operations. In addition to disaster recovery, multiple active zones may also serve as a foundation for content delivery networks.
@@ -52,7 +51,6 @@ Formerly called ‘regions’, Ceph Object Gateway can also support multiple zon
 . *Multiple Realms*
 
 In Kraken, the Ceph Object Gateway supports the notion of realms, which can be a single zone group or multiple zone groups and a globally unique namespace for the realm. Multiple realms provide the ability to support numerous configurations and namespaces.
-
 
 === Multisite Lab.
 
@@ -697,6 +695,7 @@ pipe) to be able to configure bucket sync policy
 Any changes to the zonegroup policy needs to be applied on the zonegroup master zone, and require period update and commit.
 ====
 
+----
 +----------------------------+----------------------------------------+
 |  Value                     | Description                            |
 +============================+========================================+
@@ -707,6 +706,7 @@ Any changes to the zonegroup policy needs to be applied on the zonegroup master 
 | ``forbidden``              | sync (as defined by this group) is not |
 |                            | allowed and can override other groups  |
 +----------------------------+----------------------------------------+
+----
 
 We create the zonegroup sync group and set the replication status to allowed
 
