@@ -14,23 +14,24 @@ So, from the top down, we have realm, Zone Group and zones and I'm going to expl
 
 === RGW Multisite components
 
-. zone
+. *Zone*
+
 - Defines a logical group consisting of one or more Ceph Object Gateway instances
 - Configuring zones differs from typical Ceph configuration procedures, because not all of the settings end up in a Ceph configuration file
 - There will be one zone that should be designated as the Master zone in a zonegroup
 - The Master zone will handle all bucket and user creation
 - Secondary zone can receive bucket and user operations, but will redirect them to the Master zone
 - If the Master zone is down, bucket and user operations will fail
-- It is possible to promote a secondary zone to Master zone
+- It is possible to promote a secondary zone to Master zone. This a complex operation. It is recommended only when the Master zone will be down for a long period of time
 
-NOTE: This a complex operation. It is recommended only when the Master zone will be down for a long period of time
+. *Zone Group*
 
-. zone group
 A zone group is a set of one or more zones. Data stored in one zone in the zone group is
 replicated to all other zones in the zone group. One zone in every zone group is designated as
 the master zone for that group. The other zones in the zone group are secondary zones.
 
-. realm
+. *Realm*
+
 A realm represents the global namespace for all objects and buckets in the multisite
 replication space. A realm contains one or more zone groups, each of which contains one
 or more zones. One zone group in the realm is designated as the master zone group, and
@@ -40,9 +41,17 @@ Because the master zone in the master zone group handles all metadata updates, o
 as creating users must occur in the master zone.
 
 
-. Multi-zone: A more advanced configuration consists of one zone group and multiple zones, each zone with one or more ceph-radosgw instances. Each zone is backed by its own Ceph Storage Cluster. Multiple zones in a zone group provides disaster recovery for the zone group should one of the zones experience a significant failure. In Kraken, each zone is active and may receive write operations. In addition to disaster recovery, multiple active zones may also serve as a foundation for content delivery networks.
-. Multi-zone-group: Formerly called ‘regions’, Ceph Object Gateway can also support multiple zone groups, each zone group with one or more zones. Objects stored to zones in one zone group within the same realm as another zone group will share a global object namespace, ensuring unique object IDs across zone groups and zones.
-. Multiple Realms: In Kraken, the Ceph Object Gateway supports the notion of realms, which can be a single zone group or multiple zone groups and a globally unique namespace for the realm. Multiple realms provide the ability to support numerous configurations and namespaces.
+. *Multi-zone*
+
+A more advanced configuration consists of one zone group and multiple zones, each zone with one or more ceph-radosgw instances. Each zone is backed by its own Ceph Storage Cluster. Multiple zones in a zone group provides disaster recovery for the zone group should one of the zones experience a significant failure. In Kraken, each zone is active and may receive write operations. In addition to disaster recovery, multiple active zones may also serve as a foundation for content delivery networks.
+
+. *Multi-zone-group*
+
+Formerly called ‘regions’, Ceph Object Gateway can also support multiple zone groups, each zone group with one or more zones. Objects stored to zones in one zone group within the same realm as another zone group will share a global object namespace, ensuring unique object IDs across zone groups and zones.
+
+. *Multiple Realms*
+
+In Kraken, the Ceph Object Gateway supports the notion of realms, which can be a single zone group or multiple zone groups and a globally unique namespace for the realm. Multiple realms provide the ability to support numerous configurations and namespaces.
 
 
 === Multisite Lab.
@@ -58,8 +67,9 @@ operations.
 
 [TIP]
 ====
-If you have already completed the RadosGW introduction module you can jump
-this section, and continue with section `Configure the Secondary Zone`
+If you have already completed the RadosGW introduction module, you will have
+the realm,zonegroup and zone(zone1) created, but with no endpoints configured,
+you will need to add valid rgw endpoints to the zonegroup and zone.
 ====
 
 [WARNING]
