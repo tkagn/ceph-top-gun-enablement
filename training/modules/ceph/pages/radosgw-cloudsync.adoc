@@ -257,7 +257,7 @@ days will be transitioned to the cloud storage class called `AWS`
 Using the AWS cli and the transitionuser profile, we will apply/put the bucket-lifecycle-configuration using the file transition.json we created in the previous step.
 
 ----
-# aws s3api --profile rgw  --endpoint http://ceph-mon02:8080--region default put-bucket-lifecycle-configuration --lifecycle-configuration  file://transition.json --bucket transition
+# aws s3api --profile rgw  --endpoint http://ceph-mon02:8080 --region default put-bucket-lifecycle-configuration --lifecycle-configuration  file://transition.json --bucket transition
 
 # aws s3api  --profile rgw  --endpoint https://ceph-mon02:8080 --region default get-bucket-lifecycle-configuration --bucket transition
 {
@@ -370,10 +370,10 @@ We know upload some objects to our on-prem transition bucket:
 ----
 $ for i in 1 2 3 4 5 
 do
-aws s3 --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw --endpoint https://ceph-mon02:8080 --region default cp /etc/hosts s3://transition/transition$i
+aws s3 --profile rgw --endpoint http://ceph-mon02:8080 --region default cp /etc/hosts s3://transition/transition$i
 done
  
-$ aws s3 --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw  --endpoint https://ceph-mon02:8080 --region default ls s3://transition
+$ aws s3  --profile rgw  --endpoint http://ceph-mon02:8080 --region default ls s3://transition
 2022-10-31 10:24:01       3847 transition1
 2022-10-31 10:24:04       3847 transition2
 2022-10-31 10:24:07       3847 transition3
@@ -419,7 +419,7 @@ If we now list the objects available in the transition bucket on our on-premise 
 
 
 ----
-$ aws s3 --profile rgw  --endpoint https://ceph-mon02:8080 --region default ls s3://transition
+$ aws s3 --profile rgw  --endpoint http://ceph-mon02:8080 --region default ls s3://transition
 
 2022-10-31 17:52:56          0 transition1
 2022-10-31 17:51:59          0 transition2
@@ -433,7 +433,7 @@ If we check the head of the object using the s3api we can see that the storage
 class for this object is now AWS so this object has been transitioned into the cloud provider:
 
 ----
-$ aws s3api --profile rgw  --endpoint https://ceph-mon02:8080 --region default head-object --key transition1 --bucket transition
+$ aws s3api --profile rgw  --endpoint http://ceph-mon02:8080 --region default head-object --key transition1 --bucket transition
 
 {
 

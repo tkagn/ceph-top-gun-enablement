@@ -104,6 +104,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -419,8 +422,10 @@ in this example we are using a private key to authenticate against github.</p>
 have 8 servers available, four per ceph cluster.</p>
 </div>
 <div class="paragraph">
-<p><strong>Ceph Cluster1:</strong> ceph-node01,ceph-node02,ceph-node03,proxy01
-<strong>Ceph Cluster2:</strong> ceph-mon01,ceph-mon02,ceph-mon03,proxy02</p>
+<p><strong>Ceph Cluster1:</strong> ceph-node01,ceph-node02,ceph-node03,proxy01</p>
+</div>
+<div class="paragraph">
+<p><strong>Ceph Cluster2:</strong> ceph-mon01,ceph-mon02,ceph-mon03,proxy02</p>
 </div>
 <div class="paragraph">
 <p>The previous client playbook created 2 inventory files for us.</p>

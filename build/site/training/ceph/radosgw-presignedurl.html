@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Untitled :: Ceph Top Gun Enablement</title>
-    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_performance.html">
+    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw-presignedurl.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
     <script>var uiRootPath = '../../_'</script>
@@ -155,7 +155,7 @@
   <a href="../index.html" class="home-link"></a>
 <nav class="breadcrumbs" aria-label="breadcrumbs">
 </nav>
-  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/radosgw_performance.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/radosgw-presignedurl.adoc">Edit this Page</a></div>
 </div>
   <div class="content">
 <aside class="toc sidebar" data-title="Contents" data-levels="2">
@@ -163,32 +163,13 @@
 </aside>
 <article class="doc">
 <div class="sect1">
-<h2 id="_radosgw_object_storage_performance_recomendations"><a class="anchor" href="#_radosgw_object_storage_performance_recomendations"></a>RadosGW Object Storage Performance recomendations.</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_co_located_rgw_instances_to_improve_throughput"><a class="anchor" href="#_co_located_rgw_instances_to_improve_throughput"></a>Co-Located RGW instances to improve throughput.</h3>
 <div class="paragraph">
-<p>Related Performance testing available in the following blogpost
-<a href="https://www.redhat.com/en/blog/red-hat-ceph-storage-rgw-deployment-strategies-and-sizing-guidance">RGW
-Sizing guidance</a></p>
+<p>All objects and buckets are private by default. However, you can use a presigned URL to optionally share objects or allow your customers/users to upload objects to buckets without AWS security credentials or permissions.</p>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_if_possible_pre_shard_buckets_before_hand"><a class="anchor" href="#_if_possible_pre_shard_buckets_before_hand"></a>If Possible pre-shard buckets before hand.</h3>
 <div class="paragraph">
-<p>Related Performance testing available in the following blogpost
-<a href="https://www.redhat.com/en/blog/ceph-rgw-dynamic-bucket-sharding-performance-investigation-and-guidance">RGW
-Dynamic Resharding</a></p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_multisite_deployments_use_dedicated_rgw_daemons_for_replication"><a class="anchor" href="#_multisite_deployments_use_dedicated_rgw_daemons_for_replication"></a>Multisite Deployments use dedicated RGW daemons for Replication</h3>
-<div class="paragraph">
-<p>RGW dedicated for I/O vs. sync
-5 for client IO (5 RGWs in HAproxy config)
-3 for sync (3 RGWs in zone config)
-HA proxy for I/O only, sync enabled RGW</p>
-</div>
+<p>You can use presigned URLs to generate a URL that can be used to access your Amazon S3 buckets. When you create a presigned URL, you associate it with a specific action. You can share the URL, and anyone with access to it can perform the action embedded in the URL as if they were the original signing user. The URL will expire and no longer work when it reaches its expiration time.</p>
 </div>
 </div>
 </div>

@@ -14,6 +14,7 @@
 * xref:radosgw_sts_bucket_role_policy.adoc[RGW Bucket vs Role Policy]
 * xref:radosgw_multisite.adoc[RGW Multisite Replication]
 * xref:radosgw-cloudsync.adoc[RGW Cloudsync]
+* xref:radosgw-presignedurl.adoc[RGW presigned URL]
 
 .Ceph Troubleshooting 
 * xref:trouble-shooting-nearfull-osds.adoc[Troubleshooting nearfull OSDs]

@@ -1,0 +1,43 @@
+== Introduction
+
+All objects and buckets are private by default. However, you can use a presigned URL to optionally share objects or allow your customers/users to upload objects to buckets without AWS security credentials or permissions.
+
+You can use presigned URLs to generate a URL that can be used to access your Amazon S3 buckets. When you create a presigned URL, you associate it with a specific action. You can share the URL, and anyone with access to it can perform the action embedded in the URL as if they were the original signing user. The URL will expire and no longer work when it reaches its expiration time.
+
+== When does Amazon S3 check the expiration date and time of a presigned URL?
+
+RGW S3 checks the expiration date and time of a signed URL at the time of the HTTP request. For example, if a client begins to download a large file immediately before the expiration time, the download should complete even if the expiration time passes during the download. If the connection drops and the client tries to restart the download after the expiration time passes, the download will fail.
+
+== Hands-on
+
+# aws --endpoint  http://proxy01:8000 s3 ls s3://bucket1/
+2022-12-29 04:18:01       1330 file1
+2022-12-29 04:38:20       1330 file11
+2022-12-29 04:42:34       1330 file111
+2022-12-29 04:18:54       1330 file2
+
+The following presign command generates a pre-signed URL for a specified bucket and key that is valid for one hour.
+
+----
+# aws --endpoint  http://proxy01:8000  s3 presign s3://bucket1/file1
+http://proxy01:8000/bucket1/file1?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=multiuser%2F20221229%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20221229T153107Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=0edddb0082c5433e29349eaecf92e2d928a38e85d8897cbf5f9893fb64885cdc
+----
+
+We can then access the object using for example `wget`
+
+----
+# wget 'http://proxy01:8000/bucket1/file1?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=multiuser%2F20221229%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20221229T153107Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=0edddb0082c5433e29349eaecf92e2d928a38e85d8897cbf5f9893fb64885cdc' -O file.txt
+
+# cat file.txt
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+192.168.56.50	ctrl01.example.com
+----
+
+The following presign command generates a pre-signed URL for a specified bucket and key that is valid for one week.
+
+----
+# aws --endpoint  http://proxy01:8000  s3 presign s3://bucket1/file2 --expires-in 604800
+----
+
+
