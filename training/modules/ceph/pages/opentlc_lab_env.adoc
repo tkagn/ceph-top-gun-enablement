@@ -115,6 +115,7 @@ Once the client playbook finishes we can start preparing our ceph clusters, we
 have 8 servers available, four per ceph cluster.
 
 *Ceph Cluster1:* ceph-node01,ceph-node02,ceph-node03,proxy01
+
 *Ceph Cluster2:* ceph-mon01,ceph-mon02,ceph-mon03,proxy02
 
 The previous client playbook created 2 inventory files for us.
