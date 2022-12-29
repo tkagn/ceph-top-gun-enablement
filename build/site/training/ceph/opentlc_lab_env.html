@@ -386,7 +386,183 @@ The lab environment is cloud-based, so you can access it over the Internet from 
 <div class="sect1">
 <h2 id="_prepare_for_red_hat_ceph_storage_installation"><a class="anchor" href="#_prepare_for_red_hat_ceph_storage_installation"></a>3. Prepare for Red Hat Ceph Storage Installation</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_prepare_the_workstation"><a class="anchor" href="#_prepare_the_workstation"></a>3.1. Prepare the workstation</h3>
+<div class="paragraph">
+<p>Once you have logged in via SSH to your opentlc workstation, and used sudo to
+scalate into
+root,  we are going to
+run a playbook to get the pre-reqs for the labs in place.</p>
+</div>
+<div class="paragraph">
+<p>Clone the cephadm automation repo, you will need to authenticate to get access,
+in this example we are using a private key to authenticate against github.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>GIT_SSH_COMMAND="ssh -i key.rsa" git clone git@github.com:likid0/cephadmdeploy.git</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We then run the client/workstation playbook.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ansible-playbook cephadmdeploy/ansible-cephadm-deploy/prepare-client.yaml -i workstation,</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once the client playbook finishes we can start preparing our ceph clusters, we
+have 8 servers available, four per ceph cluster.</p>
+</div>
+<div class="paragraph">
+<p><strong>Ceph Cluster1:</strong> ceph-node01,ceph-node02,ceph-node03,proxy01
+<strong>Ceph Cluster2:</strong> ceph-mon01,ceph-mon02,ceph-mon03,proxy02</p>
+</div>
+<div class="paragraph">
+<p>The previous client playbook created 2 inventory files for us.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># cat /root/cluster1
+ceph-node01.example.com
+ceph-node02.example.com
+ceph-node03.example.com
+proxy01.example.com
 
+[admin]
+ceph-node01.example.com
+
+[osds]
+ceph-node01.example.com
+ceph-node02.example.com
+ceph-node03.example.com
+
+[mgmt]
+proxy01.example.com
+
+[client]
+workstation.example.com</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># cat /root/cluster2
+ceph-mon01.example.com
+ceph-mon02.example.com
+ceph-mon03.example.com
+proxy02.example.com
+
+[admin]
+ceph-mon01.example.com
+
+[osds]
+ceph-mon01.example.com
+ceph-mon02.example.com
+ceph-mon03.example.com
+
+[mgmt]
+proxy02.example.com
+
+[client]
+workstation.example.com</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To get all the pre-requisites ready to deploy our ceph clusters we can run the
+<code>cephadmdeploy/ansible-cephadm-deploy/deploy-cephadm.yaml</code> for each of our
+clusters.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>This playbook doesn&#8217;t deploy ceph it just prepares the pre-reqs needed, repos,
+dns name resolution, etc</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>For that first we need to configure a group_vars file</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>cat &lt;&lt; EOF &gt; cephadmdeploy/ansible-cephadm-deploy/group_vars/all.yaml
+update_cluster_os: true
+dedicated_observability: true
+reg_password: 'REG_PASS'
+reg_username: email@email.com
+rhcs_subscription_username: email@redhat.com
+rhcs_subscription_password: 'SUB_PASS'
+hosts_add_ansible_managed_hosts: false
+dnsmasq_upstream_servers_ip: 150.239.16.12
+EOF</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If <code>update_cluster_os: true</code> is set to true a full OS upgrade will take place
+to the latest RHEL 8 minor version.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>For each cluster we run:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ansible-playbook -i /root/cluster1 cephadmdeploy/ansible-cephadm-deploy/deploy-cephadm.yaml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once the playbook finishes you are ready to start the ceph deployment, if
+needed several scripts have been created in our admin host
+<code>ceph-node01.example.com</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ssh ceph-node01.example.com ls *.sh
+cephadm-ansible-run.sh   &lt;--- runs Cephadm-ansible preflight playbook
+cluster-install.sh       &lt;--- Deploys the cephcluster with cephadm
+cluster-postinstall.sh   &lt;--- Configures Ceph post deploy
+cluster-wait-until-installed.sh  &lt;--- waits until ceph is healthy
+zap-disks.sh &lt;--- Zaps Disks</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The cluster-install.sh script is using for the cephadm bootstrap a spec file, you can edit and modify
+this file to your needs:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ls -l /root/cluster-spec.yaml
+-rw-r--r-- 1 root root 1240 Dec 27 16:13 /root/cluster-spec.yaml</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>For a full automated deployment we can run:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># bash cephadm-ansible-run.sh &amp;&amp; bash zap-disks.sh &amp;&amp; bash cluster-install.sh &amp;&amp;
+bash cluster-postinstall.sh</pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 </article>
@@ -395,7 +571,7 @@ The lab environment is cloud-based, so you can access it over the Internet from 
 </div>
 <footer class="footer">
   <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
-      <img src="../../_/img/header_logo.svg" alt="Red Hat Data Services">
+      <img src="../../_/img/header_logo.svg" alt="Ceph">
   </a>
 </footer>
 <script id="site-script" src="../../_/js/site.js" data-ui-root-path="../../_"></script>

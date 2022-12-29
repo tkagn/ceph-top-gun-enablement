@@ -109,6 +109,8 @@ We then run the client/workstation playbook.
 # ansible-playbook cephadmdeploy/ansible-cephadm-deploy/prepare-client.yaml -i workstation,
 ----
 
+=== Prepare Ceph nodes for deployment
+
 Once the client playbook finishes we can start preparing our ceph clusters, we
 have 8 servers available, four per ceph cluster.
 
