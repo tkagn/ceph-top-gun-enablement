@@ -13,8 +13,8 @@
 <header class="header">
   <nav class="navbar">
     <div class="navbar-brand">
-      <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
-          <img src="../../_/img/header_logo_reverse.svg" height="45px" alt="Ceph">
+      <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">
+          <img src="../../_/img/header_logo_reverse.svg" height="48px" alt="Ceph">
       </a>
       <button class="navbar-burger" data-target="topbar-nav">
         <span></span>
@@ -42,7 +42,7 @@
           <div class="navbar-dropdown">
             <a class="navbar-item" href="https://www.redhat.com/en/blog/channel/red-hat-storage" target="_blank">Our Blog</a>
             <a class="navbar-item" href="https://www.youtube.com/channel/UCoyG8VyvB-XUxQl1mD3T3Gw" target="_blank">Youtube</a>
-            <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">OCS Technology</a>
+            <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">OCS Technology</a>
           </div>
         </div>
       </div>
@@ -106,6 +106,9 @@
   </li>
   <li class="nav-item is-current-page" data-depth="1">
     <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
   </li>
@@ -483,7 +486,7 @@ days will be transitioned to the cloud storage class called <code>AWS</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># aws s3api --profile rgw  --endpoint http://ceph-mon02:8080--region default put-bucket-lifecycle-configuration --lifecycle-configuration  file://transition.json --bucket transition
+<pre># aws s3api --profile rgw  --endpoint http://ceph-mon02:8080 --region default put-bucket-lifecycle-configuration --lifecycle-configuration  file://transition.json --bucket transition
 
 # aws s3api  --profile rgw  --endpoint https://ceph-mon02:8080 --region default get-bucket-lifecycle-configuration --bucket transition
 {
@@ -605,10 +608,10 @@ configuration equals 60 sec, so three days expiration is 3 minutes):</p>
 <div class="content">
 <pre>$ for i in 1 2 3 4 5
 do
-aws s3 --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw --endpoint https://ceph-mon02:8080 --region default cp /etc/hosts s3://transition/transition$i
+aws s3 --profile rgw --endpoint http://ceph-mon02:8080 --region default cp /etc/hosts s3://transition/transition$i
 done
 
-$ aws s3 --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw  --endpoint https://ceph-mon02:8080 --region default ls s3://transition
+$ aws s3  --profile rgw  --endpoint http://ceph-mon02:8080 --region default ls s3://transition
 2022-10-31 10:24:01       3847 transition1
 2022-10-31 10:24:04       3847 transition2
 2022-10-31 10:24:07       3847 transition3
@@ -660,7 +663,7 @@ d9c4f708-5598-4c44-9d36-849552a08c4d.169377.1_transition5</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ aws s3 --profile rgw  --endpoint https://ceph-mon02:8080 --region default ls s3://transition
+<pre>$ aws s3 --profile rgw  --endpoint http://ceph-mon02:8080 --region default ls s3://transition
 
 2022-10-31 17:52:56          0 transition1
 2022-10-31 17:51:59          0 transition2
@@ -675,7 +678,7 @@ class for this object is now AWS so this object has been transitioned into the c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>$ aws s3api --profile rgw  --endpoint https://ceph-mon02:8080 --region default head-object --key transition1 --bucket transition
+<pre>$ aws s3api --profile rgw  --endpoint http://ceph-mon02:8080 --region default head-object --key transition1 --bucket transition
 
 {
 
