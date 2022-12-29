@@ -163,7 +163,7 @@ Check that our new bucket "transition" is using the default-placement placement_
 
 Let’s start configuring the remote cloud service that will be the destination
 of our transitioned objects. In this example, we will create an AWS S3
-bucket.
+bucket called `rgwtransition`.
 
 The idea behind using a namespace bucket is that the data that will be
 transitioned from the RGW on-prem bucket to an S3 AWS bucket so the data will
@@ -176,6 +176,10 @@ objects destination
 
 === Ceph On-premise Cluster Storage Class configuration
 
+
+----
+# aws --profile aws mb s3://rgwtransition
+----
 
 
 === Ceph On-premise Cluster Lifecycle Policy configuration
@@ -208,8 +212,19 @@ AWS S3 endpoint & account credentials we gathered previously:
 
 
 ----
-# radosgw-admin zonegroup placement modify --rgw-zonegroup default --placement-id default-placement --storage-class AWS --tier-config=endpoint=https://s3-openshift-storage.apps.ocp410.0e73azopenshift.com,access_key=AWSACCESSKEY,secret='AWSACCESSSECRET',multipart_sync_threshold=44432,multipart_min_part_size=44432,retain_head_object=true
+# radosgw-admin zonegroup placement modify --rgw-zonegroup default
+# --placement-id default-placement --storage-class AWS
+# --tier-config=endpoint=https://s3.us-east-1.amazonaws.com,access_key=AWSACCESSKEY,secret='AWSACCESSSECRET',multipart_sync_threshold=44432,multipart_min_part_size=44432,retain_head_object=true,target_path='rgwtransition'
 ----
+
+
+[TIP]
+====
+We are using `target_path='rgwtransition'` to set a specific bucket in the
+cloudprovider that we pre-created, The target path specifies a prefix to which the source ‘bucket-name/object-name’ is appended. If not specified the target_path created is “rgwx-${zonegroup}-${storage-class}-cloud-bucket”.
+====
+
+
 
 === Testing our Lifecycle Policy and Object Transition to the cloud
 
@@ -230,10 +245,10 @@ days will be transitioned to the cloud storage class called `AWS`
             "Transitions": [
                 {
                     "Days": 30,
-                    "StorageClass": "AZURE"
+                    "StorageClass": "AWS"
                 }
             ],
-            "ID": "Transition Objects in bucket to AZURE Blob after 30 days"
+            "ID": "Transition Objects in bucket to AWS Blob after 30 days"
         }
     ]
         }
@@ -244,7 +259,7 @@ Using the AWS cli and the transitionuser profile, we will apply/put the bucket-l
 ----
 # aws s3api --profile rgw  --endpoint http://ceph-mon02:8080--region default put-bucket-lifecycle-configuration --lifecycle-configuration  file://transition.json --bucket transition
 
-$ aws s3api  --profile rgw  --endpoint https://ceph-mon02:8080 --region default get-bucket-lifecycle-configuration --bucket transition
+# aws s3api  --profile rgw  --endpoint https://ceph-mon02:8080 --region default get-bucket-lifecycle-configuration --bucket transition
 {
     "Rules": [
         {
@@ -254,7 +269,7 @@ $ aws s3api  --profile rgw  --endpoint https://ceph-mon02:8080 --region default 
             "Transitions": [
                 {
                     "Days": 30,
-                    "StorageClass": "AZURE"
+                    "StorageClass": "AWS"
                 }
             ]
         }
@@ -290,7 +305,7 @@ $ radosgw-admin lc get --bucket transition
             "noncur_expiration": 0,
             "mp_expiration": 0,
             "transitions": {
-                "AZURE": {
+                "AWS": {
                     "days": 30
                 }
             },
@@ -299,9 +314,9 @@ $ radosgw-admin lc get --bucket transition
     },
     "rule_map": [
         {
-            "id": "Transition Objects in bucket to AZURE Blob after 30 days",
+            "id": "Transition Objects in bucket to AWS after 30 days",
             "rule": {
-                "id": "Transition Objects in bucket to AZURE Blob after 30 days",
+                "id": "Transition Objects in bucket to AWS after 30 days",
                 "prefix": "",
                 "status": "Enabled",
                 "expiration": {
@@ -323,10 +338,10 @@ $ radosgw-admin lc get --bucket transition
                     }
                 },
                 "transitions": {
-                    "AZURE": {
+                    "AWS": {
                         "days": "30",
                         "date": "",
-                        "storage_class": "AZURE"
+                        "storage_class": "AWS"
                     }
                 },
                 "noncur_transitions": {},
@@ -355,10 +370,10 @@ We know upload some objects to our on-prem transition bucket:
 ----
 $ for i in 1 2 3 4 5 
 do
-aws s3 --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw --endpoint https://ceph-bos-2.makestoragegreatagain.com:8043 --region default cp /etc/hosts s3://transition/transition$i
+aws s3 --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw --endpoint https://ceph-mon02:8080 --region default cp /etc/hosts s3://transition/transition$i
 done
  
-$ aws s3 --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw  --endpoint https://ceph-bos-2.makestoragegreatagain.com:8043 --region default ls s3://transition
+$ aws s3 --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw  --endpoint https://ceph-mon02:8080 --region default ls s3://transition
 2022-10-31 10:24:01       3847 transition1
 2022-10-31 10:24:04       3847 transition2
 2022-10-31 10:24:07       3847 transition3
@@ -390,17 +405,12 @@ If we now run the radosgw-admin lc list we should the LifeCycle for our transiti
 $ radosgw-admin lc list
 
 [
-
     {
 
         "bucket": ":transition:d9c4f708-5598-4c44-9d36-849552a08c4d.170017.5",
-
         "started": "Mon, 31 Oct 2022 16:52:56 GMT",
-
         "status": "COMPLETE"
-
     }
-
 ]
 ----
 
@@ -409,7 +419,7 @@ If we now list the objects available in the transition bucket on our on-premise 
 
 
 ----
-$ aws s3 --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw  --endpoint https://ceph-bos-2.makestoragegreatagain.com:8043 --region default ls s3://transition
+$ aws s3 --profile rgw  --endpoint https://ceph-mon02:8080 --region default ls s3://transition
 
 2022-10-31 17:52:56          0 transition1
 2022-10-31 17:51:59          0 transition2
@@ -419,10 +429,11 @@ $ aws s3 --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw 
 ----
 
 
-If we check the head of the object using the s3api we can see that the storage class for this object is now CLOUDTIER so this object has been transitioned into the cloud provider:
+If we check the head of the object using the s3api we can see that the storage
+class for this object is now AWS so this object has been transitioned into the cloud provider:
 
 ----
-$ aws s3api   --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile rgw  --endpoint https://ceph-bos-2.makestoragegreatagain.com:8043 --region default head-object --key transition1 --bucket transition
+$ aws s3api --profile rgw  --endpoint https://ceph-mon02:8080 --region default head-object --key transition1 --bucket transition
 
 {
 
@@ -437,4 +448,37 @@ $ aws s3api   --ca-bundle  /etc/pki/ca-trust/source/anchors/myCA.pem --profile
 }
 ----
 
+If we check in AWS we can see that the objects are available in AWS S3. Due to
+API limitations there is no way to preserve original object modification time
+and ETag but they get stored as metadata attributes on the destination objects.
 
+----
+$ aws s3api  --profile aws head-object --bucket rgwtransition --key transition/transition2
+{
+    "AcceptRanges": "bytes",
+    "LastModified": "2022-10-31T16:51:58+00:00",
+    "ContentLength": 3847,
+    "ETag": "\"46ecb42fd0def0e42f85922d62d06766\"",
+    "CacheControl": "private",
+    "ContentType": "application/octet-stream",
+    "Metadata": {
+        "rgwx-source": "rgw",
+        "rgwx-source-key": "transition2",
+        "rgwx-source-etag": "46ecb42fd0def0e42f85922d62d06766",
+        "rgwx-source-mtime": "1667234534.721441325",
+        "rgwx-versioned-epoch": "0"
+    }
+}
+----
+
+To avoid object names collision across various buckets, source bucket name is prepended to the target object name. If the object is versioned, object versionid is appended to the end.
+
+Below is the sample object name format:
+
+`s3://<target_path>/<source_bucket_name>/<source_object_name>(-<source_object_version_id>)`
+
+
+For versioned and locked objects, similar semantics as that of LifecycleExpiration are applied as stated below.
+
+- If the object is current, post transitioning to cloud, it is made noncurrent with delete marker created.
+- If the object is noncurrent and is locked, its transition is skipped.
