@@ -25,6 +25,7 @@ rules/policies that give access to certain roles.
 Just as a simplified example. With role policies, you would be able to
 get this info with a single command:
 
+----
 rgw policy-role list role1
 
 role1:
@@ -32,17 +33,17 @@ role1:
     - bucket1/folder1 ro
     - bucket2/folder2 rw
     - bucket3/folder3/db  rw 
+----
 
 To achieve the same with the policy in buckets you would need to run 3
 commands and aggregate the info for role1:
 
+----
 get-policy bucket1
 
 role1: /folder1 ro
 role2: /folder1 rw
 role3: /folder1 ro
-
- +
 
 get-policy bucket2
 
@@ -53,6 +54,7 @@ get-policy bucket3
 
 role1: /folder3/db rw
 role3: /folder3/db2 rw
+----
 
 In any case we are going  to share a couple of examples of each, role
 and bucket policy. 
@@ -68,8 +70,6 @@ called admin, I created the following resources:
 * A role called testrole
 * A local RGW user called testuser
 * A role document policy to give testuser access to the testrole.
-
- +
 
 ....
 # aws --profile admin --endpoint http://10.10.0.10:8080 s3 mb s3://bucket-new
@@ -492,7 +492,6 @@ The policy we are using for the bucket is the following:
 }
 ....
 
- +
 
 [NOTE] 
 ====
@@ -539,8 +538,6 @@ in account that this BZ only affects role policies, bucket policies work
 fine.
 ====
 
- +
-
 Let's briefly explain the different sections of the policy. In the first
 statement we are allowing access to the bucket-data bucket:
 
@@ -565,7 +562,7 @@ statement we are allowing access to the bucket-data bucket:
     },
 ....
 
- In the next statement we are allowing access to read/GET objects and
+In the next statement we are allowing access to read/GET objects and
 subfolders under the read-folder: 
 
 ....
@@ -665,7 +662,7 @@ Found 1 items
 -rw-rw-rw-   1 hadoop hadoop        585 2021-06-19 11:58 s3a://bucket-data/read-folder/read-object
 ....
 
- We can also read/GET from the objects inside the read-folder:
+We can also read/GET from the objects inside the read-folder:
 
 ....
 [hadoop@hadoop hadoop]$ hdfs dfs  -cat  s3a://bucket-data/read-folder/read-object
@@ -675,7 +672,7 @@ Found 1 items
 10.10.0.5 bastion.cephocs.com bastion
 ....
 
- But we can't delete or write inside the read-folder:
+But we can't delete or write inside the read-folder:
 
 ....
 [hadoop@hadoop hadoop]$ hdfs dfs  -rm  s3a://bucket-data/read-folder/read-object
@@ -684,7 +681,6 @@ rm: s3a://bucket-data/read-folder/read-object: delete on s3a://bucket-data/read-
 put: read-folder/hosts-file._COPYING_: put on read-folder/hosts-file._COPYING_: com.amazonaws.services.s3.model.AmazonS3Exception: null (Service: Amazon S3; Status Code: 403; Error Code: AccessDenied; Request ID: tx0000000000000003b6a2c-0060ceedf9-fa06c-lab1; S3 Extended Request ID: fa06c-lab1-lab), S3 Extended Request ID: fa06c-lab1-lab:AccessDenied
 ....
 
- 
 
 If we now try to assume the writerole with the readuser, it will fail: 
 
@@ -935,7 +931,6 @@ but removing the principal statement:
 }
 ....
 
- +
 
 One thing to take in account is that the radosgw-admin command we use to
 apply the role policy doesn’t like spaces in the .json, so we need to
@@ -977,7 +972,6 @@ RGW user, and assume the readrole:
 </property>
 ....
 
- +
 
 With this in place let’s test the access with the hdfs command. We can
 access the bucket and we will be able to list all folders at the root

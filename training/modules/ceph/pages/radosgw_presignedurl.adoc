@@ -1,3 +1,8 @@
+= S3 presigned URL
+
+:numbered:
+
+
 == Introduction
 
 All objects and buckets are private by default. However, you can use a presigned URL to optionally share objects or allow your customers/users to upload objects to buckets without AWS security credentials or permissions.
@@ -9,6 +14,9 @@ You can use presigned URLs to generate a URL that can be used to access your Ama
 RGW S3 checks the expiration date and time of a signed URL at the time of the HTTP request. For example, if a client begins to download a large file immediately before the expiration time, the download should complete even if the expiration time passes during the download. If the connection drops and the client tries to restart the download after the expiration time passes, the download will fail.
 
 == Hands-on
+
+We have a bucket with some files available, we want to give GET access to file1
+to an external user creating a pre-signed URL
 
 ----
 # aws --endpoint  http://proxy01:8000 s3 ls s3://bucket1/
