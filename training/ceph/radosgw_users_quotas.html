@@ -102,6 +102,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_sts_bucket_role_policy.html">RGW Bucket vs Role Policy</a>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -111,6 +114,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="trouble-shooting-nearfull-osds.html">Troubleshooting nearfull OSDs</a>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -118,7 +124,7 @@
     <span class="nav-text">Ceph Stretched</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="#rhcs-stretched-deploy.adoc">Ceph Stretch Mode</a>
+    <a class="nav-link" href="rhcs-stretched-deploy.html">Ceph Stretch Mode</a>
   </li>
 </ul>
   </li>
@@ -307,7 +313,7 @@ Swift users are out of the scope of this workshop
         {
             "user": "user2",
             "access_key": "S3user2",
-            "secret_key": "9aaLpyI5jxpIeaVWbQOIKR0LP9HkWYZ9OnhhptIV"
+            "secret_key": "S3SECRETKEY"
         }
     ],
     "swift_keys": [],
@@ -355,12 +361,12 @@ the keys for user2, we can add a new key pair</p>
         {
             "user": "user2",
             "access_key": "B7WGSZ1PMMA4RHHVMWK5",
-            "secret_key": "MDgkAPD3dT0nhqyFgzp5wD9WNSjuwJ76d88MVBLm"
+            "secret_key": "S3SECRETKEYNEW"
         },
         {
             "user": "user2",
             "access_key": "S3user2",
-            "secret_key": "9aaLpyI5jxpIeaVWbQOIKR0LP9HkWYZ9OnhhptIV"
+            "secret_key": "S3SECRETKEY"
         }
     ],
     "swift_keys": [],
@@ -407,7 +413,7 @@ old key pair.</p>
         {
             "user": "user2",
             "access_key": "B7WGSZ1PMMA4RHHVMWK5",
-            "secret_key": "MDgkAPD3dT0nhqyFgzp5wD9WNSjuwJ76d88MVBLm"
+            "secret_key": "S3SECRETKEYNEW"
         }
     ],
     "swift_keys": [],
@@ -453,7 +459,7 @@ old key pair.</p>
         {
             "user": "user2",
             "access_key": "B7WGSZ1PMMA4RHHVMWK5",
-            "secret_key": "MDgkAPD3dT0nhqyFgzp5wD9WNSjuwJ76d88MVBLm"
+            "secret_key": "S3SECRETKEYNEW"
         }
     ],
     "swift_keys": [],

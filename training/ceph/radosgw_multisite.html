@@ -102,6 +102,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_sts_bucket_role_policy.html">RGW Bucket vs Role Policy</a>
   </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -111,6 +114,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="trouble-shooting-nearfull-osds.html">Troubleshooting nearfull OSDs</a>
   </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -118,7 +124,7 @@
     <span class="nav-text">Ceph Stretched</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="#rhcs-stretched-deploy.adoc">Ceph Stretch Mode</a>
+    <a class="nav-link" href="rhcs-stretched-deploy.html">Ceph Stretch Mode</a>
   </li>
 </ul>
   </li>
@@ -149,6 +155,11 @@
 <button class="nav-toggle"></button>
   <a href="../index.html" class="home-link"></a>
 <nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
+    <li>Ceph RadosGW</li>
+    <li><a href="radosgw_multisite.html">RGW Multisite Replication</a></li>
+  </ul>
 </nav>
   <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/radosgw_multisite.adoc">Edit this Page</a></div>
 </div>
@@ -339,6 +350,28 @@ this section, and continue with section <code>Configure the Secondary Zone</code
 </div>
 </div>
 </li>
+</ol>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If you have more than one RGW service running per zone, as you would do for
+production, you can add all the rgw address to the endpoints list
+--endpoints=http://proxy01:8000,http://ceph-node02:8000 for example, if we want
+to the sync to survive DNS outages we can use the IP for the endpoints instead
+of the Hostnames.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
 <p>Create a zone:</p>
 <div class="listingblock">
@@ -790,6 +823,25 @@ full copy of the master zone is being synced with the secondary zone</p>
 </tr>
 </table>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If you encounter sync errors in your configuration, with shards falling behind
+, you can run the commandi <code># radosgw-admin  sync error list</code>.
+Also increasing the verbosity of
+the RGW logs is a good place to start looking for errors, to increase the
+verbosity you can follow the steps of this
+<a href="https://access.redhat.com/solutions/2085183">KCS</a></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>After a while if we run the same command we will probably see metadata and data in sync:</p>
 </div>
@@ -850,7 +902,7 @@ of the zones in the zonegroup</p>
 </div>
 <div class="paragraph">
 <p>We can see the sync direction configuration using <code>radosgw-admin sync info</code>
-command, we can see than sources and destinations are replicating <code>*</code> all
+command, we can see that sources and destinations are replicating <code>*</code> all
 buckets and their data between sites.</p>
 </div>
 <div class="listingblock">
@@ -907,8 +959,446 @@ buckets and their data between sites.</p>
     ],</pre>
 </div>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
 <div class="paragraph">
 <p>For multi-site only, you can check out the metadata log (mdlog), the bucket index log (bilog) and the data log (datalog). You can list them and also trim them which is not needed in most cases as rgw_sync_log_trim_interval is set to 20 minutes as default. You shouldn’t have to trim it at any time as it could cause side effects otherwise.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s check if metadata and data replication is working
+fine, all metadata changes have to be in the primary site, so I&#8217;m going to
+create a user, and we can check how it&#8217;s synced to the secondary site.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>[ceph-node01 ~]# radosgw-admin user create --uid=multiuser --display-name="multiuser" --access-key=multiuser --secret=multiuser --system
+
+[root@ceph-mon01 ~]# radosgw-admin user list
+[
+    "syncuser",
+    "dashboard",
+    "multiuser"
+]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Using the multiuser user we just created let&#8217;s upload some objects from each
+site and check that they are getting replicated in both directions</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>We change the endpoint in the AWS CLI when we want to interact with the primary
+or secondary cluster, proxy01 is zone1, and proxy02 is zone2.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># aws --endpoint http://proxy01:8000 s3 mb s3://bucket1
+# aws --endpoint http://proxy01:8000 s3 ls
+2022-12-29 03:59:14 bucket1
+# aws --endpoint http://proxy02:8000 s3 ls
+2022-12-29 03:59:14 bucket1
+# aws --endpoint  http://proxy02:8000 s3 ls s3://bucket1/
+2022-12-29 04:18:01       1330 file1
+# aws --endpoint  http://proxy02:8000 s3 cp /etc/hosts s3://bucket1/file2
+# aws --endpoint  http://proxy01:8000 s3 ls s3://bucket1/
+2022-12-29 04:18:01       1330 file1
+2022-12-29 04:18:54       1330 file2</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We have now confirmed that metadata and data sync replication is working fine
+in our deployment.</p>
+</div>
+<div class="paragraph">
+<p>There is a new feature in RGW multisite called Sync policies that gives greater
+flexibility on how we sync our data.</p>
+</div>
+<div class="paragraph">
+<p>Multisite bucket-granularity sync policy provides fine grained control of data movement between buckets in different zones. It extends the zone sync mechanism. Previously buckets were being treated symmetrically, that is – each (data) zone holds a mirror of that bucket that should be the same as all the other zones. Whereas leveraging the bucket-granularity sync policy is possible for buckets to diverge, and a bucket can pull data from other buckets (ones that don’t share its name or its ID) in different zone. The sync process was assuming therefore that the bucket sync source and the bucket sync destination were always referring to the same bucket, now that is not the case anymore.</p>
+</div>
+<div class="paragraph">
+<p>The sync policy supersedes the old zonegroup coarse configuration (sync_from*). The sync policy can be configured at the zonegroup level (and if it is configured it replaces the old style config), but it can also be configured at the bucket level.</p>
+</div>
+<div class="paragraph">
+<p>In the sync policy multiple groups that can contain lists of data-flow configurations can be defined, as well as lists of pipe configurations. The data-flow defines the flow of data between the different zones. It can define symmetrical data flow, in which multiple zones sync data from each other, and it can define directional data flow, in which the data moves in one way from one zone to another.</p>
+</div>
+<div class="paragraph">
+<p>This new feature opens up many configuration options for our multisite
+replication, in this lab we are just going to show one example, were we
+configure bucket replication granularity, and only configure replication
+between sites for bucket1. you can check more examples in the upstream <a href="https://docs.ceph.com/en/quincy/radosgw/multisite-sync-policy/#examples">DOC</a></p>
+</div>
+<div class="paragraph">
+<p>We configure the zonegroup sync policy group that needs to be in place(flow<br>
+pipe) to be able to configure bucket sync policy</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Any changes to the zonegroup policy needs to be applied on the zonegroup master zone, and require period update and commit.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>--------------------------------------------------------------------+
+|  Value                     | Description                            |
+====================================================================+
+| <code>enabled</code>                | sync is allowed and enabled            |
+--------------------------------------------------------------------+
+| <code>allowed</code>                | sync is allowed                        |
+--------------------------------------------------------------------+
+| <code>forbidden</code>              | sync (as defined by this group) is not |
+|                            | allowed and can override other groups  |
+--------------------------------------------------------------------+</p>
+</div>
+<div class="paragraph">
+<p>We create the zonegroup sync group and set the replication status to allowed</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># radosgw-admin sync group create --group-id=group1 --status=allowed
+{
+    "groups": [
+        {
+            "id": "group1",
+            "data_flow": {},
+            "pipes": [],
+            "status": "allowed"
+        }
+    ]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now we create a flow for the group, setting the flow bi-derectional/symmetrical
+for zones: zone1,zone2</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># radosgw-admin sync group flow create --group-id=group1  --flow-id=flow-symmetrical --flow-type=symmetrical --zones=zone1,zone2
+{
+    "groups": [
+        {
+            "id": "group1",
+            "data_flow": {
+                "symmetrical": [
+                    {
+                        "id": "flow-symmetrical",
+                        "zones": [
+                            "zone2",
+                            "zone1"
+                        ]
+                    }
+                ]
+            },
+            "pipes": [],
+            "status": "allowed"
+        }
+    ]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Finally we set on the zonegroup sync policy a pipe were we allow replication of
+all buckets from all zones in the group</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>radosgw-admin sync group pipe create --group-id=group1 --pipe-id=pipe1 --source-zones='*' --source-bucket='*' --dest-zones='*' --dest-bucket='*'
+{
+    "groups": [
+        {
+            "id": "group1",
+            "data_flow": {
+                "symmetrical": [
+                    {
+                        "id": "flow-symmetrical",
+                        "zones": [
+                            "zone2",
+                            "zone1"
+                        ]
+                    }
+                ]
+            },
+            "pipes": [
+                {
+                    "id": "pipe1",
+                    "source": {
+                        "bucket": "*",
+                        "zones": [
+                            "*"
+                        ]
+                    },
+                    "dest": {
+                        "bucket": "*",
+                        "zones": [
+                            "*"
+                        ]
+                    },
+                    "params": {
+                        "source": {
+                            "filter": {
+                                "tags": []
+                            }
+                        },
+                        "dest": {},
+                        "priority": 0,
+                        "mode": "system",
+                        "user": ""
+                    }
+                }
+            ],
+            "status": "allowed"
+        }
+    ]
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We need to do a period update so the changes we made to the zonegroup
+replication are reflected on both sites</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># radosgw-admin period update --commit</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>But remember that the status of the replication for the zonegroup is set to
+<code>allowed</code> not <code>enabled</code> so there is currently no replication between sites, we
+can confirm it with the s3 cli.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>[root@ceph-node01 ~]# aws --endpoint  http://proxy01:8000 s3 cp /etc/hosts s3://bucket1/file11
+upload: ../etc/hosts to s3://bucket1/file11
+[root@ceph-node01 ~]# aws --endpoint  http://proxy01:8000 s3 ls s3://bucket1/
+2022-12-29 04:18:01       1330 file1
+2022-12-29 04:38:20       1330 file11
+2022-12-29 04:18:54       1330 file2
+[root@ceph-node01 ~]# aws --endpoint  http://proxy02:8000 s3 ls s3://bucket1/
+2022-12-29 04:18:01       1330 file1
+2022-12-29 04:18:54       1330 file2</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now that the zonegroup is in place and is <code>allowing</code> replication, we can
+configure the sync policy at the bucket level, we only want to enable sync for
+bucket <code>bucket1</code> , we create a new sync group and pipe for <code>bucket1</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># radosgw-admin sync group create --bucket=bucket1 --group-id=bucket1-default --status=enabled
+{
+    "groups": [
+        {
+            "id": "bucket1-default",
+            "data_flow": {},
+            "pipes": [],
+            "status": "enabled"
+        }
+    ]
+}
+
+# radosgw-admin sync group pipe create --bucket=bucket1 --group-id=bucket1-default --pipe-id=pipe1 --source-zones='*' --dest-zones='*'
+# radosgw-admin sync group get --bucket bucket1
+[
+    {
+        "key": "bucket1-default",
+        "val": {
+            "id": "bucket1-default",
+            "data_flow": {},
+            "pipes": [
+                {
+                    "id": "pipe1",
+                    "source": {
+                        "bucket": "*",
+                        "zones": [
+                            "*"
+                        ]
+                    },
+                    "dest": {
+                        "bucket": "*",
+                        "zones": [
+                            "*"
+                        ]
+                    },
+                    "params": {
+                        "source": {
+                            "filter": {
+                                "tags": []
+                            }
+                        },
+                        "dest": {},
+                        "priority": 0,
+                        "mode": "system",
+                        "user": "multiuser"
+                    }
+                }
+            ],
+            "status": "enabled"
+        }
+    }
+]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We can check the replication policies configured for a bucket with the help of
+the <code>radosgw-admin sync info</code> command, because the flow we configured for
+replication is bi-directional, we can see that bucket replication for bucket1
+is configured as source and destination</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># radosgw-admin sync info --bucket bucket1
+{
+    "sources": [
+        {
+            "id": "pipe1",
+            "source": {
+                "zone": "zone2",
+                "bucket": "bucket1:a315bff5-2e58-495b-b297-95383c1e0ab3.24584.1"
+            },
+            "dest": {
+                "zone": "zone1",
+                "bucket": "bucket1:a315bff5-2e58-495b-b297-95383c1e0ab3.24584.1"
+            },
+            "params": {
+                "source": {
+                    "filter": {
+                        "tags": []
+                    }
+                },
+                "dest": {},
+                "priority": 0,
+                "mode": "system",
+                "user": "multiuser"
+            }
+        }
+    ],
+    "dests": [
+        {
+            "id": "pipe1",
+            "source": {
+                "zone": "zone1",
+                "bucket": "bucket1:a315bff5-2e58-495b-b297-95383c1e0ab3.24584.1"
+            },
+            "dest": {
+                "zone": "zone2",
+                "bucket": "bucket1:a315bff5-2e58-495b-b297-95383c1e0ab3.24584.1"
+            },
+            "params": {
+                "source": {
+                    "filter": {
+                        "tags": []
+                    }
+                },
+                "dest": {},
+                "priority": 0,
+                "mode": "system",
+                "user": "multiuser"
+            }
+        }
+    ],
+    "hints": {
+        "sources": [],
+        "dests": []
+    },
+    "resolved-hints-1": {
+        "sources": [],
+        "dests": []
+    },
+    "resolved-hints": {
+        "sources": [],
+        "dests": []
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Bucket policy modifications don&#8217;t need a period update, they are automaticly
+detected, so let&#8217;s go ahead and test if bucket replication is working for
+bucket1:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># aws --endpoint  http://proxy01:8000 s3 cp /etc/hosts s3://bucket1/file111
+upload: ../etc/hosts to s3://bucket1/file111
+# aws --endpoint  http://proxy02:8000 s3 ls s3://bucket1/
+2022-12-29 04:18:01       1330 file1
+2022-12-29 04:42:34       1330 file111
+2022-12-29 04:18:54       1330 file2</pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>You could achieve the same bucket granular replication by using the
+<code>radosgw-admin bucket sync [enable/disable] --bucket=&lt;bucket&gt;</code> command, but
+take into account the multisite sync policies are so much more powerfull and
+flexible</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Just to double check we can create a new bucket called <code>bucket2</code> and see how
+this bucket is not getting replicated as there is no policy in place to enable
+this replication.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># aws --endpoint http://proxy01:8000 s3 mb s3://bucket2
+# aws --endpoint  http://proxy01:8000 s3 cp /etc/hosts s3://bucket2/file1
+upload: ../etc/hosts to s3://bucket2/file1
+# aws --endpoint  http://proxy02:8000 s3 ls s3://bucket2/
+#</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we want to also enable sync in this bucket we can go ahead with</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># radosgw-admin sync group create --bucket=bucket2 --group-id=bucket2-default --status=enabled
+# radosgw-admin sync group pipe create --bucket=bucket2 --group-id=bucket2-default --pipe-id=pipe1 --source-zones='*' --dest-zones='*'
+# aws --endpoint  http://proxy01:8000 s3 cp /etc/hosts s3://bucket2/file2
+upload: ../etc/hosts to s3://bucket2/file2
+# aws --endpoint  http://proxy02:8000 s3 ls s3://bucket2/
+2022-12-29 05:10:03       1330 file2</pre>
+</div>
 </div>
 </div>
 </div>

@@ -102,6 +102,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_sts_bucket_role_policy.html">RGW Bucket vs Role Policy</a>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -111,6 +114,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="trouble-shooting-nearfull-osds.html">Troubleshooting nearfull OSDs</a>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -118,7 +124,7 @@
     <span class="nav-text">Ceph Stretched</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="#rhcs-stretched-deploy.adoc">Ceph Stretch Mode</a>
+    <a class="nav-link" href="rhcs-stretched-deploy.html">Ceph Stretch Mode</a>
   </li>
 </ul>
   </li>
@@ -438,7 +444,7 @@ the objects are stored in the <code>ssd</code> placement target.</p>
         {
             "user": "test-ssd-placement-target",
             "access_key": "PIC2A85DZPEJVNKK8MZT",
-            "secret_key": "BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy"
+            "secret_key": "SECRETKEY"
         }
     ],
     "swift_keys": [],
@@ -485,7 +491,7 @@ target we have created before:</p>
         {
             "user": "test-ssd-placement-target",
             "access_key": "PIC2A85DZPEJVNKK8MZT",
-            "secret_key": "BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy"
+            "secret_key": "SECRETKEY"
         }
     ],
     "swift_keys": [],
@@ -523,7 +529,7 @@ target we have created before:</p>
 $ cat &lt;&lt; EOF &gt; ~/s3cmd-credentials/test-ssd-placement-target.conf
 [default]
 access_key = PIC2A85DZPEJVNKK8MZT
-secret_key = BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy
+secret_key = SECRETKEY
 host_base = s3zone1.example.com:80
 host_bucket = s3zone1.example.com:80
 use_https = False
@@ -718,7 +724,7 @@ upon bucket creation:</p>
         {
             "user": "test-placement-target-no-tag",
             "access_key": "DZR9KE6TYN92KIVGJZX4",
-            "secret_key": "nBKWn83pz5O0aEfT741FLa0Azq7ua3cNzAoOhl2z"
+            "secret_key": "SECRETKEY2FAR"
         }
     ],
     "swift_keys": [],
@@ -741,7 +747,7 @@ target:</p>
 <pre>$ cat &lt;&lt; EOF &gt; ~/s3cmd-credentials/test-placement-target-no-tag.conf
 [default]
 access_key =DZR9KE6TYN92KIVGJZX4
-secret_key = nBKWn83pz5O0aEfT741FLa0Azq7ua3cNzAoOhl2z
+secret_key = SECRETKEY2FAR
 host_base = s3zone1.example.com:80
 host_bucket = s3zone1.example.com:80
 use_https = False
@@ -774,7 +780,7 @@ Bucket 's3://test-bucket-test-placement-target-no-tag/' created</pre>
 
 s3_endpoint="http://proxy01:8000"
 s3_access_key="PIC2A85DZPEJVNKK8MZT"
-s3_secret_key="BQxFf5S8P8wBnhARQOv9t0OJCKNizh80JNpHlxYy"
+s3_secret_key="SECRETKEY"
 s3client = boto3.client('s3', use_ssl=False, verify=False, endpoint_url=s3_endpoint, aws_access_key_id=s3_access_key, aws_secret_access_key=s3_secret_key)
 location = {'LocationConstraint': ":ssd"}
 s3client.create_bucket(Bucket="boto3-ssd-placement-target",CreateBucketConfiguration=location)
