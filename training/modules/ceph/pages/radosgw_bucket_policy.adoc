@@ -25,6 +25,8 @@ The Ceph Object Gateway supports a subset of the Amazon S3 policy language appli
 
 Giving external users access to our buckets.
 
+image::S3-bucket-access-from-another-AWS-account-1.png[S3 bucket,740,580]
+
 In this lab, we are going to create two new users:
 
 * user1

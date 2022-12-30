@@ -6,7 +6,9 @@ CephFS achieves these goals through the use of some novel architectural choices.
 
 Access to data is coordinated through the cluster of MDS which serve as authorities for the state of the distributed metadata cache cooperatively maintained by clients and MDS. Mutations to metadata are aggregated by each MDS into a series of efficient writes to a journal on RADOS; no metadata state is stored locally by the MDS. This model allows for coherent and rapid collaboration between clients within the context of a POSIX file system.
 
-image::cephfs-architecture.svg[Cephfs Architecture]
+image::cephfs-architecture.svg[cephfs,740,580]
+
+
 
 == MDS the metadata server
 

@@ -60,7 +60,7 @@ There are many ways to deploy the RADOS object gateway on of which is through a 
 
 In this section, you create a realm, a zone group, and a zone, and then specify a placement specification with the host name when you deploy the RGW daemons.
 
-image::gateway-realm.png[RGW Realm]
+image::gateway-realm.png[RGW Realm,740,580]
 
 Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_osd` configuration setting is lower than required. When you create more than seven pools each of PGs and PGPs, with the pool size being 32, then you must increase the value of `mon_max_pg_per_osd` from `256` to `512` in order to create the additional pools.
 

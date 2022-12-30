@@ -41,7 +41,7 @@ We haven’t tested this configuration but looking at the S3A available credenti
 The lifetime of a token can be set by the user when calling the GetSessionToken API call, with the parameter ‘DurationSeconds’, you can set this option to the maximum configured in RGW by the ceph configuration parameter ‘rgw sts max session duration’. So if needed the duration/expiration of a token can be configured to the longest running job. There is also a minimum value for the DurationSeconds which is dictated by the AWS STS api, this value is 900 seconds and cannot be lowered. https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html
 To partially reduce the security concerns we have with LDAP, we can deploy dedicated STS RGW services that would only provide the STS API endpoint, so we would reduce the exposure of  the AD user credentials in the RGW log files when in debug mode 20 only to a couple of RGW nodes, as the users would only send their AD credentials to the dedicated STS RGW endpoints to get their temporary credentials, then they would access the S3 RGW endpoints using the STS temporary keys.
 
-image:::STS_ligth.png[STS light]
+image:::STS_ligth.png[STS light,840,680]
 
 === Keystone Authentication.
 Keystone is the Openstack authentication & authorization service available in the Red Hat Openstack product.
