@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <title>RGW Authentication/Authorization. :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_auth.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -105,10 +105,10 @@
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+    <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
+    <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
   </li>
@@ -179,8 +179,24 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
+<h1 class="page">RGW Authentication/Authorization.</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="ulist">
+<div class="title">Goals</div>
+<ul>
+<li>
+<p>Review RGW Authentication methods</p>
+</li>
+<li>
+<p>Evaluate Pros and Cons of Each Auth Method</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
 <div class="sect1">
-<h2 id="_rgw_authenticationauthorization"><a class="anchor" href="#_rgw_authenticationauthorization"></a>RGW Authentication/Authorization.</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>In order to access Object Storage using the s3 protocol you need to provide a s3 access key and secret key. The actual content of the access key can be varied by implementation of the s3 api but it serves as your identity. When you send a request to the S3 api, the api will check it knows about your s3 access key and lookup the associated secret key. The secret key is a shared secret between you and the S3 api and should not be sent over the wire to S3. Instead the secret key is used to create a Hash-based Message Authentication Code (HMAC) to sign each request that is sent to s3 where it will be validated and upon successful validation will be executed. S3 treats a successful validation as proof that you hold the secret key and therefore are the identity you have sent.</p>
@@ -216,10 +232,10 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_radosgw_authentication_methods"><a class="anchor" href="#_radosgw_authentication_methods"></a>RadosGW authentication methods.</h2>
+<h2 id="_radosgw_authentication_methods"><a class="anchor" href="#_radosgw_authentication_methods"></a>2. RadosGW authentication methods.</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_rgw_local_user_database_using_sts"><a class="anchor" href="#_rgw_local_user_database_using_sts"></a>RGW local user database using STS.</h3>
+<h3 id="_rgw_local_user_database_using_sts"><a class="anchor" href="#_rgw_local_user_database_using_sts"></a>2.1. RGW local user database using STS.</h3>
 <div class="paragraph">
 <p>RadosGW by default has a local user database to manage authentication and authorization, the user information and credentials are stored in a rados pool, so there is no extra work needed to setup this authentication setup, it works with STS, an admin user can create roles and policies for the roles and then indicate the RGW local users that will be authorized to assume the new role.</p>
 </div>
@@ -233,7 +249,7 @@
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ldap_authentication"><a class="anchor" href="#_ldap_authentication"></a>LDAP authentication</h3>
+<h3 id="_ldap_authentication"><a class="anchor" href="#_ldap_authentication"></a>2.2. LDAP authentication</h3>
 <div class="paragraph">
 <p>We can configure LDAP as an authentication backend for RadosGW, the configuration is straightforward; we only have to set some parameters in the RGW config, like LDAP search filters, bind users,etc.</p>
 </div>
@@ -246,7 +262,7 @@ One important drawback using LDAP is the security concerns of the current implem
 </div>
 </div>
 <div class="sect2">
-<h3 id="_ldap_authentication_with_sts_lite"><a class="anchor" href="#_ldap_authentication_with_sts_lite"></a>LDAP authentication with STS-Lite</h3>
+<h3 id="_ldap_authentication_with_sts_lite"><a class="anchor" href="#_ldap_authentication_with_sts_lite"></a>2.3. LDAP authentication with STS-Lite</h3>
 <div class="paragraph">
 <p>LDAP is able to implement the GetSessionToken STS API call, so all the same points would be valid from the previous LDAP chapters, with the difference that with this implementation we would be able to use temporary credentials(STS), so the user will only use his ldap user/password base64 encoded key once to get the temporary credentials and token, and from that point use the new provided credentials on the application.
 The advantage of this approach is that the user&#8217;s ldap credentials are only used once to get access to the temporary STS credentials, so we are reducing the risk of exposing the user AD credentials.
@@ -262,7 +278,7 @@ To partially reduce the security concerns we have with LDAP, we can deploy dedic
 </div>
 </div>
 <div class="sect2">
-<h3 id="_keystone_authentication"><a class="anchor" href="#_keystone_authentication"></a>Keystone Authentication.</h3>
+<h3 id="_keystone_authentication"><a class="anchor" href="#_keystone_authentication"></a>2.4. Keystone Authentication.</h3>
 <div class="paragraph">
 <p>Keystone is the Openstack authentication &amp; authorization service available in the Red Hat Openstack product.
 The radosgw can be integrated with Openstack keystone. Keystone can have multiple identity services configured like LDAP or Active Directory. Users and Groups from the backend are synchronized with keystone and made available to openstack.
@@ -276,7 +292,7 @@ One of the biggest drawbacks of keystone is having to deploy and maintain the li
 </div>
 </div>
 <div class="sect2">
-<h3 id="_keystone_sts_lite"><a class="anchor" href="#_keystone_sts_lite"></a>Keystone STS-Lite</h3>
+<h3 id="_keystone_sts_lite"><a class="anchor" href="#_keystone_sts_lite"></a>2.5. Keystone STS-Lite</h3>
 <div class="paragraph">
 <p>Like with LDAP STS-lite there is an implementation in keystone of the GetSessionToken STS API call, the same arguments that we made in the ldap sts-lite chapter are valid here.</p>
 </div>
@@ -288,7 +304,7 @@ One of the biggest drawbacks of keystone is having to deploy and maintain the li
 </div>
 </div>
 <div class="sect2">
-<h3 id="_oauthoidc_sts_authentication"><a class="anchor" href="#_oauthoidc_sts_authentication"></a>OAUTH(OIDC) + STS authentication.</h3>
+<h3 id="_oauthoidc_sts_authentication"><a class="anchor" href="#_oauthoidc_sts_authentication"></a>2.6. OAUTH(OIDC) + STS authentication.</h3>
 <div class="paragraph">
 <p>With OAUTH authentication we use an OIDC service to authenticate against, we need to have an OpenID Connect/ OAuth2 compatible service. Red Hat has tested the integration with RGW of the following OIDC products: Red Hat SSO and keycloak IDPs. Consulting has successfully integrated a F5 OIDC provider but had to modify the F5 providers configuration to match url paths defined by Keycloak due to a hardcoded path in the 4.2 code <a href="https://gitlab.cee.redhat.com/ceph/ceph/-/blob/ceph-4.2-rhel-patches/src/rgw/rgw_rest_sts.cc#L194" class="bare">https://gitlab.cee.redhat.com/ceph/ceph/-/blob/ceph-4.2-rhel-patches/src/rgw/rgw_rest_sts.cc#L194</a>.</p>
 </div>

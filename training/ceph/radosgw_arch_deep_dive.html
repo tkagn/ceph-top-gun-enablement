@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <title>Deep dive into RGW Architecture. :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_arch_deep_dive.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -105,10 +105,10 @@
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+    <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
+    <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
   </li>
@@ -179,14 +179,36 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<div class="sect1">
-<h2 id="_deep_dive_into_rgw_architecture"><a class="anchor" href="#_deep_dive_into_rgw_architecture"></a>Deep dive into RGW Architecture.</h2>
+<h1 class="page">Deep dive into RGW Architecture.</h1>
+<div id="preamble">
 <div class="sectionbody">
-
+<div class="ulist">
+<div class="title">Goals</div>
+<ul>
+<li>
+<p>Review the RGW frontends</p>
+</li>
+<li>
+<p>Undestanding RGW Rados Pools</p>
+</li>
+<li>
+<p>Detailed overview of Bucket Index &amp; Bucket Sharding</p>
+</li>
+<li>
+<p>Deep Dive RGW Data Layout</p>
+</li>
+<li>
+<p>S3 MultiPart Upload</p>
+</li>
+<li>
+<p>Garbage Collector</p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_radosgw_frontends"><a class="anchor" href="#_radosgw_frontends"></a>RadosGW Frontends</h2>
+<h2 id="_radosgw_frontends"><a class="anchor" href="#_radosgw_frontends"></a>1. RadosGW Frontends</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The Ceph Object Gateway exposes its RESTful interfaces over HTTP, RGW currently
@@ -237,7 +259,7 @@ spec:
 </div>
 </div>
 <div class="sect1">
-<h2 id="_radosgw_pools"><a class="anchor" href="#_radosgw_pools"></a>RadosGW pools</h2>
+<h2 id="_radosgw_pools"><a class="anchor" href="#_radosgw_pools"></a>2. RadosGW pools</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The Ceph Object Gateway uses several pools for its various storage needs, which are listed in the Zone object. A single zone named default is created automatically with pool names starting with default.rgw.</p>
@@ -360,7 +382,7 @@ users.uid</pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_bucket_index"><a class="anchor" href="#_bucket_index"></a>Bucket Index</h2>
+<h2 id="_bucket_index"><a class="anchor" href="#_bucket_index"></a>3. Bucket Index</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Rados Gateway maintains an index per bucket that holds the list and the
@@ -573,7 +595,7 @@ to use this tool on a conteinerized setup[link]</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_bucket_sharding"><a class="anchor" href="#_bucket_sharding"></a>Bucket Sharding</h2>
+<h2 id="_bucket_sharding"><a class="anchor" href="#_bucket_sharding"></a>4. Bucket Sharding</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Sharding is the process of breaking down data onto multiple locations so as to increase parallelism, as well as distribute the load. This is a common feature used in databases.</p>
@@ -641,7 +663,7 @@ this tunable is set to 11.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_dynamic_bucket_re_sharding"><a class="anchor" href="#_dynamic_bucket_re_sharding"></a>Dynamic Bucket Re-Sharding</h2>
+<h2 id="_dynamic_bucket_re_sharding"><a class="anchor" href="#_dynamic_bucket_re_sharding"></a>5. Dynamic Bucket Re-Sharding</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Since Luminous we have a new RGW capability to automatically manage the sharding of RGW bucket index objects. This completely automates management of RGW&#8217;s internal index objects</p>
@@ -681,7 +703,7 @@ Expected one of the following:
 </div>
 </div>
 <div class="sect1">
-<h2 id="_radosgw_data_layout"><a class="anchor" href="#_radosgw_data_layout"></a>RadosGW data Layout</h2>
+<h2 id="_radosgw_data_layout"><a class="anchor" href="#_radosgw_data_layout"></a>6. RadosGW data Layout</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Although RADOS only knows about pools and objects with their Extended Attributes (xattrs) and object map (OMAP), conceptually Ceph Object Gateway organizes its data into three different kinds:</p>
@@ -700,11 +722,11 @@ Expected one of the following:
 </ul>
 </div>
 <div class="sect2">
-<h3 id="_bucket_index_we_have_already_covered_in_detail"><a class="anchor" href="#_bucket_index_we_have_already_covered_in_detail"></a>Bucket index we have already covered in detail.</h3>
+<h3 id="_bucket_index_we_have_already_covered_in_detail"><a class="anchor" href="#_bucket_index_we_have_already_covered_in_detail"></a>6.1. Bucket index we have already covered in detail.</h3>
 
 </div>
 <div class="sect2">
-<h3 id="_metadata"><a class="anchor" href="#_metadata"></a>Metadata</h3>
+<h3 id="_metadata"><a class="anchor" href="#_metadata"></a>6.2. Metadata</h3>
 <div class="paragraph">
 <p>There are three sections of metadata:</p>
 </div>
@@ -765,7 +787,7 @@ When accessing a user’s data, the user record is loaded from an object USER_ID
 </div>
 </div>
 <div class="sect2">
-<h3 id="_data"><a class="anchor" href="#_data"></a>Data</h3>
+<h3 id="_data"><a class="anchor" href="#_data"></a>6.3. Data</h3>
 <div class="paragraph">
 <p>The object is located in the default.rgw.buckets.data pool. Object name is MARKER_KEY, for example default.7593.4_image.png, where the marker is default.7593.4 and the key is image.png. These concatenated names are not parsed and are passed down to RADOS only.</p>
 </div>
@@ -938,7 +960,7 @@ next section</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_s3_multipart_upload"><a class="anchor" href="#_s3_multipart_upload"></a>S3 Multipart Upload</h2>
+<h2 id="_s3_multipart_upload"><a class="anchor" href="#_s3_multipart_upload"></a>7. S3 Multipart Upload</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Multipart upload allows you to upload a single object as a set of parts. Each part is a contiguous portion of the object&#8217;s data. You can upload these object parts independently and in any order. If transmission of any part fails, you can retransmit that part without affecting other parts. After all parts of your object are uploaded, Amazon S3 assembles these parts and creates the object. In general, when your object size reaches 100 MB, you should consider using multipart uploads instead of uploading the object in a single operation.</p>
@@ -1075,7 +1097,7 @@ Multipart Upload</a></p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_radosgw_garbage_collector"><a class="anchor" href="#_radosgw_garbage_collector"></a>RadosGW Garbage collector</h2>
+<h2 id="_radosgw_garbage_collector"><a class="anchor" href="#_radosgw_garbage_collector"></a>8. RadosGW Garbage collector</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>When users delete files or upload files with the same name, the files are overwritten (also in re-multipart), and Ceph will insert them into something called GC.</p>

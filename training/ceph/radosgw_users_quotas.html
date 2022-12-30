@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <title>RadosGW users and Quotas :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_users_quotas.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -105,10 +105,10 @@
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+    <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
+    <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
   </li>
@@ -179,11 +179,10 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
+<h1 class="page">RadosGW users and Quotas</h1>
 <div class="sect1">
-<h2 id="_radosgw_users_and_quotas"><a class="anchor" href="#_radosgw_users_and_quotas"></a>RadosGW users and Quotas</h2>
+<h2 id="_radosgw_users"><a class="anchor" href="#_radosgw_users"></a>1. RadosGW Users</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_radosgw_users"><a class="anchor" href="#_radosgw_users"></a>RadosGW Users</h3>
 <div class="paragraph">
 <p>User management is performed different as traditional user management in Ceph clusters (cephx)</p>
 </div>
@@ -536,8 +535,10 @@ old key pair.</p>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_multi_tenancy"><a class="anchor" href="#_multi_tenancy"></a>Multi-tenancy</h3>
+</div>
+<div class="sect1">
+<h2 id="_multi_tenancy"><a class="anchor" href="#_multi_tenancy"></a>2. Multi-tenancy</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Traditionally, if multi-tenancy is not used, S3 bucket names should be “globally” unique With multi-tenancy, each user and bucket lies under a tenant
 Prevents namespace clashing when multiple tenants are using common bucket names</p>
@@ -624,8 +625,10 @@ make_bucket: butent
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_quotas"><a class="anchor" href="#_quotas"></a>Quotas</h3>
+</div>
+<div class="sect1">
+<h2 id="_quotas"><a class="anchor" href="#_quotas"></a>3. Quotas</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Set quotas to limit the amount of storage a user or bucket can consume. Set the quota parameters
 first, then enable the quota. To disable a quota, set a negative value for the quota parameter.
@@ -711,7 +714,6 @@ upload failed: ../etc/hosts to s3://quota/5 An error occurred (QuotaExceeded) wh
 </td>
 </tr>
 </table>
-</div>
 </div>
 </div>
 </div>

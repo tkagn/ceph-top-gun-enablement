@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <title>S3 Object Versioning :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_object_versioning.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -105,10 +105,10 @@
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+    <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
+    <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
   </li>
@@ -179,11 +179,25 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<div class="sect1">
-<h2 id="_s3_object_versioning"><a class="anchor" href="#_s3_object_versioning"></a>S3 Object Versioning</h2>
+<h1 class="page">S3 Object Versioning</h1>
+<div id="preamble">
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_some_object_versioning_facts_to_take_into_account"><a class="anchor" href="#_some_object_versioning_facts_to_take_into_account"></a>Some object versioning facts to take into account:</h3>
+<div class="ulist">
+<div class="title">Goals</div>
+<ul>
+<li>
+<p>Introduction to S3 Object versioning</p>
+</li>
+<li>
+<p>Hands-on Lab. Enable and Experiment with Object Versioning</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_some_object_versioning_facts_to_take_into_account"><a class="anchor" href="#_some_object_versioning_facts_to_take_into_account"></a>1. Some object versioning facts to take into account:</h2>
+<div class="sectionbody">
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -222,8 +236,10 @@
 </ol>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_s3_object_versioning_workflow"><a class="anchor" href="#_s3_object_versioning_workflow"></a>S3 Object versioning Workflow</h3>
+</div>
+<div class="sect1">
+<h2 id="_s3_object_versioning_workflow"><a class="anchor" href="#_s3_object_versioning_workflow"></a>2. S3 Object versioning Workflow</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Put Object with versioning enabled on the bucket:</p>
 </div>
@@ -263,8 +279,10 @@ will get <code>404 Not found</code> Error</p>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_s3_object_versioning_with_rgw_hands_on"><a class="anchor" href="#_s3_object_versioning_with_rgw_hands_on"></a>S3 Object versioning with RGW Hands-on</h3>
+</div>
+<div class="sect1">
+<h2 id="_s3_object_versioning_with_rgw_hands_on"><a class="anchor" href="#_s3_object_versioning_with_rgw_hands_on"></a>3. S3 Object versioning with RGW Hands-on</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Create a new bucket:</p>
 </div>
@@ -674,7 +692,6 @@ folder/sshd     HgRgUA6YFYZ1dZC7U5fxR34jkRqtB5Z</pre>
 
 [root@bastion s3cmd]# s3cmd -c s3cfg-versioning setlifecycle ../lc-current.txt s3://test-bucket
 s3://test-bucket/: Lifecycle Policy updated</pre>
-</div>
 </div>
 </div>
 </div>

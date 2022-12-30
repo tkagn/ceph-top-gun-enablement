@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <title>Object Lifecycle Management :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_life_cycle_management.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -105,10 +105,10 @@
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+    <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
+    <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
   </li>
@@ -179,8 +179,24 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
+<h1 class="page">Object Lifecycle Management</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="ulist">
+<div class="title">Goals</div>
+<ul>
+<li>
+<p>Introduction to RGW Lifecycle Management</p>
+</li>
+<li>
+<p>Hands-on Lab. Configure and Experiment with RGW Lifecycle Management</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
 <div class="sect1">
-<h2 id="_object_lifecycle_management"><a class="anchor" href="#_object_lifecycle_management"></a>Object Lifecycle Management</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Object expiration is in substance implemented in the following way: ceph lifecycle mechanism (lc) scans the objects' metadata, where the expiration date is being hold, comparing the expiration date with the current date. Once the condition becomes true lc marks the object as deleted, and it is transferred to Ceph’s garbage collector (gc) which in its turn deletes the expired object. lc process runs periodically with a pre-defined and configurable schedule. This mechanism makes it possible to use a declarative policy to expire the objects we have in our cluster, in the same way it can be done in Amazon S3.</p>
@@ -189,8 +205,11 @@
 <p>Tier transition in its turn provides us with the ability of creating Storage
 Classes for hot (fast media, such as SSD/NVMe used for I/O sensitive workloads) and slow (slow, magnetic media such as SAS/SATA used for archiving) areas relying on bucket lifecycle process for moving out data. Thus it&#8217;s now possible to create a scheduled data movement between storage classes where data is written to the hot class, then it&#8217;s moved to the slow (after a configured amount of time) and then expires and deleted for good. This feature is the de-facto standard in AWS nowadays, and now it’s available in Ceph as well.</p>
 </div>
-<div class="sect2">
-<h3 id="_create_a_new_storage_class"><a class="anchor" href="#_create_a_new_storage_class"></a>Create a new storage class</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_create_a_new_storage_class"><a class="anchor" href="#_create_a_new_storage_class"></a>2. Create a new storage class</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>To create a new storage class named <code>SLOW</code> in the <code>default-placement</code>
 target, start by adding it to the zonegroup in the master zone:</p>
@@ -218,9 +237,8 @@ Ceph RadosGW:</p>
 <pre>$  radosgw-admin period update --commit</pre>
 </div>
 </div>
-</div>
 <div class="sect2">
-<h3 id="_verify_the_new_storage_class"><a class="anchor" href="#_verify_the_new_storage_class"></a>Verify the new storage class</h3>
+<h3 id="_verify_the_new_storage_class"><a class="anchor" href="#_verify_the_new_storage_class"></a>2.1. Verify the new storage class</h3>
 <div class="paragraph">
 <p>The zonegroup placement configuration can be queried with:</p>
 </div>

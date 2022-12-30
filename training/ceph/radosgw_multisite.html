@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <title>RadosGW Multisite :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_multisite.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -105,10 +105,10 @@
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+    <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
+    <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
   </li>
@@ -179,11 +179,10 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
+<h1 class="page">RadosGW Multisite</h1>
 <div class="sect1">
-<h2 id="_radosgw_multisite"><a class="anchor" href="#_radosgw_multisite"></a>RadosGW Multisite</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h3>
 <div class="paragraph">
 <p>A single zone configuration typically consists of one zone group containing one zone and one or more ceph-radosgw instances where you may load-balance gateway client requests between the instances. In a single zone configuration, typically multiple gateway instances point to a single Ceph storage cluster.</p>
 </div>
@@ -202,8 +201,10 @@
 <p>So, from the top down, we have realm, Zone Group and zones and I&#8217;m going to explain all those right now. So, a realm represents a globally unique namespace and represents the highest level of the Ceph multisite cluster. Each realm can then contain either one or multiple zone groups and multiple zones. So next we have zone groups. These used to be called regions and they&#8217;re essentially made to define one or more multiple geographic areas. So next we have zones. These are the lowest level of the Ceph multisite configuration and they&#8217;re represented by one or more object gateways underneath one single Ceph cluster.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_rgw_multisite_components"><a class="anchor" href="#_rgw_multisite_components"></a>RGW Multisite components</h3>
+</div>
+<div class="sect1">
+<h2 id="_rgw_multisite_components"><a class="anchor" href="#_rgw_multisite_components"></a>2. RGW Multisite components</h2>
+<div class="sectionbody">
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -291,8 +292,10 @@ as creating users must occur in the master zone.</p>
 <p>In Kraken, the Ceph Object Gateway supports the notion of realms, which can be a single zone group or multiple zone groups and a globally unique namespace for the realm. Multiple realms provide the ability to support numerous configurations and namespaces.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_multisite_lab"><a class="anchor" href="#_multisite_lab"></a>Multisite Lab.</h3>
+</div>
+<div class="sect1">
+<h2 id="_multisite_lab"><a class="anchor" href="#_multisite_lab"></a>3. Multisite Lab.</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>In this lab we are going to deploy an advanced configuration that consists
 of a single realm with one zone group and two zones, each zone with two Ceph RGW instances. Each
@@ -301,9 +304,8 @@ provides disaster recovery for the zone group should one of the zones
 experience a significant failure. Each zone is active and may receive write
 operations.</p>
 </div>
-</div>
 <div class="sect2">
-<h3 id="_configure_the_master_realm_zonegroup_and_zone"><a class="anchor" href="#_configure_the_master_realm_zonegroup_and_zone"></a>Configure the Master Realm, Zonegroup and Zone.</h3>
+<h3 id="_configure_the_master_realm_zonegroup_and_zone"><a class="anchor" href="#_configure_the_master_realm_zonegroup_and_zone"></a>3.1. Configure the Master Realm, Zonegroup and Zone.</h3>
 <div class="admonitionblock tip">
 <table>
 <tr>
@@ -493,7 +495,7 @@ rgw.multi.zone1.proxy01.mhawfj      proxy01      *:8000       running (30m)     
 </div>
 </div>
 <div class="sect2">
-<h3 id="_create_sync_user"><a class="anchor" href="#_create_sync_user"></a>Create Sync User</h3>
+<h3 id="_create_sync_user"><a class="anchor" href="#_create_sync_user"></a>3.2. Create Sync User</h3>
 <div class="paragraph">
 <p>Create a system user that we will use to configure the sync between sites.</p>
 </div>
@@ -504,7 +506,7 @@ rgw.multi.zone1.proxy01.mhawfj      proxy01      *:8000       running (30m)     
 </div>
 </div>
 <div class="sect2">
-<h3 id="_configure_seconday_zone"><a class="anchor" href="#_configure_seconday_zone"></a>Configure Seconday Zone</h3>
+<h3 id="_configure_seconday_zone"><a class="anchor" href="#_configure_seconday_zone"></a>3.3. Configure Seconday Zone</h3>
 <div class="paragraph">
 <p>Steps to configure the RADOS Gateway instance on the secondary zone.</p>
 </div>
