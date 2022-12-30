@@ -1,11 +1,10 @@
-== Red Hat Ceph Storage Lab
+== Red Hat Ceph Storage Lab Introduction
 
 .Goals
 * Provision the lab environment
 * Become familiar with the lab environment
 * Review server access considerations
 * Install Red Hat^(R)^ Ceph^(R)^ Storage using the `cephadm` utility
-* Explore RBD, CephFS, and RADOSGW
 
 :numbered:
 

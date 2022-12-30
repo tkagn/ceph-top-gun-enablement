@@ -1,3 +1,14 @@
+== Rados Gateway Cloud Transitions
+
+:toc:
+:toclevels: 4
+:icons: font
+:source-highlighter: pygments
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+
 == Introduction.
 
 RadosGW has had for some time now a feature called ‘Data Tier Transition’, which provides us with the ability to create Storage Classes that represent storage tiers, for example, a ‘hot’ tier backed by fast media that is accessed frequently and a ‘cold’ tier backed by slow, magnetic media for data that barely needs to be accessed, We then rely on the S3 bucket lifecycle policies to transition the data from the hot storage class to the cold storage class after a defined policy is met.

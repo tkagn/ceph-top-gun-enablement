@@ -182,8 +182,28 @@
 <div class="sect1">
 <h2 id="_rados_gateway_introduction_and_deployment"><a class="anchor" href="#_rados_gateway_introduction_and_deployment"></a>Rados Gateway Introduction and Deployment</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_introducing_object_storage"><a class="anchor" href="#_introducing_object_storage"></a>Introducing Object Storage</h3>
+<div class="ulist">
+<div class="title">Goals</div>
+<ul>
+<li>
+<p>Introduction to Object Storage</p>
+</li>
+<li>
+<p>Introduction to RadosGW</p>
+</li>
+<li>
+<p>Hands-On. Deploy RGW with Cephadm</p>
+</li>
+<li>
+<p>Hands-On. Verify S3/RGW Access with S3 client</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_introducing_object_storage"><a class="anchor" href="#_introducing_object_storage"></a>1. Introducing Object Storage</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Object storage stores data as discrete items, each individually called an object. Unlike files in a file
 system, objects are not organized in a tree of directories and subdirectories. Instead, objects are
@@ -214,8 +234,10 @@ information, typically in the form of key-value pairs. You can also create your 
 and store custom information in the object as key values.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_introducing_radosgw"><a class="anchor" href="#_introducing_radosgw"></a>Introducing RadosGW</h3>
+</div>
+<div class="sect1">
+<h2 id="_introducing_radosgw"><a class="anchor" href="#_introducing_radosgw"></a>2. Introducing RadosGW</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The RADOS Gateway, also called the Object Gateway (RGW), is a service that provides access to
 the Ceph cluster for clients using standard object storage APIs. The RADOS Gateway supports
@@ -242,8 +264,10 @@ one instance of the RGW, masked by a Load Balancer,</p>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_radosgw_service_deployment_with_cephadm"><a class="anchor" href="#_radosgw_service_deployment_with_cephadm"></a>RadosGW service deployment with Cephadm</h3>
+</div>
+<div class="sect1">
+<h2 id="_radosgw_service_deployment_with_cephadm"><a class="anchor" href="#_radosgw_service_deployment_with_cephadm"></a>3. RadosGW service deployment with Cephadm</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Ceph Object Gateway supports two interfaces:</p>
 </div>
@@ -595,8 +619,10 @@ The Ceph orchestrator service names the daemons by using the format rgw.&lt;real
 </ol>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_verify_connectivity_to_rados_gateway"><a class="anchor" href="#_verify_connectivity_to_rados_gateway"></a>Verify Connectivity to RADOS Gateway</h3>
+</div>
+<div class="sect1">
+<h2 id="_verify_connectivity_to_rados_gateway"><a class="anchor" href="#_verify_connectivity_to_rados_gateway"></a>4. Verify Connectivity to RADOS Gateway</h2>
+<div class="sectionbody">
 <div class="olist arabic">
 <ol class="arabic">
 <li>
@@ -635,8 +661,10 @@ tcp6       0      0 :::80                   :::*                    LISTEN      
 </ol>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_create_rados_gateway_user_accounts"><a class="anchor" href="#_create_rados_gateway_user_accounts"></a>Create RADOS Gateway User Accounts</h3>
+</div>
+<div class="sect1">
+<h2 id="_create_rados_gateway_user_accounts"><a class="anchor" href="#_create_rados_gateway_user_accounts"></a>5. Create RADOS Gateway User Accounts</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>To access Red Hat Ceph Storage over object storage interfaces&#8212;&#8203;that is, via Swift or S3&#8212;&#8203;you must configure a Ceph RADOS Gateway component. In this section, you configure <code>proxy01</code> as a Ceph RADOS Gateway and then test S3 and Swift from <code>ceph-mon01</code> or from <code>workstation</code>.</p>
 </div>
@@ -719,8 +747,10 @@ tcp6       0      0 :::80                   :::*                    LISTEN      
 </ol>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_accessing_s3_objects_using_rados_gateway"><a class="anchor" href="#_accessing_s3_objects_using_rados_gateway"></a>Accessing S3 Objects Using RADOS Gateway</h3>
+</div>
+<div class="sect1">
+<h2 id="_accessing_s3_objects_using_rados_gateway"><a class="anchor" href="#_accessing_s3_objects_using_rados_gateway"></a>6. Accessing S3 Objects Using RADOS Gateway</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The Amazon S3 API enables developers to manage object storage resources using an Amazon
 S3 compatible interface. Applications implemented with the S3 API can inter-operate with other
@@ -739,8 +769,10 @@ There are object and metadata size limits to consider when using the Amazon S3 A
 • The maximum metadata size is 16,000 bytes in a single HTTP request.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_using_amazon_s3_api_clients"><a class="anchor" href="#_using_amazon_s3_api_clients"></a>Using Amazon S3 API Clients</h3>
+</div>
+<div class="sect1">
+<h2 id="_using_amazon_s3_api_clients"><a class="anchor" href="#_using_amazon_s3_api_clients"></a>7. Using Amazon S3 API Clients</h2>
+<div class="sectionbody">
 <div class="imageblock">
 <div class="content">
 <img src="_images/S3.png" alt="AWS S3">
@@ -787,7 +819,6 @@ configure RGW http endpoint, for example:</p>
 <div class="listingblock">
 <div class="content">
 <pre>[ceph: root@node /]# aws --endpoint http://ceph-node01:8080 s3 mb s3://demobucket</pre>
-</div>
 </div>
 </div>
 </div>

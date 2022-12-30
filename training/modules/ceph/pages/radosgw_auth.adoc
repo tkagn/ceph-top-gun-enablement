@@ -1,5 +1,14 @@
 == RGW Authentication/Authorization.
 
+.Goals
+* Review RGW Authentication methods
+* Evaluate Pros and Cons of Each Auth Method
+
+:numbered:
+
+
+== Introduction
+
 In order to access Object Storage using the s3 protocol you need to provide a s3 access key and secret key. The actual content of the access key can be varied by implementation of the s3 api but it serves as your identity. When you send a request to the S3 api, the api will check it knows about your s3 access key and lookup the associated secret key. The secret key is a shared secret between you and the S3 api and should not be sent over the wire to S3. Instead the secret key is used to create a Hash-based Message Authentication Code (HMAC) to sign each request that is sent to s3 where it will be validated and upon successful validation will be executed. S3 treats a successful validation as proof that you hold the secret key and therefore are the identity you have sent. 
 
 The following options are available to authenticate against RGW.
@@ -60,8 +69,6 @@ Like with LDAP STS-lite there is an implementation in keystone of the GetSession
 We haven’t tested this configuration but looking at the S3A available credential providers we would need to use the TemporaryAWSCredentialsProvider available, using this provider the client sets the temporary credentials that have been provided by the STS API in ENV vars or the config files, with this provider there is no refresh of tokens available, so once the token expires the client won’t have access to s3 with the provided credentials.
 
 The lifetime of a token can be set by the user when calling the GetSessionToken API call, with the parameter ‘DurationSeconds’, you can set this option to the maximum configured in RGW by the ceph configuration parameter ‘rgw sts max session duration’. So if needed the duration/expiration of a token can be configured to the longest running job.
-
-
 
 === OAUTH(OIDC) + STS authentication.
 

@@ -1,6 +1,15 @@
 == Rados Gateway Introduction and Deployment
 
-=== Introducing Object Storage
+.Goals
+* Introduction to Object Storage
+* Introduction to RadosGW
+* Hands-On. Deploy RGW with Cephadm
+* Hands-On. Verify S3/RGW Access with S3 client
+
+:numbered:
+
+
+== Introducing Object Storage
 
 Object storage stores data as discrete items, each individually called an object. Unlike files in a file
 system, objects are not organized in a tree of directories and subdirectories. Instead, objects are
@@ -27,7 +36,7 @@ Objects also contain metadata about the object data, and natively support extend
 information, typically in the form of key-value pairs. You can also create your own metadata keys
 and store custom information in the object as key values.
 
-=== Introducing RadosGW
+== Introducing RadosGW
 The RADOS Gateway, also called the Object Gateway (RGW), is a service that provides access to
 the Ceph cluster for clients using standard object storage APIs. The RADOS Gateway supports
 both the Amazon S3 and OpenStack Swift APIs.
@@ -46,7 +55,7 @@ one instance of the RGW, masked by a Load Balancer,
 
 image::rgw-lb.webp[RGW LoadBalancer]
 
-=== RadosGW service deployment with Cephadm
+== RadosGW service deployment with Cephadm
 
 Ceph Object Gateway supports two interfaces:
 
@@ -345,7 +354,7 @@ NOTE: The Ceph orchestrator service names the daemons by using the format rgw.<r
 
 
 
-=== Verify Connectivity to RADOS Gateway
+== Verify Connectivity to RADOS Gateway
 
 . Verify that the RADOS Gateway container is bound to port 8080 on `proxy01`:
 +
@@ -378,7 +387,7 @@ tcp6       0      0 :::80                   :::*                    LISTEN      
 <?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>
 -----
 
-=== Create RADOS Gateway User Accounts
+== Create RADOS Gateway User Accounts
 
 To access Red Hat Ceph Storage over object storage interfaces--that is, via Swift or S3--you must configure a Ceph RADOS Gateway component. In this section, you configure `proxy01` as a Ceph RADOS Gateway and then test S3 and Swift from `ceph-mon01` or from `workstation`.
 
@@ -443,7 +452,7 @@ You begin by logging into `ceph-mon01` to create RADOS Gateway user accounts to 
 * The output produced is the same as provided by the previous command.
 * The Ceph RGW instances are already configured and running.
 
-=== Accessing S3 Objects Using RADOS Gateway
+== Accessing S3 Objects Using RADOS Gateway
 
 The Amazon S3 API enables developers to manage object storage resources using an Amazon
 S3 compatible interface. Applications implemented with the S3 API can inter-operate with other
@@ -461,7 +470,7 @@ There are object and metadata size limits to consider when using the Amazon S3 A
 • Upload objects larger than 100MB by using the multipart upload capability.
 • The maximum metadata size is 16,000 bytes in a single HTTP request.
 
-=== Using Amazon S3 API Clients
+== Using Amazon S3 API Clients
 
 image::S3.png[AWS S3]
 

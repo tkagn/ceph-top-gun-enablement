@@ -1,6 +1,17 @@
 
 == Deep dive into RGW Architecture.
 
+.Goals
+* Review the RGW frontends
+* Undestanding RGW Rados Pools
+* Detailed overview of Bucket Index & Bucket Sharding
+* Deep Dive RGW Data Layout 
+* S3 MultiPart Upload
+* Garbage Collector
+
+:numbered:
+
+
 == RadosGW Frontends
 
 The Ceph Object Gateway exposes its RESTful interfaces over HTTP, RGW currently

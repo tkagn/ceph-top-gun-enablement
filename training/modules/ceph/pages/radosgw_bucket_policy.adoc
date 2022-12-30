@@ -1,6 +1,16 @@
 == S3 Bucket Policies
 
-=== Introduction
+:toc:
+:toclevels: 4
+:icons: font
+:source-highlighter: pygments
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+
+
+== Introduction
 An S3 bucket policy is an object that allows you to manage access to specific S3 storage resources. You can specify permissions for each resource to allow or deny actions requested by a principal (a user or role). When you create a new S3 bucket, you should set a policy granting the relevant permissions to the data forwarder’s principal roles.
 
 With S3 bucket policies, you can secure access to objects in your buckets, so that only users with the appropriate permissions can access them. You can even prevent authenticated users without the appropriate permissions from accessing your Amazon S3 resources.
@@ -8,7 +18,7 @@ With S3 bucket policies, you can secure access to objects in your buckets, so th
 The Ceph Object Gateway supports a subset of the Amazon S3 policy language applied to buckets.
 
 
-=== An Amazon S3 bucket policy contains the following basic elements:
+== An Amazon S3 bucket policy contains the following basic elements:
 
 - Statements: a statement is the main element in a policy. It consists of several elements, including principals, resources, actions, and effects. Bucket policies typically contain an array of statements.
 - Permitted principals: a principal is a user, entity, or account with access permissions to resources and actions in a statement.
@@ -21,7 +31,7 @@ The Ceph Object Gateway supports a subset of the Amazon S3 policy language appli
 - Statement ID: this is an identifier that you can assign to policy statements. You may assign Sid values to every statement in a policy. In AWS services like SNS and SQS, which allow you to specify ID elements, the Sid values are sub-IDs of the policy’s ID. IAM requires the Sid values in a JSON policy to be unique.
 
 
-=== Bucket Policy Lab
+== Bucket Policy Lab
 
 Giving external users access to our buckets.
 
