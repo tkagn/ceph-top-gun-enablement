@@ -13,8 +13,8 @@
 <header class="header">
   <nav class="navbar">
     <div class="navbar-brand">
-      <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
-          <img src="../../_/img/header_logo_reverse.svg" height="40px" alt="Red Hat Data Services">
+      <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">
+          <img src="../../_/img/header_logo_reverse.svg" height="48px" alt="Ceph">
       </a>
       <button class="navbar-burger" data-target="topbar-nav">
         <span></span>
@@ -27,14 +27,13 @@
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link" href="#">Get Help</a>
           <div class="navbar-dropdown">
-            <a class="navbar-item" href="https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage" target="_blank">OCS Documentation</a>
+            <a class="navbar-item" href="https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage" target="_blank">Ceph Documentation</a>
             <a class="navbar-item" href="https://bugzilla.redhat.com/describecomponents.cgi?product=Red%20Hat%20OpenShift%20Container%20Storage" target="_blank">Browse Bugs</a>
           </div>
         </div>
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link" href="#">Improve Guides</a>
           <div class="navbar-dropdown">
-            <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/blob/master/CONTRIBUTING.adoc" target="_blank">Guidelines</a>
             <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/issues/new/choose" target="_blank">Open Issue</a>
           </div>
         </div>
@@ -43,7 +42,7 @@
           <div class="navbar-dropdown">
             <a class="navbar-item" href="https://www.redhat.com/en/blog/channel/red-hat-storage" target="_blank">Our Blog</a>
             <a class="navbar-item" href="https://www.youtube.com/channel/UCoyG8VyvB-XUxQl1mD3T3Gw" target="_blank">Youtube</a>
-            <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">OCS Technology</a>
+            <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">OCS Technology</a>
           </div>
         </div>
       </div>
@@ -70,7 +69,7 @@
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw_intro.html">RGW Introduction and Deployment</a>
+    <a class="nav-link" href="radosgw_intro.html">RGW Introduction &amp; Deployment</a>
   </li>
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_arch_deep_dive.html">RGW Deep Dive</a>
@@ -105,6 +104,21 @@
   <li class="nav-item is-current-page" data-depth="1">
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">CephFS Shared FileSystem</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephfs_intro.html">CephFS introduction &amp; Deployment</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -113,9 +127,6 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="trouble-shooting-nearfull-osds.html">Troubleshooting nearfull OSDs</a>
-  </li>
-  <li class="nav-item is-current-page" data-depth="1">
-    <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
 </ul>
   </li>
@@ -196,7 +207,7 @@
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>zone</p>
+<p><strong>Zone</strong></p>
 <div class="ulist">
 <ul>
 <li>
@@ -218,53 +229,66 @@
 <p>If the Master zone is down, bucket and user operations will fail</p>
 </li>
 <li>
-<p>It is possible to promote a secondary zone to Master zone</p>
+<p>It is possible to promote a secondary zone to Master zone. This a complex operation. It is recommended only when the Master zone will be down for a long period of time</p>
 </li>
 </ul>
 </div>
 </li>
+<li>
+<p><strong>Zone Group</strong></p>
+</li>
 </ol>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-This a complex operation. It is recommended only when the Master zone will be down for a long period of time
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>A zone group is a set of one or more zones. Data stored in one zone in the zone group is
+replicated to all other zones in the zone group. One zone in every zone group is designated as
+the master zone for that group. The other zones in the zone group are secondary zones.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>zone group
-A zone group is a set of one or more zones. Data stored in one zone in the zone group is
-replicated to all other zones in the zone group. One zone in every zone group is designated as
-the master zone for that group. The other zones in the zone group are secondary zones.</p>
+<p><strong>Realm</strong></p>
 </li>
-<li>
-<p>realm
-A realm represents the global namespace for all objects and buckets in the multisite
+</ol>
+</div>
+<div class="paragraph">
+<p>A realm represents the global namespace for all objects and buckets in the multisite
 replication space. A realm contains one or more zone groups, each of which contains one
 or more zones. One zone group in the realm is designated as the master zone group, and
 the others are secondary zone groups. All RADOS Gateways in the environment pull their
 configuration from the RADOS Gateway in the master zone group and master zone.
 Because the master zone in the master zone group handles all metadata updates, operations such
 as creating users must occur in the master zone.</p>
-</li>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
-<p>Multi-zone: A more advanced configuration consists of one zone group and multiple zones, each zone with one or more ceph-radosgw instances. Each zone is backed by its own Ceph Storage Cluster. Multiple zones in a zone group provides disaster recovery for the zone group should one of the zones experience a significant failure. In Kraken, each zone is active and may receive write operations. In addition to disaster recovery, multiple active zones may also serve as a foundation for content delivery networks.</p>
-</li>
-<li>
-<p>Multi-zone-group: Formerly called ‘regions’, Ceph Object Gateway can also support multiple zone groups, each zone group with one or more zones. Objects stored to zones in one zone group within the same realm as another zone group will share a global object namespace, ensuring unique object IDs across zone groups and zones.</p>
-</li>
-<li>
-<p>Multiple Realms: In Kraken, the Ceph Object Gateway supports the notion of realms, which can be a single zone group or multiple zone groups and a globally unique namespace for the realm. Multiple realms provide the ability to support numerous configurations and namespaces.</p>
+<p><strong>Multi-zone</strong></p>
 </li>
 </ol>
+</div>
+<div class="paragraph">
+<p>A more advanced configuration consists of one zone group and multiple zones, each zone with one or more ceph-radosgw instances. Each zone is backed by its own Ceph Storage Cluster. Multiple zones in a zone group provides disaster recovery for the zone group should one of the zones experience a significant failure. In Kraken, each zone is active and may receive write operations. In addition to disaster recovery, multiple active zones may also serve as a foundation for content delivery networks.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Multi-zone-group</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Formerly called ‘regions’, Ceph Object Gateway can also support multiple zone groups, each zone group with one or more zones. Objects stored to zones in one zone group within the same realm as another zone group will share a global object namespace, ensuring unique object IDs across zone groups and zones.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Multiple Realms</strong></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>In Kraken, the Ceph Object Gateway supports the notion of realms, which can be a single zone group or multiple zone groups and a globally unique namespace for the realm. Multiple realms provide the ability to support numerous configurations and namespaces.</p>
 </div>
 </div>
 <div class="sect2">
@@ -288,8 +312,9 @@ operations.</p>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>If you have already completed the RadosGW introduction module you can jump
-this section, and continue with section <code>Configure the Secondary Zone</code></p>
+<p>If you have already completed the RadosGW introduction module, you will have
+the realm,zonegroup and zone(zone1) created, but with no endpoints configured,
+you will need to add valid rgw endpoints to the zonegroup and zone.</p>
 </div>
 </td>
 </tr>
@@ -1065,17 +1090,19 @@ pipe) to be able to configure bucket sync policy</p>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>--------------------------------------------------------------------+
+<div class="listingblock">
+<div class="content">
+<pre>+----------------------------+----------------------------------------+
 |  Value                     | Description                            |
-====================================================================+
-| <code>enabled</code>                | sync is allowed and enabled            |
---------------------------------------------------------------------+
-| <code>allowed</code>                | sync is allowed                        |
---------------------------------------------------------------------+
-| <code>forbidden</code>              | sync (as defined by this group) is not |
++============================+========================================+
+| ``enabled``                | sync is allowed and enabled            |
++----------------------------+----------------------------------------+
+| ``allowed``                | sync is allowed                        |
++----------------------------+----------------------------------------+
+| ``forbidden``              | sync (as defined by this group) is not |
 |                            | allowed and can override other groups  |
---------------------------------------------------------------------+</p>
++----------------------------+----------------------------------------+</pre>
+</div>
 </div>
 <div class="paragraph">
 <p>We create the zonegroup sync group and set the replication status to allowed</p>
@@ -1409,7 +1436,7 @@ upload: ../etc/hosts to s3://bucket2/file2
 </div>
 <footer class="footer">
   <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
-      <img src="../../_/img/header_logo.svg" alt="Red Hat Data Services">
+      <img src="../../_/img/header_logo.svg" alt="Ceph">
   </a>
 </footer>
 <script id="site-script" src="../../_/js/site.js" data-ui-root-path="../../_"></script>

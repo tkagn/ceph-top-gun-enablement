@@ -13,8 +13,8 @@
 <header class="header">
   <nav class="navbar">
     <div class="navbar-brand">
-      <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
-          <img src="../../_/img/header_logo_reverse.svg" height="40px" alt="Red Hat Data Services">
+      <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">
+          <img src="../../_/img/header_logo_reverse.svg" height="48px" alt="Ceph">
       </a>
       <button class="navbar-burger" data-target="topbar-nav">
         <span></span>
@@ -27,14 +27,13 @@
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link" href="#">Get Help</a>
           <div class="navbar-dropdown">
-            <a class="navbar-item" href="https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage" target="_blank">OCS Documentation</a>
+            <a class="navbar-item" href="https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage" target="_blank">Ceph Documentation</a>
             <a class="navbar-item" href="https://bugzilla.redhat.com/describecomponents.cgi?product=Red%20Hat%20OpenShift%20Container%20Storage" target="_blank">Browse Bugs</a>
           </div>
         </div>
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link" href="#">Improve Guides</a>
           <div class="navbar-dropdown">
-            <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/blob/master/CONTRIBUTING.adoc" target="_blank">Guidelines</a>
             <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/issues/new/choose" target="_blank">Open Issue</a>
           </div>
         </div>
@@ -43,7 +42,7 @@
           <div class="navbar-dropdown">
             <a class="navbar-item" href="https://www.redhat.com/en/blog/channel/red-hat-storage" target="_blank">Our Blog</a>
             <a class="navbar-item" href="https://www.youtube.com/channel/UCoyG8VyvB-XUxQl1mD3T3Gw" target="_blank">Youtube</a>
-            <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">OCS Technology</a>
+            <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">OCS Technology</a>
           </div>
         </div>
       </div>
@@ -70,7 +69,7 @@
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item is-current-page" data-depth="1">
-    <a class="nav-link" href="radosgw_intro.html">RGW Introduction and Deployment</a>
+    <a class="nav-link" href="radosgw_intro.html">RGW Introduction &amp; Deployment</a>
   </li>
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_arch_deep_dive.html">RGW Deep Dive</a>
@@ -105,6 +104,21 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">CephFS Shared FileSystem</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephfs_intro.html">CephFS introduction &amp; Deployment</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -113,9 +127,6 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="trouble-shooting-nearfull-osds.html">Troubleshooting nearfull OSDs</a>
-  </li>
-  <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
 </ul>
   </li>
@@ -158,7 +169,7 @@
   <ul>
     <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
     <li>Ceph RadosGW</li>
-    <li><a href="radosgw_intro.html">RGW Introduction and Deployment</a></li>
+    <li><a href="radosgw_intro.html">RGW Introduction &amp; Deployment</a></li>
   </ul>
 </nav>
   <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/radosgw_intro.adoc">Edit this Page</a></div>
@@ -258,7 +269,7 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/gateway-realm.png" alt="RGW Realm">
+<img src="_images/gateway-realm.png" alt="RGW Realm" width="740" height="580">
 </div>
 </div>
 <div class="paragraph">
@@ -787,7 +798,7 @@ configure RGW http endpoint, for example:</p>
 </div>
 <footer class="footer">
   <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
-      <img src="../../_/img/header_logo.svg" alt="Red Hat Data Services">
+      <img src="../../_/img/header_logo.svg" alt="Ceph">
   </a>
 </footer>
 <script id="site-script" src="../../_/js/site.js" data-ui-root-path="../../_"></script>
