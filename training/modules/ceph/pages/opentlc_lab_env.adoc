@@ -19,7 +19,7 @@ The lab environment is a playground provided with instructions on how to set up 
 For example, the lab provides information on how to configure four MONs. A best practice in a production environment is to configure an odd number of MONs, such as three or five. You have the option in this lab to use the `cephadm` command line tool to configure only three MONs.
 
 . Navigate to the link:https://labs.opentlc.com[OPENTLC lab portal^] and log in with your username and password.
-+
+
 [NOTE]
 If you do not remember your username or password, go to the link:https://www.opentlc.com/pwm[OPENTLC Account Management page^] to obtain a username reminder or reset your password.
 
@@ -32,12 +32,12 @@ If you do not remember your username or password, go to the link:https://www.ope
 . On the next page, check the box to confirm that you understand the runtime and expiration dates, then click *Submit* on the bottom right to order your environment.
 
 . After a few minutes, check your email account for a message from Red Hat confirming that provisioning started.
-+
+
 [WARNING]
 ====
 Do not select *App Control -> Start* after ordering the lab. The lab environment is already building, and selecting *Start* may corrupt it or cause other complications.
 ====
-+
+
 [TIP]
 ====
 You can select *Status* to view the status of your environment.
@@ -50,7 +50,7 @@ In this section, you verify that you can access `registry.redhat.io` and retriev
 . Navigate to link:https://access.redhat.com/terms-based-registry/\#/accounts[https://access.redhat.com/terms-based-registry/#/accounts^].
 
 . Select your account name, and note your username and password from the *Token Information* tab:
-+
+
 image::images/Registry-Login-01.png[]
 
 == Explore Lab Environment and Server List
@@ -59,26 +59,26 @@ Due to the nature of OpenStack^(R)^ and storage, the lab environment for this co
 
 [NOTE]
 The lab environment is cloud-based, so you can access it over the Internet from anywhere. However, do not expect the performance to match a dedicated environment.
-+
+
 [NOTE]
 ====
 You are able to access any system in your lab environment by using the Novello virtual console, the link to which is provided in the email message you received with information about accessing your lab environment.
 ====
-+
+
 [WARNING]
 ====
 While you have root access to all of the systems, including the workstation node, and you are able to make any configuration changes necessary, do not enable root login from SSH to the workstation node. The default password is not secure and your machine may be compromised and subsequently deleted without warning.
 ====
 
 . Verify that your environment is ready for use by connecting to your administration host through SSH using the details provided in the external provisioning email, which includes your username and password:
-+
+
 .Example Command
 [source,sh]
 -----
 # ssh username@workstation-67a5.dynamic.opentlc.com
 -----
 * It may take up to 30 minutes for your lab environment to be ready. If you cannot connect to your administration host, continue to try periodically until your connection succeeds.
-+
+
 [NOTE]
 ====
 * If you are using Windows, use a terminal program such as PuTTY to connect instead of the `ssh` command shown.
@@ -105,6 +105,7 @@ GIT_SSH_COMMAND="ssh -i key.rsa" git clone git@github.com:likid0/cephadmdeploy.g
 We then run the client/workstation playbook.
 
 ----
+# ansible-galaxy collection install community.crypto
 # ansible-playbook cephadmdeploy/ansible-cephadm-deploy/prepare-client.yaml -i workstation,
 ----
 
