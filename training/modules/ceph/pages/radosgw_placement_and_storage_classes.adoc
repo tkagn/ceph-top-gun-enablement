@@ -1,4 +1,15 @@
-== Ceph RadosGW placement targets
+= Ceph RadosGW placement targets
+
+.Goals
+* Introduction to RGW placmenet targers
+* Hands-on Lab. Configure and Experiment with RGW placement targets
+* Introduction to RGW Storage Classes
+* Hands-on Lab. Configure and Experiment with RGW Storage Classes
+
+:numbered:
+
+
+== Introduction
 
 Placement targets control which pools are associated with a particular
 bucket. A bucket’s placement target is selected on creation, and cannot
@@ -20,7 +31,7 @@ https://docs.ceph.com/en/latest/radosgw/placement/[Ceph upstream
 documentation].
 ====
 
-=== Getting current placement targets configuration
+== Getting current placement targets configuration
 
 The zonegroup placement configuration can be queried with:
 

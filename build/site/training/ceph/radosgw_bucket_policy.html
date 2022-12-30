@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <title>S3 Bucket Policies :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_bucket_policy.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -105,10 +105,10 @@
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+    <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
+    <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
   </li>
@@ -179,11 +179,10 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
+<h1 class="page">S3 Bucket Policies</h1>
 <div class="sect1">
-<h2 id="_s3_bucket_policies"><a class="anchor" href="#_s3_bucket_policies"></a>S3 Bucket Policies</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h3>
 <div class="paragraph">
 <p>An S3 bucket policy is an object that allows you to manage access to specific S3 storage resources. You can specify permissions for each resource to allow or deny actions requested by a principal (a user or role). When you create a new S3 bucket, you should set a policy granting the relevant permissions to the data forwarder’s principal roles.</p>
 </div>
@@ -194,8 +193,10 @@
 <p>The Ceph Object Gateway supports a subset of the Amazon S3 policy language applied to buckets.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_an_amazon_s3_bucket_policy_contains_the_following_basic_elements"><a class="anchor" href="#_an_amazon_s3_bucket_policy_contains_the_following_basic_elements"></a>An Amazon S3 bucket policy contains the following basic elements:</h3>
+</div>
+<div class="sect1">
+<h2 id="_an_amazon_s3_bucket_policy_contains_the_following_basic_elements"><a class="anchor" href="#_an_amazon_s3_bucket_policy_contains_the_following_basic_elements"></a>2. An Amazon S3 bucket policy contains the following basic elements:</h2>
+<div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
@@ -228,8 +229,10 @@
 </ul>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_bucket_policy_lab"><a class="anchor" href="#_bucket_policy_lab"></a>Bucket Policy Lab</h3>
+</div>
+<div class="sect1">
+<h2 id="_bucket_policy_lab"><a class="anchor" href="#_bucket_policy_lab"></a>3. Bucket Policy Lab</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Giving external users access to our buckets.</p>
 </div>
@@ -651,7 +654,6 @@ delete: 's3://test-s3-policies/test-file-policies'</pre>
 <p>In this Module we have covered a basic example of S3 bucket policies, we have
 more advanced examples on the module <code>STS Bucket and Role Policies</code> Check it
 out.</p>
-</div>
 </div>
 </div>
 </div>

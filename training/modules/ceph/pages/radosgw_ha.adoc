@@ -1,6 +1,16 @@
-== Providing RadosGW HA.
+= Providing RadosGW HA
 
-=== Introduction
+:toc:
+:toclevels: 3
+:icons: font
+:source-highlighter: pygments
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+
+
+== Introduction
 
 To avoid single points of failure in our Ceph RGW deployment we need to provide
 an S3/RGW endpoint that can tolerate the failure of one or more RGW services.
@@ -14,7 +24,7 @@ HA and loadbalancing stack based on keepalive and haproxy.
 The ingress service allows you to create a high availability endpoint for RGW with a minimum set of configuration options. The orchestrator will deploy and manage a combination of haproxy and keepalived to provide load balancing on a floating virtual IP.
 If SSL is used, then SSL must be configured and terminated by the ingress service and not RGW itself.
 
-image::ingress.png[HAproxy Ingress Service]
+image::ingress.png[HAproxy Ingress Service,840,680]
 
 There are N hosts where the ingress service is deployed. Each host has a haproxy daemon and a keepalived daemon. A virtual IP is automatically configured on only one of these hosts at a time.
 
@@ -22,7 +32,7 @@ Each keepalived daemon checks every few seconds whether the haproxy daemon on th
 
 The active haproxy acts like a load balancer, distributing all RGW requests between all the RGW daemons available.
 
-=== Deploying a new RGW daemon
+== Deploying a new RGW daemon
 
 Currently in our lab we have single RGW service/deamon running, we need at
 least two RGW services configured with the same Real/Zonegroup/Zone and running
@@ -56,6 +66,8 @@ Scheduled rgw.multi.zone1 update...
 rgw.multi.zone1.ceph-node02.lviwfb  ceph-node02  *:8000       running (3m)      3m ago   3m    45.7M        -  16.2.8-85.el8cp  b2c997ff1898  0e3521f3a162  
 rgw.multi.zone1.proxy01.mhawfj      proxy01      *:8000       running (30m)     4m ago  30m    61.9M        -  16.2.8-85.el8cp  b2c997ff1898  4de70934f04e  
 ----
+
+== Deploying the Ingress Service
 
 Now that we have 2 rgw instances running we can deploy an ingress service to
 provide HA and loadbalancing of out S3 http endpoint, we beed a VIP for

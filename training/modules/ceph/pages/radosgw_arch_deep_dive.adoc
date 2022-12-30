@@ -1,5 +1,5 @@
 
-== Deep dive into RGW Architecture.
+= Deep dive into RGW Architecture.
 
 .Goals
 * Review the RGW frontends

@@ -1,4 +1,4 @@
-== Rados Gateway Cloud Transitions
+= Rados Gateway Cloud Transitions
 
 :toc:
 :toclevels: 4

@@ -1,5 +1,13 @@
+= Object Lifecycle Management 
 
-==  Object Lifecycle Management 
+.Goals
+* Introduction to RGW Lifecycle Management
+* Hands-on Lab. Configure and Experiment with RGW Lifecycle Management
+
+:numbered:
+
+
+== Introduction
 
 Object expiration is in substance implemented in the following way: ceph lifecycle mechanism (lc) scans the objects' metadata, where the expiration date is being hold, comparing the expiration date with the current date. Once the condition becomes true lc marks the object as deleted, and it is transferred to Ceph’s garbage collector (gc) which in its turn deletes the expired object. lc process runs periodically with a pre-defined and configurable schedule. This mechanism makes it possible to use a declarative policy to expire the objects we have in our cluster, in the same way it can be done in Amazon S3.
 
@@ -7,7 +15,7 @@ Tier transition in its turn provides us with the ability of creating Storage
 Classes for hot (fast media, such as SSD/NVMe used for I/O sensitive workloads) and slow (slow, magnetic media such as SAS/SATA used for archiving) areas relying on bucket lifecycle process for moving out data. Thus it's now possible to create a scheduled data movement between storage classes where data is written to the hot class, then it's moved to the slow (after a configured amount of time) and then expires and deleted for good. This feature is the de-facto standard in AWS nowadays, and now it’s available in Ceph as well.
 
 
-=== Create a new storage class
+== Create a new storage class
 
 To create a new storage class named `SLOW` in the `default-placement`
 target, start by adding it to the zonegroup in the master zone:

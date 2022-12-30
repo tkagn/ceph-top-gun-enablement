@@ -1,7 +1,14 @@
 
-== S3 Object Versioning
+= S3 Object Versioning
 
-=== Some object versioning facts to take into account:
+.Goals
+* Introduction to S3 Object versioning
+* Hands-on Lab. Enable and Experiment with Object Versioning
+
+:numbered:
+
+
+== Some object versioning facts to take into account:
 
 . Older object versions can be removed by specifying the name and the versionID of the object to be removed
 . By default There is no expiration on buckets meaning older versions will be kept until manually removed.
@@ -16,7 +23,7 @@
 . Object versioning examples with the AWS CLI.
 
 
-=== S3 Object versioning Workflow
+== S3 Object versioning Workflow
 
 Put Object with versioning enabled on the bucket:
 
@@ -39,7 +46,7 @@ But you can always GET and object using the version ID:
 
 image::versioning_GET_Versioned3.png[Get Object version]
 
-=== S3 Object versioning with RGW Hands-on
+== S3 Object versioning with RGW Hands-on
 
 Create a new bucket:
 

@@ -1,6 +1,8 @@
-== RadosGW users and Quotas
+= RadosGW users and Quotas
 
-=== RadosGW Users
+:numbered:
+
+== RadosGW Users
 
 User management is performed different as traditional user management in Ceph clusters (cephx)
 
@@ -298,7 +300,7 @@ To remove a user and also delete their objects and buckets, use the --purge-data
 
 
 
-=== Multi-tenancy
+== Multi-tenancy
 
 Traditionally, if multi-tenancy is not used, S3 bucket names should be “globally” unique With multi-tenancy, each user and bucket lies under a tenant
 Prevents namespace clashing when multiple tenants are using common bucket names
@@ -378,7 +380,7 @@ Accessing buckets with explicit tenants, Python Boto3 example
      bucket = c.get_bucket("testx:butent")
 ----
 
-=== Quotas
+== Quotas
 
 Set quotas to limit the amount of storage a user or bucket can consume. Set the quota parameters
 first, then enable the quota. To disable a quota, set a negative value for the quota parameter.

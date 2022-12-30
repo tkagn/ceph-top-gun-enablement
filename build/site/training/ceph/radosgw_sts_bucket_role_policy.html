@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <title>STS assume role Bucket &amp; Role Policy Examples. :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_sts_bucket_role_policy.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -105,10 +105,10 @@
     <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-cloudsync.html">RGW Cloudsync</a>
+    <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="radosgw-presignedurl.html">RGW presigned URL</a>
+    <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
   </li>
@@ -179,8 +179,9 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
+<h1 class="page">STS assume role Bucket &amp; Role Policy Examples.</h1>
 <div class="sect1">
-<h2 id="_sts_assume_role_bucket_role_policy_examples"><a class="anchor" href="#_sts_assume_role_bucket_role_policy_examples"></a>STS assume role Bucket &amp; Role Policy Examples.</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>In this module we explain the differences between bucket policies and
@@ -188,8 +189,11 @@ role policies when using the STS assume role call implementation, we
 also share policy examples and how they are applied differently using
 bucket or role policies.</p>
 </div>
-<div class="sect2">
-<h3 id="_bucket_policy_vs_role_policy"><a class="anchor" href="#_bucket_policy_vs_role_policy"></a>Bucket Policy vs Role Policy:</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bucket_policy_vs_role_policy"><a class="anchor" href="#_bucket_policy_vs_role_policy"></a>2. Bucket Policy vs Role Policy:</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>We can apply the rules/policy that give access to the s3 resources in 2
 places, at the bucket level and at the role level.</p>
@@ -251,8 +255,8 @@ role3: /folder3/db2 rw</p>
 <p>In any case we are going  to share a couple of examples of each, role
 and bucket policy.</p>
 </div>
-<div class="sect3">
-<h4 id="_bucket_policy_1st_example"><a class="anchor" href="#_bucket_policy_1st_example"></a>Bucket Policy. 1st Example.</h4>
+<div class="sect2">
+<h3 id="_bucket_policy_1st_example"><a class="anchor" href="#_bucket_policy_1st_example"></a>2.1. Bucket Policy. 1st Example.</h3>
 <div class="paragraph">
 <p>The steps I have followed to setup this example with a rgw local user
 called admin, I created the following resources:</p>
@@ -632,8 +636,10 @@ cat: s3a://bucket-new/folder2/host1: getFileStatus on s3a://bucket-new/folder2/h
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_bucket_policy_2nd_example_use_of_notresource"><a class="anchor" href="#_bucket_policy_2nd_example_use_of_notresource"></a>Bucket Policy. 2nd Example. Use of NotResource</h3>
+</div>
+<div class="sect1">
+<h2 id="_bucket_policy_2nd_example_use_of_notresource"><a class="anchor" href="#_bucket_policy_2nd_example_use_of_notresource"></a>3. Bucket Policy. 2nd Example. Use of NotResource</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The steps I have followed with a rgw local user called admin, I create:</p>
 </div>
@@ -767,12 +773,23 @@ cat: s3a://bucket-new/folder2/host1: getFileStatus on s3a://bucket-new/folder2/h
 <pre>+</pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
 <div class="paragraph">
-<p><strong>NOTE: </strong>We are using the NotResource and Effect Deny workaround
+<p>We are using the NotResource and Effect Deny workaround
 because we found a bug when using the more straight forward approach to
 limit the access of the user to certain folders/prefixes that would be
 to use a condition with the StringLike to match the folder we want to
 use, for example:</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -803,11 +820,22 @@ use, for example:</p>
     },</pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
 <div class="paragraph">
-<p> <strong>NOTE:</strong> There is an open BZ to fix this issue:
+<p>There is an open BZ to fix this issue:
 <a href="https://bugzilla.redhat.com/show_bug.cgi?id=1974678" class="bare">https://bugzilla.redhat.com/show_bug.cgi?id=1974678</a> , important to take
 in account that this BZ only affects role policies, bucket policies work
 fine.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -1079,9 +1107,8 @@ Found 1 items
 -rw-rw-rw-   1 hadoop hadoop        177 2021-06-20 03:39 s3a://bucket-data/write-folder/write-object-new</pre>
 </div>
 </div>
-</div>
 <div class="sect2">
-<h3 id="_role_policy_examples"><a class="anchor" href="#_role_policy_examples"></a>Role Policy examples.</h3>
+<h3 id="_role_policy_examples"><a class="anchor" href="#_role_policy_examples"></a>3.1. Role Policy examples.</h3>
 <div class="paragraph">
 <p>Role policies are written in the same way as the bucket policies, the
 only difference is that the principal of the policy in a role policy is
@@ -1137,8 +1164,9 @@ apply the role policy:</p>
 }</pre>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_role_policy_example_local_rgw_user"><a class="anchor" href="#_role_policy_example_local_rgw_user"></a>Role Policy. Example. Local RGW user.</h4>
+</div>
+<div class="sect2">
+<h3 id="_role_policy_example_local_rgw_user"><a class="anchor" href="#_role_policy_example_local_rgw_user"></a>3.2. Role Policy. Example. Local RGW user.</h3>
 <div class="paragraph">
 <p>In this example we are going to try and achieve the same thing we did
 with example number 2 of bucket policies, where we have a read and a
@@ -1442,22 +1470,6 @@ drwxrwxrwx   - hadoop hadoop          0 2021-06-26 04:24 s3a://bucket-pol/write-
 -rw-rw-rw-   1 hadoop hadoop        585 2021-06-26 03:16 s3a://bucket-pol/write-folder/hosts2
 [hadoop@hadoop ~]$ hdfs dfs  -rm  s3a://bucket-pol/write-folder/hosts2
 Deleted s3a://bucket-pol/write-folder/hosts2</pre>
-</div>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>+</pre>
-</div>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>+</pre>
-</div>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>+</pre>
-</div>
 </div>
 </div>
 </div>

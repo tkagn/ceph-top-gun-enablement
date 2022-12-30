@@ -13,8 +13,8 @@
 * xref:radosgw_sts_introduction.adoc[RGW Secure Token Service]
 * xref:radosgw_sts_bucket_role_policy.adoc[RGW Bucket vs Role Policy]
 * xref:radosgw_multisite.adoc[RGW Multisite Replication]
-* xref:radosgw-cloudsync.adoc[RGW Cloudsync]
-* xref:radosgw-presignedurl.adoc[RGW presigned URL]
+* xref:radosgw_cloudsync.adoc[RGW Object Cloud Transition]
+* xref:radosgw_presignedurl.adoc[RGW presigned URL]
 
 .CephFS Shared FileSystem
 * xref:cephfs_intro.adoc[CephFS introduction & Deployment]

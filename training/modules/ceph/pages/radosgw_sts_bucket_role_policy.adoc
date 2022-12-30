@@ -1,12 +1,17 @@
-== STS assume role Bucket & Role Policy Examples.
+= STS assume role Bucket & Role Policy Examples.
 
+
+:numbered:
+
+
+== Introduction
 
 In this module we explain the differences between bucket policies and
 role policies when using the STS assume role call implementation, we
 also share policy examples and how they are applied differently using
 bucket or role policies.
 
-=== Bucket Policy vs Role Policy:
+== Bucket Policy vs Role Policy:
 
 We can apply the rules/policy that give access to the s3 resources in 2
 places, at the bucket level and at the role level.
@@ -52,7 +57,7 @@ role3: /folder3/db2 rw
 In any case we are going  to share a couple of examples of each, role
 and bucket policy. 
 
-==== Bucket Policy. 1st Example.
+=== Bucket Policy. 1st Example.
 
 The steps I have followed to setup this example with a rgw local user
 called admin, I created the following resources:
@@ -381,9 +386,7 @@ cat: s3a://bucket-new/folder2/host1: getFileStatus on s3a://bucket-new/folder2/h
  
 ....
 
-=== Bucket Policy. 2nd Example. Use of NotResource
-
- 
+== Bucket Policy. 2nd Example. Use of NotResource
 
 The steps I have followed with a rgw local user called admin, I create:
 
@@ -398,8 +401,6 @@ The steps I have followed with a rgw local user called admin, I create:
 * A role document policy to give writeuser access to the writerole.
 
 The policy we are using for the bucket is the following:
-
- 
 
 ....
 {
@@ -493,11 +494,14 @@ The policy we are using for the bucket is the following:
 
  +
 
-**NOTE: **We are using the NotResource and Effect Deny workaround
+[NOTE] 
+====
+We are using the NotResource and Effect Deny workaround
 because we found a bug when using the more straight forward approach to
 limit the access of the user to certain folders/prefixes that would be
 to use a condition with the StringLike to match the folder we want to
 use, for example:
+====
 
 ....
 {
@@ -527,10 +531,13 @@ use, for example:
     },
 ....
 
- *NOTE:* There is an open BZ to fix this issue:
+[NOTE]
+====
+There is an open BZ to fix this issue:
 https://bugzilla.redhat.com/show_bug.cgi?id=1974678 , important to take
 in account that this BZ only affects role policies, bucket policies work
 fine.
+====
 
  +
 
@@ -824,9 +831,8 @@ apply the role policy:
 }
 ....
 
-==== Role Policy. Example. Local RGW user.
+=== Role Policy. Example. Local RGW user.
 
- 
 
 In this example we are going to try and achieve the same thing we did
 with example number 2 of bucket policies, where we have a read and a
@@ -834,7 +840,6 @@ write role, the readuser assuming the readrole will only be able to
 access the readfolder, and the writeuser assuming the writerole will
 only be able to access the writefolder.
 
- 
 
 The steps I have followed with a rgw local user called admin, I created:
 
@@ -1082,9 +1087,3 @@ drwxrwxrwx   - hadoop hadoop          0 2021-06-26 04:24 s3a://bucket-pol/write-
 [hadoop@hadoop ~]$ hdfs dfs  -rm  s3a://bucket-pol/write-folder/hosts2
 Deleted s3a://bucket-pol/write-folder/hosts2
 ....
-
- +
-
- +
-
- +

@@ -1,4 +1,4 @@
-== Rados Gateway Introduction and Deployment
+= Rados Gateway Introduction and Deployment
 
 .Goals
 * Introduction to Object Storage

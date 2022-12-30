@@ -1,6 +1,9 @@
-== RadosGW Multisite
+= RadosGW Multisite
 
-=== Introduction
+:numbered:
+
+
+== Introduction
 
 A single zone configuration typically consists of one zone group containing one zone and one or more ceph-radosgw instances where you may load-balance gateway client requests between the instances. In a single zone configuration, typically multiple gateway instances point to a single Ceph storage cluster.
 
@@ -12,7 +15,7 @@ This is where asynchronous replication is used. This allows each cluster in the 
 
 So, from the top down, we have realm, Zone Group and zones and I'm going to explain all those right now. So, a realm represents a globally unique namespace and represents the highest level of the Ceph multisite cluster. Each realm can then contain either one or multiple zone groups and multiple zones. So next we have zone groups. These used to be called regions and they're essentially made to define one or more multiple geographic areas. So next we have zones. These are the lowest level of the Ceph multisite configuration and they're represented by one or more object gateways underneath one single Ceph cluster.
 
-=== RGW Multisite components
+== RGW Multisite components
 
 . *Zone*
 
@@ -52,7 +55,7 @@ Formerly called ‘regions’, Ceph Object Gateway can also support multiple zon
 
 In Kraken, the Ceph Object Gateway supports the notion of realms, which can be a single zone group or multiple zone groups and a globally unique namespace for the realm. Multiple realms provide the ability to support numerous configurations and namespaces.
 
-=== Multisite Lab.
+== Multisite Lab.
 
 In this lab we are going to deploy an advanced configuration that consists
 of a single realm with one zone group and two zones, each zone with two Ceph RGW instances. Each

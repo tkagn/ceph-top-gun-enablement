@@ -1,4 +1,4 @@
-== RGW Authentication/Authorization.
+= RGW Authentication/Authorization.
 
 .Goals
 * Review RGW Authentication methods
