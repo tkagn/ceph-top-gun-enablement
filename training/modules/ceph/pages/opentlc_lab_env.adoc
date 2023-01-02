@@ -202,7 +202,7 @@ For each cluster we run:
 ----
 
 Once the playbook finishes you are ready to start the ceph deployment, if
-needed several scripts have been created in our admin host
+needed several scripts have been created in the `/root` filesystem of our admin host
 `ceph-node01.example.com`
 
 ----
@@ -214,7 +214,7 @@ cluster-wait-until-installed.sh  <--- waits until ceph is healthy
 zap-disks.sh <--- Zaps Disks
 ----
 
-The cluster-install.sh script is using for the cephadm bootstrap a spec file, you can edit and modify
+The cluster-install.sh script is using for the cephadm bootstrap a spec file `ceph-node01.example.com`, you can edit and modify
 this file to your needs:
 
 ----

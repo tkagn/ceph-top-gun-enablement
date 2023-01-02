@@ -4,6 +4,7 @@
 * xref:radosgw_intro.adoc[RGW Introduction & Deployment]
 * xref:radosgw_arch_deep_dive.adoc[RGW Deep Dive]
 * xref:radosgw_ha.adoc[RGW High Availability]
+* xref:radosgw_ssl.adoc[RGW & Ingress with SSL]
 * xref:radosgw_users_quotas.adoc[RGW Users & Quotas]
 * xref:radosgw_auth.adoc[RGW Auth & Authz]
 * xref:radosgw_object_versioning.adoc[RGW S3 Object Versioning]

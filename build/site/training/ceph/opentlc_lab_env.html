@@ -78,6 +78,9 @@
     <a class="nav-link" href="radosgw_ha.html">RGW High Availability</a>
   </li>
   <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_ssl.html">RGW &amp; Ingress with SSL</a>
+  </li>
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_users_quotas.html">RGW Users &amp; Quotas</a>
   </li>
   <li class="nav-item" data-depth="1">
@@ -218,6 +221,9 @@
 <ol class="arabic">
 <li>
 <p>Navigate to the <a href="https://labs.opentlc.com" target="_blank" rel="noopener">OPENTLC lab portal</a> and log in with your username and password.</p>
+</li>
+</ol>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -230,7 +236,8 @@ If you do not remember your username or password, go to the <a href="https://www
 </tr>
 </table>
 </div>
-</li>
+<div class="olist arabic">
+<ol class="arabic">
 <li>
 <p>Navigate to <strong>Services &#8594; Catalogs &#8594; All Services &#8594; OPENTLC Cloud Infrastructure Labs</strong>.</p>
 </li>
@@ -245,6 +252,9 @@ If you do not remember your username or password, go to the <a href="https://www
 </li>
 <li>
 <p>After a few minutes, check your email account for a message from Red Hat confirming that provisioning started.</p>
+</li>
+</ol>
+</div>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -273,9 +283,6 @@ If you do not remember your username or password, go to the <a href="https://www
 </tr>
 </table>
 </div>
-</li>
-</ol>
-</div>
 </div>
 <div class="sect2">
 <h3 id="_set_up_registry_prerequisites"><a class="anchor" href="#_set_up_registry_prerequisites"></a>1.2. Set Up Registry Prerequisites</h3>
@@ -289,13 +296,13 @@ If you do not remember your username or password, go to the <a href="https://www
 </li>
 <li>
 <p>Select your account name, and note your username and password from the <strong>Token Information</strong> tab:</p>
+</li>
+</ol>
+</div>
 <div class="imageblock unresolved">
 <div class="content">
 <img src="images/Registry-Login-01.png" alt="Registry Login 01">
 </div>
-</div>
-</li>
-</ol>
 </div>
 </div>
 </div>
@@ -318,9 +325,6 @@ The lab environment is cloud-based, so you can access it over the Internet from 
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>+</p>
-</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -334,9 +338,6 @@ The lab environment is cloud-based, so you can access it over the Internet from 
 </td>
 </tr>
 </table>
-</div>
-<div class="paragraph">
-<p>+</p>
 </div>
 <div class="admonitionblock warning">
 <table>
@@ -356,6 +357,9 @@ The lab environment is cloud-based, so you can access it over the Internet from 
 <ol class="arabic">
 <li>
 <p>Verify that your environment is ready for use by connecting to your administration host through SSH using the details provided in the external provisioning email, which includes your username and password:</p>
+</li>
+</ol>
+</div>
 <div class="listingblock">
 <div class="title">Example Command</div>
 <div class="content">
@@ -366,6 +370,9 @@ The lab environment is cloud-based, so you can access it over the Internet from 
 <ul>
 <li>
 <p>It may take up to 30 minutes for your lab environment to be ready. If you cannot connect to your administration host, continue to try periodically until your connection succeeds.</p>
+</li>
+</ul>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -386,12 +393,6 @@ The lab environment is cloud-based, so you can access it over the Internet from 
 </td>
 </tr>
 </table>
-</div>
-</li>
-</ul>
-</div>
-</li>
-</ol>
 </div>
 </div>
 </div>
@@ -420,7 +421,8 @@ in this example we are using a private key to authenticate against github.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ansible-playbook cephadmdeploy/ansible-cephadm-deploy/prepare-client.yaml -i workstation,</pre>
+<pre># ansible-galaxy collection install community.crypto
+# ansible-playbook cephadmdeploy/ansible-cephadm-deploy/prepare-client.yaml -i workstation,</pre>
 </div>
 </div>
 </div>
@@ -547,7 +549,7 @@ to the latest RHEL 8 minor version.</p>
 </div>
 <div class="paragraph">
 <p>Once the playbook finishes you are ready to start the ceph deployment, if
-needed several scripts have been created in our admin host
+needed several scripts have been created in the <code>/root</code> filesystem of our admin host
 <code>ceph-node01.example.com</code></p>
 </div>
 <div class="listingblock">
@@ -561,7 +563,7 @@ zap-disks.sh &lt;--- Zaps Disks</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The cluster-install.sh script is using for the cephadm bootstrap a spec file, you can edit and modify
+<p>The cluster-install.sh script is using for the cephadm bootstrap a spec file <code>ceph-node01.example.com</code>, you can edit and modify
 this file to your needs:</p>
 </div>
 <div class="listingblock">
