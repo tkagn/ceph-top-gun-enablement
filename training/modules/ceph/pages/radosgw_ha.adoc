@@ -173,4 +173,3 @@ Now that we have the Ingress service working, and the Client requests are being
 loadbalanced between both RGW services, you can shutodown a node, and check
 with and s3client that you can still interact with the S3 endpoint, uploading
 some files for example.
-

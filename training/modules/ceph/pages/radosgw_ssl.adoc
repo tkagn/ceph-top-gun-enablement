@@ -1,0 +1,94 @@
+= RadosGW & Ingress SSL 
+
+:toc:
+:toclevels: 3
+:icons: font
+:source-highlighter: pygments
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+
+
+== Introduction
+
+The first ingredient we need to configure SSL endpoint is the "SSL Certificate" itself, which must be obtained through an official certification authority, or CA. It’s the CA’s responsibility to confirm the certificate’s identity, as well as assert for its authenticity. For demonstration purposes, we’ll use a self-sign certificate. For production environment acquiring an SSL certificate through an authorized CA is recommended.
+
+== Configuring SSL for the RGW daemon
+
+To configure SSL in our RGW daemon we are going to use a RGW spec definition.
+
+[NOTE]
+====
+Some parameters such as the network to be used by RGW instances or the ssl certificate content can only be defined by using the service speficiation file.
+====
+
+---
+service_type: rgw
+service_id: objectgw
+service_name: rgw.objectgw
+placement:
+  count: 1
+  label: "rgw"
+spec:
+  ssl: true
+  rgw_frontend_port: 8443
+  rgw_frontend_type: beast
+  rgw_frontend_ssl_certificate: |
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEowIBAAKCAQEAtSJHgIAfQuh6j53voNCOGiCQhoQB403oyZQjYQ1duBWVJ2UW
+    1NRSEcguA1XZHvDzInTSstOmV8/3yKNW/zcWzLxjKy2UCUFzFMVMPrnSXfveKanr
+    yFYh087ArA8mA5XEEDOayPMTy3YSMAGwBX5O7jnYiFAUrQP96iAh5ERxgmxYhAx7
+    syq1IhWhrS4cL1meCYXqRQG2nsaVvbkxdnb+U5Q4WUKtdLyKyOgC7clPWasnIlte
+    PBlczoT+9396kYRFivzzU0waFgxIDtS+bl0XRDiVnYRAElPPvpuB7OfE4noRzibB
+    l52N270/Kq65KmkRPmTQ47lvHb+zuJAtJ7g36wIDAQABAoIBAFLRipnRevmvrCIw
+    V1lTIjYF/67Rer+AZtiMGCUO5HP/wkPR779+GMwyl/9EaFLCXpi5i4DiTuNFnoip
+    TmTAvnb8B+e9HjuhJkov762abvoz6B9qpvjhkPP0S5ogDwSCnLO/tJz+r2VO5f/3
+    NZE9cD9ySXQCEYIOGjHLYVOqi6/SrvDnUICHG2XFbpXRhh1PUCoQT6ZHNt63Sl+D
+    Hqu1AEdX4lZcl9aTbYqghFHO4tE8Rt0Dq36w27VubC6KgHjj1ubdw9cfbfZm1y8I
+    IPId3jYHCuPlhdSBT5ZtgS7YiiAuYClPcz5JSaUVs67GOwr3KCau5w6IPwyMbm2n
+    N2DWiHECgYEA4wWg3z3hHjw8IKE7kCLWN35+dDcS1f++3ETbN3SwyxGKQAY1awxR
+    4MG8RdM5lKRFgC7tVGNL9FmTOLQOp1dGmoYW9MUXmWxlw139wyBHrGBtjBN77sBJ
+    eMdRqv2ElRL8bmoqDxQgRAJFQh+rjOoZ0Ltw8g/8X4HRHvUgME3vPCMCgYEAzEEr
+    1ytHukbVqkQVpL2NbSTSUwNor8EOiGJO/o2unu9N4ik3Qa4lEccCmmgZQziPwuBf
+    rD5PlDIvmwsOwaaM2WCqM8otP6Qdt85yvBl+IUXpJzGJlrNLzmUezUCnWG+wwihd
+    4ZS3ejxNnZw7bpr4KRzgdla9KJU62xu1ufTKjZkCgYB4Jllu7TQAqYZ1CoAYl6di
+    NWs9nIw2gCUGNNcEcZjD0KOnoOGSpzGKT16SYekelxZFchCfUfI3/1RgdUMwI4u1
+    anQp1UnZJDpzfII6TBJC08IGmaVExbXc2ziI06Xgs+yvjzZ1RoSRGdaH2XUUni1N
+    gHaVVgqOjYkc5kTD6+tKmwKBgAdbvbGVvJLIZIAqzcDOl168OduFvuq+AMEHEaN4
+    BTdylZK1O2lhVbKLQdvALlDOo9c4cBnrcMB9AlwKjPCLCH34TolpGjI1vmBVzqpa
+    HMIkG58u2K8WLH/2AqMQVjcIZwzHmYI78lQ0AfPQog99A72vbaK1w0DIB4PHPsfB
+    Ot7ZAoGBAKJVigBCRNfMHfJcRg/8qV0pDqW1aqH4fwbpotgYXgd26UlLayApmRHx
+    sf7XdP4hJjxNyP75OapLJUVsAEmusYYar2tAqp18zIDzLwE5Yy4U8zOEuRUUPIB+
+    wS8IflMYFJQ6IoFLusA/5G13zN+mEwaI1+ZZVUy4DbIISlwwMjoJ
+    -----END RSA PRIVATE KEY-----
+    -----BEGIN CERTIFICATE-----
+    MIIEOTCCAiGgAwIBAgIUBaNZHVmXRuU6ouqvly+z+NiivlEwDQYJKoZIhvcNAQEL
+    BQAwFTETMBEGA1UEAwwKQW5zaWJsZSBDQTAeFw0yMjEyMjkxNzAzNTJaFw0yMzEy
+    MzAxNzAzNTJaMAAwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC1IkeA
+    gB9C6HqPne+g0I4aIJCGhAHjTejJlCNhDV24FZUnZRbU1FIRyC4DVdke8PMidNKy
+    06ZXz/fIo1b/NxbMvGMrLZQJQXMUxUw+udJd+94pqevIViHTzsCsDyYDlcQQM5rI
+    8xPLdhIwAbAFfk7uOdiIUBStA/3qICHkRHGCbFiEDHuzKrUiFaGtLhwvWZ4JhepF
+    AbaexpW9uTF2dv5TlDhZQq10vIrI6ALtyU9ZqyciW148GVzOhP73f3qRhEWK/PNT
+    TBoWDEgO1L5uXRdEOJWdhEASU8++m4Hs58TiehHOJsGXnY3bvT8qrrkqaRE+ZNDj
+    uW8dv7O4kC0nuDfrAgMBAAGjgZUwgZIwUAYDVR0RBEkwR4ILZXhhbXBsZS5jb22C
+    E3Mzem9uZTEuZXhhbXBsZS5jb22CE3Mzem9uZTIuZXhhbXBsZS5jb22CDnMzLmV4
+    YW1wbGUuY29tMB0GA1UdDgQWBBRkr7LfgXx0CyKM9Gv2JOA/8fmKLjAfBgNVHSME
+    GDAWgBSRSpFSDyWkkvh7yuuTYbTISfu/PjANBgkqhkiG9w0BAQsFAAOCAgEAnuIF
+    FXi3VlcwfcRMfds+OnCtGwlJQ+rmAgF+QRpJv1hODUF2AHAqcM4I+1Wz/N8orZ70
+    BE/VWzS1dhCUjbNFtFSNfr+ZUXXK60qsu5y6R9Coyjcrae1rl4xG/JULmEG032UQ
+    k6iRgUcpboSOZgY8Jm3MUDdHmCP6I8QcEP17RPTlel7z0MH1DuCzJihyGiohJT1B
+    gMKH9eMjpNp2YzlY7DFrUnoQQyAIwNiA2Sy31ctGaoHqg5g65l4WnOKaLMAFjPQk
+    oDfPtLf82hMA6AF2RO42BL6hkCKm+xlJj8q0+Js3uH8svsVBkVK3gKrfUHbiq9b2
+    GWK4Q4peBUfrnN5hGwuFsySdci75mS3bMtKZK1bttaSq0XtyN9gB0hOuK91s24wo
+    jMibkYoF5BUjgSX4PQD0yuGnL2NhDgvxROF8WD+8kZucD9MMNRHHI7PF1lQ8xaHX
+    2ztZyaI1dFzBPpN2ad4fLlCzDt5crOrTiKz1m9/G6Cu1n3/bRjKOhauKa0sU0v+L
+    8hBUZtECf2a7uSlQN6mNLr87UOQOqIjJ/2utcznAOToeRuJpBSlexzbqYoFisYc7
+    5iiE0Epgbi10FULLz94VCx3KT+/W2ZNlRL6cNX5k4vXfNEtmm4EoNPsekqbSwOQm
+    n4XUOuRBbqgijGHAHXnpGa10ZxFf2aYXmfklgHQ=
+    -----END CERTIFICATE-----
+---
+
+
+== Configuring SSL for the Ingress Service
+
