@@ -77,14 +77,14 @@ Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_os
 +
 [source,sh]
 ----
-[ceph: root@ceph-mon01 /]#  ceph config set mon mon_max_pg_per_osd 512
+#  ceph config set mon mon_max_pg_per_osd 512
 ----
 
 . Create a realm:
 +
 [source,sh]
 ----
-[ceph: root@ceph-mon01 /]# radosgw-admin realm create --rgw-realm=multisite --default
+# radosgw-admin realm create --rgw-realm=multisite --default
 ----
 +
 .Sample Output
@@ -102,7 +102,7 @@ Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_os
 +
 [source,sh]
 ----
-[ceph: root@ceph-mon01 /]# radosgw-admin zonegroup create --rgw-zonegroup=multisite_zonegroup  --master --default
+# radosgw-admin zonegroup create --rgw-zonegroup=multizg  --master --default
 ----
 +
 .Sample Output
@@ -110,8 +110,8 @@ Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_os
 ----
 {
     "id": "2e41dde9-80f4-4ec8-a099-ec0e8a60938d",
-    "name": "multisite_zonegroup",
-    "api_name": "multisite_zonegroup",
+    "name": "multizg",
+    "api_name": "multizg",
     "is_master": "true",
     "endpoints": [],
     "hostnames": [],
@@ -131,7 +131,7 @@ Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_os
 +
 [source,sh]
 ----
-[ceph: root@ceph-mon01 /]# radosgw-admin zone create --rgw-zonegroup=multisite_zonegroup --rgw-zone=zone1 --master --default
+# radosgw-admin zone create --rgw-zonegroup=multizg --rgw-zone=zone1 --master --default
 ----
 +
 .Sample Output
@@ -182,7 +182,7 @@ Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_os
 +
 [source,sh]
 ----
-[ceph: root@ceph-mon01 /]# radosgw-admin period update --rgw-realm=multisite --commit
+# radosgw-admin period update --rgw-realm=multisite --commit
 ----
 +
 .Sample Output
@@ -271,7 +271,7 @@ Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_os
 +
 [source,sh]
 ----
-[ceph: root@ceph-mon01 /]# ceph orch apply rgw multi.zone1 --realm=multisite --zone=zone1 --placement="1 proxy01" --port=8000
+# ceph orch apply rgw multi.zone1 --realm=multisite --zone=zone1 --placement="1 proxy01" --port=8000
 ----
 +
 .Sample Output
@@ -289,7 +289,7 @@ Use the client.rgw.* section in the centralized configuration database to define
 +
 [source,sh]
 ----
-[ceph: root@ceph-mon01 /]# ceph orch ls
+# ceph orch ls
 ----
 +
 .Sample Output
@@ -312,7 +312,7 @@ multi.zone1                   ?:8080       1/1  5s ago     12s  proxy01.example.
 +
 [source,sh]
 ----
-[ceph: root@ceph-mon01 /]# ceph orch ps | grep rgw
+# ceph orch ps | grep rgw
 ----
 +
 .Sample Output
@@ -378,7 +378,7 @@ tcp6       0      0 :::80                   :::*                    LISTEN      
 +
 [source,sh]
 -----
-[root@ceph-mon01 ceph-ansible]# curl http://192.168.56.24:80
+[root@ceph-mon01 ceph-ansible]# curl http://proxy01:8000
 -----
 +
 .Sample Output
@@ -501,3 +501,188 @@ configure RGW http endpoint, for example:
 [ceph: root@node /]# aws --endpoint http://ceph-node01:8080 s3 mb s3://demobucket
 ----
 
+== S3 bucket access types
+
+The S3 API currently supports two different bucket addressing models: path-style (old) and virtual-hosted style (new).
+
+
+=== What’s the difference?
+
+*In path-style URLs*, the s3 bucket name will be in the URL path, examples:
+
+S3 endpoint URL: “https://s3.example.com/bucket-name/object_key"
+
+If you notice that the S3 buckets name and objects keys always in the same subdomain which in this case s3.example.com
+
+*In hosted-style URLs*, the bucket name will be included on the subdomain so we can have distinct DNS subdomains for the buckets, examples:
+
+https://bucket-name.s3.example.com/object_key
+
+Hosted style URL's can help with DNS resolution, scaling, security, traffic management, and DDoS protection more challenging with this old centralized model than unique, virtual-hosted style subdomains.
+
+=== How to enable hosted-style URLs in RadosGW
+
+By default RGW will work in the path-style URLs format, if we want to access a bucket using the hosted-style URLs some small configuration options are needed.
+
+The first thing would be getting DNS resolution ready, we will need to get a
+wildcard in place so any dns query that asks for *.bucket.example.com points to
+our RGW instance, in our lab we are using dnsmasq for DNS resoultion so we are
+going to add a new line to the dnsmasq config, to get the DNS bucket resolution
+working.
+
+[NOTE]
+====
+There are certain applications that only work with hosted-style bucket access
+====
+
+[TIP]
+====
+RGW prefers the first method(Path Style), because the second
+method(hosted-style) requires added operations like domain certification and DNS wild cards.
+====
+
+In this example IP 172.16.7.24 is for proxy01 were we have our RGW instance
+running:
+
+----
+# echo "address=/.bucket.example.com/172.16.7.24" >> /etc/dnsmasq.conf
+# systemctl restart dnsmasq
+# ping bucket1.bucket.example.com
+PING bucket1.bucket.example.com (172.16.7.24) 56(84) bytes of data.
+64 bytes from proxy01 (172.16.7.24): icmp_seq=1 ttl=64 time=2.18 ms
+----
+
+Now that DNS resoution is working we need to configure our RGW instance, we can
+configure the hosted-style url access in two ways:
+
+- Add the cname.domain.com to the rgw_dns_name config parameter per RGW instance
+- add cname.domain.com to the list of hostnames in your zonegroup configuration
+
+Lets get the name of our RGW instance
+
+----
+# ceph orch ps | grep rgw
+rgw.multi.zone1.proxy01.yrtaci  proxy01      *:8000       running (63m)      2m ago   63m    65.5M        -  16.2.8-85.el8cp  b2c997ff1898  323585d51d1e  
+----
+
+And use the name of the RGW instance adding client.  configure our dns bucket subdomain
+----
+# ceph config ls | grep rgw_dns_name
+rgw_dns_name
+
+# ceph config set client.rgw.multi.zone1.proxy01.yrtaci rgw_dns_name bucket.example.com
+----
+
+Just so it's obivious that we are sucesfully using the hosted-style access, I'm
+going to do the following steps:
+
+Create a bucket called bucket2 for example
+
+----
+# aws --endpoint http://proxy01:8000 s3 mb s3://bucket2 --region multizg
+make_bucket: bucket2
+----
+
+Upload an object
+
+----
+# aws --endpoint http://proxy01:8000 s3 cp /etc/hosts  s3://bucket2 --region multizg
+upload: ../etc/hosts to s3://bucket2/hosts
+----
+
+Modify the object ACL to give it public-read access, so it can be access by an
+anonymous user with curl
+
+----
+# aws --endpoint http://proxy01:8000  s3api put-object-acl --bucket bucket2 --key hosts --acl public-read
+----
+
+Now I can access the object using curl with the hosted-style access, the bucket
+name is in the URL as a subdomain, and the object is access directly without
+specifying the name of the bucket
+
+----
+# curl http://bucket2.bucket.example.com:8000/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+----
+
+If I remove the rgw_dns_name configuration we can see what happens
+
+----
+# ceph config rm client.rgw.multi.zone1.proxy01.fybord rgw_dns_name
+# ceph orch  daemon restart rgw.multi.zone1.proxy01.fybord
+Scheduled to restart rgw.multi.zone1.proxy01.fybord on host 'proxy01'
+# curl http://bucket2.bucket.example.com:8000/hosts
+<?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchBucket</Code><BucketName>hosts</BucketName><RequestId>tx00000809c18c68dcf0c57-0063b30865-858d-zone1</RequestId><HostId>858d-zone1-multizg</HostId></Error>
+----
+
+It will only work with path-style:
+----
+# curl http://bucket2.bucket.example.com:8000/bucket2/hosts
+----
+
+
+The second way and the recomended way of enabling hosted-style access is
+configuring our dns host cname at zonegroup configuration level:
+
+
+----
+# radosgw-admin zonegroup get > zonegroup.json
+# vi zonegroup.json
+...
+"hostnames": [ "bucket.example.com" ],
+...
+# radosgw-admin zonegroup set --infile zonegroup.json
+{
+    "id": "9ebd51aa-9e79-45c8-ab5d-d6b92f389c10",
+    "name": "multizg",
+    "api_name": "multizg",
+    "is_master": "true",
+    "endpoints": [],
+    "hostnames": [
+        "bucket.example.com"
+    ],
+    "hostnames_s3website": [],
+    "master_zone": "4bdeb630-734e-4b9f-9a7f-d1157de83b12",
+    "zones": [
+        {
+            "id": "4bdeb630-734e-4b9f-9a7f-d1157de83b12",
+            "name": "zone1",
+            "endpoints": [],
+            "log_meta": "false",
+            "log_data": "false",
+            "bucket_index_max_shards": 11,
+            "read_only": "false",
+            "tier_type": "",
+            "sync_from_all": "true",
+            "sync_from": [],
+            "redirect_zone": ""
+        }
+    ],
+    "placement_targets": [
+        {
+            "name": "default-placement",
+            "tags": [],
+            "storage_classes": [
+                "STANDARD"
+            ]
+        }
+    ],
+    "default_placement": "default-placement",
+    "realm_id": "4b6578f1-778b-4a51-95b1-4f81efb548b8",
+    "sync_policy": {
+        "groups": []
+    }
+}
+#  radosgw-admin period update --commit
+----
+
+We do the same test as before, and check that we can access using the
+hosted-style access
+
+----
+# curl http://bucket2.bucket.example.com:8000/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+----
