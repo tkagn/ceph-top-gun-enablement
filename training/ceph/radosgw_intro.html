@@ -78,6 +78,9 @@
     <a class="nav-link" href="radosgw_ha.html">RGW High Availability</a>
   </li>
   <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_ssl.html">RGW &amp; Ingress with SSL</a>
+  </li>
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_users_quotas.html">RGW Users &amp; Quotas</a>
   </li>
   <li class="nav-item" data-depth="1">
@@ -197,6 +200,9 @@
 <li>
 <p>Hands-On. Verify S3/RGW Access with S3 client</p>
 </li>
+<li>
+<p>Hands-On. S3 Access: Path Style vs Hosted Style</p>
+</li>
 </ul>
 </div>
 </div>
@@ -206,8 +212,8 @@
 <div class="sectionbody">
 <div class="paragraph">
 <p>Object storage stores data as discrete items, each individually called an object. Unlike files in a file
-system, objects are not organized in a tree of directories and subdirectories. Instead, objects are
-stored in a flat namespace. Each object is retrieved by using the object&#8217;s unique object ID, also
+system, objects are not organised in a tree of directories and subdirectories. Instead, objects are
+stored in a flat namespace. Each object is retrieved using the object&#8217;s unique object ID, also
 known as an object key.</p>
 </div>
 <div class="paragraph">
@@ -217,10 +223,10 @@ common object APIs, Amazon S3 (Simple Storage Service) and OpenStack Swift (Open
 Object Storage).</p>
 </div>
 <div class="paragraph">
-<p>Amazon S3 calls the flat namespace for object storage a bucket while OpenStack Swift calls it
+<p>Amazon S3 calls the flat namespace for object storage a bucket, while OpenStack Swift calls it
 a container. Because a namespace is flat, neither buckets nor containers can be nested. Ceph
 typically uses the term bucket, as does this lecture.
-A single user account can be configured for access to multiple buckets on the same storage
+A single user account can be configured to access multiple buckets on the same storage
 cluster. Buckets can each have different access permissions and be used to store objects for
 different use cases.</p>
 </div>
@@ -229,8 +235,8 @@ different use cases.</p>
 has a unique ID, it can be stored or retrieved without the user knowing the object&#8217;s location.
 Without the directory hierarchy, relationships between objects are simplified.
 Objects, similar to files, contain a binary data stream and can grow to arbitrarily large sizes.
-Objects also contain metadata about the object data, and natively support extended metadata
-information, typically in the form of key-value pairs. You can also create your own metadata keys
+Objects also contain metadata about the object data and natively support extended metadata
+information, typically in key-value pairs. You can also create metadata keys
 and store custom information in the object as key values.</p>
 </div>
 </div>
@@ -239,7 +245,7 @@ and store custom information in the object as key values.</p>
 <h2 id="_introducing_radosgw"><a class="anchor" href="#_introducing_radosgw"></a>2. Introducing RadosGW</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The RADOS Gateway, also called the Object Gateway (RGW), is a service that provides access to
+<p>The RADOS Gateway also called the Object Gateway (RGW), is a service that provides access to
 the Ceph cluster for clients using standard object storage APIs. The RADOS Gateway supports
 both the Amazon S3 and OpenStack Swift APIs.</p>
 </div>
@@ -256,7 +262,7 @@ the RADOS Gateway uses librados module calls to communicate with the Ceph cluste
 <div class="paragraph">
 <p>The RGW is a separate service that externally connects to a Ceph cluster and provides object storage
 access to its clients. In a production environment, it&#8217;s recommended that you run more than
-one instance of the RGW, masked by a Load Balancer,</p>
+one instance of the RGW masked by a Load Balancer,</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -274,7 +280,7 @@ one instance of the RGW, masked by a Load Balancer,</p>
 <div class="ulist">
 <ul>
 <li>
-<p><em>S3-compatibility</em>, which provides object storage functionality with an interface that is compatible with a large subset of the Amazon S3 RESTful API.</p>
+<p>_S3-compatibility_provides object storage functionality with an interface compatible with a large subset of the Amazon S3 RESTful API.</p>
 </li>
 <li>
 <p><em>Swift-compatibility</em>, which provides object storage functionality with an interface that is compatible with a large subset of the OpenStack Swift API.</p>
@@ -286,10 +292,14 @@ one instance of the RGW, masked by a Load Balancer,</p>
 Note that with <code>cephadm</code>, the RGW daemons are configured via the monitor configuration database instead of via a <code>ceph.conf</code> file or the command line. If that configuration is not already in place (usually in the client.rgw.&lt;something&gt; section), then the RGW daemons start up with default settings (for example, binding to port 80).</p>
 </div>
 <div class="paragraph">
-<p>There are many ways to deploy the RADOS object gateway on of which is through a single command that creates an object gateway across two random servers. You use a step-by-step method to gain a better understanding of the deployment process.</p>
+<p>There are many ways to deploy the RADOS object gateway one of which is through
+a single cephadm command that creates an object gateway across two random servers.</p>
 </div>
 <div class="paragraph">
-<p>In this section, you create a realm, a zone group, and a zone, and then specify a placement specification with the host name when you deploy the RGW daemons.</p>
+<p>In this lab we are going to follow a step-by-step approach to better understand the deployment process.</p>
+</div>
+<div class="paragraph">
+<p>First we will create a realm, a zone group, and a zone, and then specify a placement specification with the hostname when you deploy the RGW daemons.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -297,7 +307,7 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 </div>
 </div>
 <div class="paragraph">
-<p>Due to the limited number of OSDs in the lab environment, the <code>mon_max_pg_per_osd</code> configuration setting is lower than required. When you create more than seven pools each of PGs and PGPs, with the pool size being 32, then you must increase the value of <code>mon_max_pg_per_osd</code> from <code>256</code> to <code>512</code> in order to create the additional pools.</p>
+<p>Due to the limited number of OSDs in the lab environment, the <code>mon_max_pg_per_osd</code> configuration setting is lower than required. When you create more than seven pools each of PGs and PGPs, with the pool size being 32, you must increase the value of <code>mon_max_pg_per_osd</code> from <code>256</code> to <code>512</code> to create the additional pools.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -305,7 +315,7 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 <p>Update the value of the <code>mon_max_pg_per_osd</code> configuration variable to <code>512</code>:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-mon01 /]#  ceph config set mon mon_max_pg_per_osd 512</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">#  ceph config set mon mon_max_pg_per_osd 512</code></pre>
 </div>
 </div>
 </li>
@@ -313,7 +323,7 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 <p>Create a realm:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-mon01 /]# radosgw-admin realm create --rgw-realm=multisite --default</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># radosgw-admin realm create --rgw-realm=multisite --default</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -332,7 +342,7 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 <p>Create a zone group:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-mon01 /]# radosgw-admin zonegroup create --rgw-zonegroup=multisite_zonegroup  --master --default</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># radosgw-admin zonegroup create --rgw-zonegroup=multizg  --master --default</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -340,8 +350,8 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">{
     "id": "2e41dde9-80f4-4ec8-a099-ec0e8a60938d",
-    "name": "multisite_zonegroup",
-    "api_name": "multisite_zonegroup",
+    "name": "multizg",
+    "api_name": "multizg",
     "is_master": "true",
     "endpoints": [],
     "hostnames": [],
@@ -362,7 +372,7 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 <p>Create a zone:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-mon01 /]# radosgw-admin zone create --rgw-zonegroup=multisite_zonegroup --rgw-zone=zone1 --master --default</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># radosgw-admin zone create --rgw-zonegroup=multizg --rgw-zone=zone1 --master --default</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -414,7 +424,7 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 <p>Commit the changes:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-mon01 /]# radosgw-admin period update --rgw-realm=multisite --commit</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># radosgw-admin period update --rgw-realm=multisite --commit</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -504,7 +514,7 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 <p>Deploy the RGW daemons with the name <code>multi.zone1</code>:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-mon01 /]# ceph orch apply rgw multi.zone1 --realm=multisite --zone=zone1 --placement="1 proxy01" --port=8000</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph orch apply rgw multi.zone1 --realm=multisite --zone=zone1 --placement="1 proxy01" --port=8000</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -524,7 +534,7 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Use the client.rgw.* section in the centralized configuration database to define parameters and characteristics for new RADOS Gateway daemons.</p>
+<p>Use the client.rgw.* section in the centralised configuration database to define parameters and characteristics for new RADOS Gateway daemons.</p>
 </div>
 </td>
 </tr>
@@ -536,7 +546,7 @@ Note that with <code>cephadm</code>, the RGW daemons are configured via the moni
 <p>Verify that the RGW service is available:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-mon01 /]# ceph orch ls</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph orch ls</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -560,7 +570,7 @@ multi.zone1                   ?:8080       1/1  5s ago     12s  proxy01.example.
 <p>Verify that the RGW process is available:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-mon01 /]# ceph orch ps | grep rgw</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph orch ps | grep rgw</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -588,7 +598,7 @@ The Ceph orchestrator service names the daemons by using the format rgw.&lt;real
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Also verify that the RGW daemons are running:</p>
+<p>Also, verify that the RGW daemons are running:</p>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[root@ceph-mon01 ~]# ceph -s</code></pre>
@@ -648,7 +658,7 @@ tcp6       0      0 :::80                   :::*                    LISTEN      
 <p>Use cURL to connect to each RADOS Gateway and check for a response on <code>ceph-mon01</code>:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[root@ceph-mon01 ceph-ansible]# curl http://192.168.56.24:80</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[root@ceph-mon01 ceph-ansible]# curl http://proxy01:8000</code></pre>
 </div>
 </div>
 <div class="listingblock">
@@ -666,10 +676,10 @@ tcp6       0      0 :::80                   :::*                    LISTEN      
 <h2 id="_create_rados_gateway_user_accounts"><a class="anchor" href="#_create_rados_gateway_user_accounts"></a>5. Create RADOS Gateway User Accounts</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>To access Red Hat Ceph Storage over object storage interfaces&#8212;&#8203;that is, via Swift or S3&#8212;&#8203;you must configure a Ceph RADOS Gateway component. In this section, you configure <code>proxy01</code> as a Ceph RADOS Gateway and then test S3 and Swift from <code>ceph-mon01</code> or from <code>workstation</code>.</p>
+<p>To access Red Hat Ceph Storage over object storage interfaces via Swift or S3, you must configure a Ceph RADOS Gateway component. In this section, you configure <code>proxy01</code> as a Ceph RADOS Gateway and then test S3 and Swift from <code>ceph-mon01</code>.</p>
 </div>
 <div class="paragraph">
-<p>You begin by logging into <code>ceph-mon01</code> to create RADOS Gateway user accounts to be used by S3 and Swift APIs to access Red Hat Ceph Storage via an object storage interface.</p>
+<p>You begin by logging into <code>ceph-mon01</code> to create RADOS Gateway user accounts to be used by S3 to access Ceph Storage via an object storage S3 cli client .</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -754,7 +764,7 @@ tcp6       0      0 :::80                   :::*                    LISTEN      
 <div class="paragraph">
 <p>The Amazon S3 API enables developers to manage object storage resources using an Amazon
 S3 compatible interface. Applications implemented with the S3 API can inter-operate with other
-S3-compatible object storage services besides the RADOS Gateway, and migrate storage from
+S3-compatible object storage services, besides the RADOS Gateway, migrate storage from
 other locations to your Ceph storage cluster. In a hybrid cloud environment, you can configure
 your applications to use different authentication keys, regions, and vendor services to mix private
 enterprise and public cloud resources and storage locations seamlessly using the same API.
@@ -799,9 +809,9 @@ API.</p>
 </ul>
 </div>
 <div class="paragraph">
-<p>We will be using the AWS CLI during the lab, the nodes have the AWS CLI binary
-available you will just need to configure it, using the configure option, you
-can create a new RGW user or use the previous created user, you will need the
+<p>We will be using the AWS CLI during the lab; the nodes have the AWS CLI binary
+available, you will just need to configure it; using the configure option, you
+can create a new RGW user or use the previously created user, you will need the
 Access and Secret key.</p>
 </div>
 <div class="listingblock">
@@ -813,12 +823,265 @@ Default region name [Default]:</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Once configured you need to use the --endpoint option and point it to your
-configure RGW http endpoint, for example:</p>
+<p>Once configured, you need to use the --endpoint option and point it to your
+configure RGW HTTP endpoint, for example:</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre>[ceph: root@node /]# aws --endpoint http://ceph-node01:8080 s3 mb s3://demobucket</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_s3_bucket_access_types"><a class="anchor" href="#_s3_bucket_access_types"></a>8. S3 bucket access types</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The S3 API currently supports two different bucket addressing models: path-style (old) and virtual-hosted style (new).</p>
+</div>
+<div class="sect2">
+<h3 id="_whats_the_difference"><a class="anchor" href="#_whats_the_difference"></a>8.1. What’s the difference?</h3>
+<div class="paragraph">
+<p><strong>In path-style URLs</strong>, the s3 bucket name will be in the URL path, examples:</p>
+</div>
+<div class="paragraph">
+<p>S3 endpoint URL: “https://s3.example.com/bucket-name/object_key"</p>
+</div>
+<div class="paragraph">
+<p>If you notice that the S3 bucket name and object keys are always in the same subdomain, which in this case is s3.example.com</p>
+</div>
+<div class="paragraph">
+<p><strong>In hosted-style URLs</strong>, the bucket name will be included on the subdomain so we can have distinct DNS subdomains for the buckets, examples:</p>
+</div>
+<div class="paragraph">
+<p><a href="https://bucket-name.s3.example.com/object_key" class="bare">https://bucket-name.s3.example.com/object_key</a></p>
+</div>
+<div class="paragraph">
+<p>Hosted-style URL&#8217;s can help with DNS resolution, scaling, security, traffic management, and DDoS protection more challenging with this old centralised model than unique, virtual-hosted-style subdomains.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_how_to_enable_hosted_style_urls_in_radosgw"><a class="anchor" href="#_how_to_enable_hosted_style_urls_in_radosgw"></a>8.2. How to enable hosted-style URLs in RadosGW</h3>
+<div class="paragraph">
+<p>By default, RGW will work in the path-style URL format; if we want to access a bucket using the hosted-style URLs, some minimal configuration is needed.</p>
+</div>
+<div class="paragraph">
+<p>The first thing would be getting DNS resolution ready; we will need to get a
+wildcard DNS entry in place, so any DNS query that asks for *.bucket.example.com points to
+Our Load Balancer or RGW instance, in our lab, we are using dnsmasq for DNS resolution so we are
+going to add a new line to the dnsmasq config to get the DNS bucket resolution
+working.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Certain applications only work with hosted-style bucket access</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>RGW prefers the first method(Path Style), because the second
+method(hosted-style) requires added operations like domain certification and DNS wild cards.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In this example, IP 172.16.7.24 is for proxy01 where we have our RGW instance
+running, we add it at the end of the <code>/etc/dnsmasq.conf</code> of the <code>workstation</code>
+server and finally restart dnsmasq.</p>
+</div>
+<div class="paragraph">
+<p>On the <code>workstation.example.com</code> node:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># echo "address=/.bucket.example.com/172.16.7.24" &gt;&gt; /etc/dnsmasq.conf
+# systemctl restart dnsmasq
+# ping bucket1.bucket.example.com
+PING bucket1.bucket.example.com (172.16.7.24) 56(84) bytes of data.
+64 bytes from proxy01 (172.16.7.24): icmp_seq=1 ttl=64 time=2.18 ms</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now that DNS resolution is working, we need to configure our RGW instance; we can
+configure the hosted-style URL access in two ways:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Add the cname.domain.com to the rgw_dns_name config parameter per RGW instance</p>
+</li>
+<li>
+<p>add cname.domain.com to the list of hostnames in your zonegroup configuration</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s get the name of our RGW instance</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph orch ps | grep rgw
+rgw.multi.zone1.proxy01.yrtaci  proxy01      *:8000       running (63m)      2m ago   63m    65.5M        -  16.2.8-85.el8cp  b2c997ff1898  323585d51d1e</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And use the name of the RGW instance adding the client.  configure our DNS bucket subdomain</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph config ls | grep rgw_dns_name
+rgw_dns_name
+
+# ceph config set client.rgw.multi.zone1.proxy01.yrtaci rgw_dns_name bucket.example.com</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Just so it&#8217;s evident that we are successfully using the hosted-style access, I&#8217;m
+going to do the following steps:</p>
+</div>
+<div class="paragraph">
+<p>Create a bucket called bucket2, for example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># aws --endpoint http://proxy01:8000 s3 mb s3://bucket2 --region multizg
+make_bucket: bucket2</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Upload an object</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># aws --endpoint http://proxy01:8000 s3 cp /etc/hosts  s3://bucket2 --region multizg
+upload: ../etc/hosts to s3://bucket2/hosts</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Modify the object ACL to give it public-read access so that it can be accessed by an
+anonymous user with curl</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># aws --endpoint http://proxy01:8000  s3api put-object-acl --bucket bucket2 --key hosts --acl public-read</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now I can access the object using curl with the hosted-style access, the bucket
+name is in the URL as a subdomain, and the object is accessed directly without
+specifying the name of the bucket</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># curl http://bucket2.bucket.example.com:8000/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If I remove the rgw_dns_name configuration, we can see what happens</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph config rm client.rgw.multi.zone1.proxy01.fybord rgw_dns_name
+# ceph orch  daemon restart rgw.multi.zone1.proxy01.fybord
+Scheduled to restart rgw.multi.zone1.proxy01.fybord on host 'proxy01'
+# curl http://bucket2.bucket.example.com:8000/hosts
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;&lt;Error&gt;&lt;Code&gt;NoSuchBucket&lt;/Code&gt;&lt;BucketName&gt;hosts&lt;/BucketName&gt;&lt;RequestId&gt;tx00000809c18c68dcf0c57-0063b30865-858d-zone1&lt;/RequestId&gt;&lt;HostId&gt;858d-zone1-multizg&lt;/HostId&gt;&lt;/Error&gt;</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It will only work with path style:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># curl http://bucket2.bucket.example.com:8000/bucket2/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The second way and recommended way of enabling hosted-style access is configuring our DNS host cname at the zone group configuration level:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># radosgw-admin zonegroup get &gt; zonegroup.json
+# vi zonegroup.json
+...
+"hostnames": [ "bucket.example.com" ],
+...
+# radosgw-admin zonegroup set --infile zonegroup.json
+{
+    "id": "9ebd51aa-9e79-45c8-ab5d-d6b92f389c10",
+    "name": "multizg",
+    "api_name": "multizg",
+    "is_master": "true",
+    "endpoints": [],
+    "hostnames": [
+        "bucket.example.com"
+    ],
+    "hostnames_s3website": [],
+    "master_zone": "4bdeb630-734e-4b9f-9a7f-d1157de83b12",
+    "zones": [
+        {
+            "id": "4bdeb630-734e-4b9f-9a7f-d1157de83b12",
+            "name": "zone1",
+            "endpoints": [],
+            "log_meta": "false",
+            "log_data": "false",
+            "bucket_index_max_shards": 11,
+            "read_only": "false",
+            "tier_type": "",
+            "sync_from_all": "true",
+            "sync_from": [],
+            "redirect_zone": ""
+        }
+    ],
+    "placement_targets": [
+        {
+            "name": "default-placement",
+            "tags": [],
+            "storage_classes": [
+                "STANDARD"
+            ]
+        }
+    ],
+    "default_placement": "default-placement",
+    "realm_id": "4b6578f1-778b-4a51-95b1-4f81efb548b8",
+    "sync_policy": {
+        "groups": []
+    }
+}
+#  radosgw-admin period update --commit</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We do the same test as before and check that we can access using the
+hosted-style access</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># curl http://bucket2.bucket.example.com:8000/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6</pre>
+</div>
 </div>
 </div>
 </div>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <title>S3 presigned URL :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_presignedurl.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -76,6 +76,9 @@
   </li>
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_ha.html">RGW High Availability</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_ssl.html">RGW &amp; Ingress with SSL</a>
   </li>
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_users_quotas.html">RGW Users &amp; Quotas</a>
@@ -179,8 +182,9 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
+<h1 class="page">S3 presigned URL</h1>
 <div class="sect1">
-<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>All objects and buckets are private by default. However, you can use a presigned URL to optionally share objects or allow your customers/users to upload objects to buckets without AWS security credentials or permissions.</p>
@@ -191,7 +195,7 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_when_does_amazon_s3_check_the_expiration_date_and_time_of_a_presigned_url"><a class="anchor" href="#_when_does_amazon_s3_check_the_expiration_date_and_time_of_a_presigned_url"></a>When does Amazon S3 check the expiration date and time of a presigned URL?</h2>
+<h2 id="_when_does_amazon_s3_check_the_expiration_date_and_time_of_a_presigned_url"><a class="anchor" href="#_when_does_amazon_s3_check_the_expiration_date_and_time_of_a_presigned_url"></a>2. When does Amazon S3 check the expiration date and time of a presigned URL?</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>RGW S3 checks the expiration date and time of a signed URL at the time of the HTTP request. For example, if a client begins to download a large file immediately before the expiration time, the download should complete even if the expiration time passes during the download. If the connection drops and the client tries to restart the download after the expiration time passes, the download will fail.</p>
@@ -199,8 +203,12 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_hands_on"><a class="anchor" href="#_hands_on"></a>Hands-on</h2>
+<h2 id="_hands_on"><a class="anchor" href="#_hands_on"></a>3. Hands-on</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>We have a bucket with some files available, we want to give GET access to file1
+to an external user creating a pre-signed URL</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre># aws --endpoint  http://proxy01:8000 s3 ls s3://bucket1/

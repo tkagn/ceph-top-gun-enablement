@@ -78,6 +78,9 @@
     <a class="nav-link" href="radosgw_ha.html">RGW High Availability</a>
   </li>
   <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_ssl.html">RGW &amp; Ingress with SSL</a>
+  </li>
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_users_quotas.html">RGW Users &amp; Quotas</a>
   </li>
   <li class="nav-item" data-depth="1">
@@ -209,47 +212,39 @@ rules/policies that give access to certain roles.</p>
 <p>Just as a simplified example. With role policies, you would be able to
 get this info with a single command:</p>
 </div>
-<div class="paragraph">
-<p>rgw policy-role list role1</p>
-</div>
-<div class="paragraph">
-<p>role1:</p>
-</div>
-<div class="paragraph">
-<p>    - bucket1/folder1 ro
+<div class="listingblock">
+<div class="content">
+<pre>rgw policy-role list role1
+
+role1:
+
+    - bucket1/folder1 ro
     - bucket2/folder2 rw
-    - bucket3/folder3/db  rw</p>
+    - bucket3/folder3/db  rw</pre>
+</div>
 </div>
 <div class="paragraph">
 <p>To achieve the same with the policy in buckets you would need to run 3
 commands and aggregate the info for role1:</p>
 </div>
-<div class="paragraph">
-<p>get-policy bucket1</p>
-</div>
-<div class="paragraph">
-<p>role1: /folder1 ro
-role2: /folder1 rw
-role3: /folder1 ro</p>
-</div>
-<div class="literalblock">
+<div class="listingblock">
 <div class="content">
-<pre>+</pre>
+<pre>get-policy bucket1
+
+role1: /folder1 ro
+role2: /folder1 rw
+role3: /folder1 ro
+
+get-policy bucket2
+
+role1: /folder2 rw
+role2: /folder2 ro
+
+get-policy bucket3
+
+role1: /folder3/db rw
+role3: /folder3/db2 rw</pre>
 </div>
-</div>
-<div class="paragraph">
-<p>get-policy bucket2</p>
-</div>
-<div class="paragraph">
-<p>role1: /folder2 rw
-role2: /folder2 ro</p>
-</div>
-<div class="paragraph">
-<p>get-policy bucket3</p>
-</div>
-<div class="paragraph">
-<p>role1: /folder3/db rw
-role3: /folder3/db2 rw</p>
 </div>
 <div class="paragraph">
 <p>In any case we are going  to share a couple of examples of each, role
@@ -280,11 +275,6 @@ called admin, I created the following resources:</p>
 </li>
 <li>
 <p>A role document policy to give testuser access to the testrole.</p>
-<div class="literalblock">
-<div class="content">
-<pre>+</pre>
-</div>
-</div>
 </li>
 </ul>
 </div>
@@ -768,11 +758,6 @@ cat: s3a://bucket-new/folder2/host1: getFileStatus on s3a://bucket-new/folder2/h
 }</pre>
 </div>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>+</pre>
-</div>
-</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -837,11 +822,6 @@ fine.</p>
 </tr>
 </table>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>+</pre>
-</div>
-</div>
 <div class="paragraph">
 <p>Let&#8217;s briefly explain the different sections of the policy. In the first
 statement we are allowing access to the bucket-data bucket:</p>
@@ -869,7 +849,7 @@ statement we are allowing access to the bucket-data bucket:</p>
 </div>
 </div>
 <div class="paragraph">
-<p> In the next statement we are allowing access to read/GET objects and
+<p>In the next statement we are allowing access to read/GET objects and
 subfolders under the read-folder:</p>
 </div>
 <div class="literalblock">
@@ -979,7 +959,7 @@ Found 1 items
 </div>
 </div>
 <div class="paragraph">
-<p> We can also read/GET from the objects inside the read-folder:</p>
+<p>We can also read/GET from the objects inside the read-folder:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -991,7 +971,7 @@ Found 1 items
 </div>
 </div>
 <div class="paragraph">
-<p> But we can&#8217;t delete or write inside the read-folder:</p>
+<p>But we can&#8217;t delete or write inside the read-folder:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -1294,11 +1274,6 @@ but removing the principal statement:</p>
 }</pre>
 </div>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>+</pre>
-</div>
-</div>
 <div class="paragraph">
 <p>One thing to take in account is that the radosgw-admin command we use to
 apply the role policy doesn’t like spaces in the .json, so we need to
@@ -1343,11 +1318,6 @@ RGW user, and assume the readrole:</p>
   &lt;name&gt;fs.s3a.secret.key&lt;/name&gt;
   &lt;value&gt;readuser&lt;/value&gt;
 &lt;/property&gt;</pre>
-</div>
-</div>
-<div class="literalblock">
-<div class="content">
-<pre>+</pre>
 </div>
 </div>
 <div class="paragraph">
