@@ -1,5 +1,4 @@
-
-= S3 Object Versioning
+= S3 Object Versioning.
 
 .Goals
 * Introduction to S3 Object versioning
@@ -8,18 +7,18 @@
 :numbered:
 
 
-== Some object versioning facts to take into account:
+== Some object versioning facts to consider:
 
-. Older object versions can be removed by specifying the name and the versionID of the object to be removed
-. By default There is no expiration on buckets meaning older versions will be kept until manually removed.
-. Once object versioning is enabled in a bucket  it can only be paused not disabled.
-. Bucket versioning can be combined with object lifecycle to set an expiration. See policy example here.
+. Older object versions can be removed by specifying the name and the version ID of the object to be removed
+. By default, There is no expiration on buckets meaning older versions will be kept until manually removed.
+. Once object versioning is enabled in a bucket, it can only be paused, not disabled.
+. Bucket versioning can be combined with object lifecycle to set an expiration.
 . Ordinary expiration only removes current version
 . Non-current version expiration removes older versions
-. Expiration is specified as a number of days
-. Versioning can only be  enabled at the bucket level
+. Expiration is specified as the number of days
+. Versioning can only be enabled at the bucket level
 . Lifecycle policy can only be applied at the bucket level
-. Each version of an object by all means counts like another object in the bucket
+. Each version of an object counts like another object in the bucket
 . Object versioning examples with the AWS CLI.
 
 
@@ -29,9 +28,9 @@ Put Object with versioning enabled on the bucket:
 
 image::versioning_PUT_versionEnabled3.png[Put Object]
 
-For every new version of the object a new version ID of the object is created
+For every new version of the object, a new version ID of the object is created
 with the current state of the object, every version of the object can be
-retrived even if the object is deleted.
+retrieved even if the object is deleted.
 
 When the object is delete a Delete Marker is set on the Object:
 
@@ -317,7 +316,7 @@ VersionId: QAzliCOeiVykU1V4xD5.NCIiE4J0lO-
 # 
 ----
 
-If we want to recover the latest version of the object, in this case the latest version is the only one we have available, we would just delete the marker:
+If we want to recover the latest version of the object, in this case, the latest version is the only one we have available, we would just delete the marker:
 
 ----
 # aws --endpoint=http://cepha:8080 s3api delete-object --bucket test-bucket --key hosts --version-id QAzliCOeiVykU1V4xD5.NCIiE4J0lO-
@@ -378,7 +377,7 @@ DeleteMarkers:
 
 From our previous output we can see that folders are just objects with a prefix set, that the clients are able to interpret and give us a folder view.
 
-We can also use the --query parameter to refine our output, so for example we use the --prefix of our folder and with query we will only list objects with the deleted marker inside the folder.
+We can also use the --query parameter to refine our output, so for example, we use the --prefix of our folder, and with query, we will only list objects with the deleted marker inside the folder.
 
 ----
 # aws --endpoint=http://cepha:8080 s3api list-object-versions --prefix folder --bucket test-bucket --query 'DeleteMarkers[?IsLatest==`true`].[Key]' --output text
@@ -386,7 +385,7 @@ folder/hosts
 folder/sshd
 ----
 
-If we wanted to recover all deleted files from the folder we could use loop with the output from:
+If we wanted to recover all deleted files from the folder we could use a loop with the output from
 
 ----
 # aws --endpoint=http://cepha:8080 s3api list-object-versions --prefix folder --bucket test-bucket --query 'DeleteMarkers[?IsLatest==`true`].[Key, VersionId]' --output text
@@ -395,7 +394,7 @@ folder/sshd     HgRgUA6YFYZ1dZC7U5fxR34jkRqtB5Z
 ----
 
 
-We can apply a Life Cycle Policy on the bucket where we have versioning enabled to take care of the cleaning up for us, with the following policy all non current objects will get deleted including the object markers for deleted objects in 1 day:
+We can apply a Life Cycle Policy on the bucket where we have versioning enabled to take care of the cleaning up for us, with the following policy all non-current objects will get deleted including the object markers for deleted objects in 1 day:
 
 ----
 [root@bastion s3cmd]# cat ../lc-current.xml

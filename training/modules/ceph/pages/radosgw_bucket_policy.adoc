@@ -24,11 +24,11 @@ The Ceph Object Gateway supports a subset of the Amazon S3 policy language appli
 - Permitted principals: a principal is a user, entity, or account with access permissions to resources and actions in a statement.
 - Resources: Amazon S3 resources to which the policy applies include buckets, objects, jobs, and access points. You can identify resources using ARNs.
 - Actions: there are specific, permitted operations for each resource. You can use action keywords to allow or deny operations.
-- Effects: each request by a principal must generate an allow or deny effect. In the absence of an explicit access permission to a resource, the policy will automatically deny the request.
+- Effects: each request by a principal must generate an allow or deny effect. In the absence of explicit access permission to a resource, the policy will automatically deny the request.
 - Conditions: these determine when the policy applies. You can specify conditions for access policies using AWS-wide or S3-specific keys.
-- Version: this determines the policy’s language version. This element is optional, allowing you to specify a new language version instead of the old default version.
-- ID: this optional element specifies a policy identifier. Policy IDs should be unique, with GUID values.
-- Statement ID: this is an identifier that you can assign to policy statements. You may assign Sid values to every statement in a policy. In AWS services like SNS and SQS, which allow you to specify ID elements, the Sid values are sub-IDs of the policy’s ID. IAM requires the Sid values in a JSON policy to be unique.
+- Version: this determines the policy’s language version. This optional element allows you to specify a new language version instead of the old default version.
+- ID: This optional element specifies a policy identifier. Policy IDs should be unique, with GUID values.
+- Statement ID: this is an identifier you can assign to policy statements. You may assign Sid values to every statement in a policy. In AWS services like SNS and SQS, which allow you to specify ID elements, the Sid values are sub-IDs of the policy’s ID. IAM requires the Sid values in a JSON policy to be unique.
 
 
 == Bucket Policy Lab
@@ -37,12 +37,12 @@ Giving external users access to our buckets.
 
 image::S3-bucket-access-from-another-AWS-account-1.png[S3 bucket,740,580]
 
-In this lab, we are going to create two new users:
+In this lab, we will create two new users:
 
 * user1
 * user2
 
-We are going to check how S3 policies work and how we can allow access to our personal buckets to other users.
+We are going to check how S3 policies work and how we can allow access to our buckets to other users.
 
 Let's create both users, *we are going to specify a very short access key and secret for the users to keep it simple*.
 
@@ -196,8 +196,7 @@ ERROR: Access to bucket 'test-s3-policies' was denied
 ERROR: S3 error: 403 (AccessDenied)
 ....
 
-To allow other users to access one of our buckets, we need to write a
-new policy in JSON format.
+We need to write a new policy in JSON format to allow other users to access one of our buckets.
 
 We can specify fine-grain actions. All possible actions are documented
 in http://docs.ceph.com/docs/luminous/radosgw/bucketpolicy/[upstream
@@ -393,6 +392,8 @@ in _test-s3-policies_ bucket.
 delete: 's3://test-s3-policies/test-file-policies'
 ....
 
-In this Module we have covered a basic example of S3 bucket policies, we have
-more advanced examples on the module `STS Bucket and Role Policies` Check it
+In this Module, we have covered a basic example of S3 bucket policies. We have
+more advanced examples of bucket policies in the module `STS Bucket and Role Policies` Check it
 out.
+
+

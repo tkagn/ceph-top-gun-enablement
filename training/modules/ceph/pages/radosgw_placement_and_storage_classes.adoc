@@ -1,7 +1,7 @@
 = Ceph RadosGW placement targets
 
 .Goals
-* Introduction to RGW placmenet targers
+* Introduction to RGW placement targets
 * Hands-on Lab. Configure and Experiment with RGW placement targets
 * Introduction to RGW Storage Classes
 * Hands-on Lab. Configure and Experiment with RGW Storage Classes
@@ -88,12 +88,11 @@ $  radosgw-admin zone get
 
 [TIP]
 ====
-Before creating the pools we have to add the new hosts/OSDs and
+Before creating the pools, we have to add the new hosts/OSDs and
 create a different CRUSH rule.
 ====
 
-First thing we need to do is to create new pools where the objects are
-going to be stored. We can use the following commands:
+First thing we need to do is create new pools where the objects will be stored. We can use the following commands:
 
 * *zone1:*
 
@@ -106,9 +105,9 @@ $  ceph osd pool application enable zone1.rgw.ssd.buckets.non-ec rgw
 $  ceph osd pool application enable zone1.rgw.ssd.buckets.index rgw
 ....
 
-NOTE: Because this is just for testing we don't have a crush rule that would
-point to different disks, we are using the per-default replicated crush rule
-that uses our standard hdd class osds
+NOTE: Because this is just for testing, we don't have a crush rule that would
+point to different disks. We are using the per-default replicated crush rule
+that uses our standard HDD class osds
 
 
 === Create a new placement target
@@ -210,7 +209,7 @@ $  radosgw-admin zone get
 As we have created a new placement target, we are going to verify that
 the objects are stored in the `ssd` placement target.
 
-First thing we have to do is to create a new user:
+The first thing we have to do is to create a new user:
 
 ....
 $  radosgw-admin user create --uid test-ssd-placement-target --display-name test-ssd-placement-target 
@@ -330,7 +329,7 @@ $  radosgw-admin bucket stats --bucket test-bucket-ssd-placement-target | jq [.p
 ]
 ....
 
-Also, we can verify how the object have been created in the pools for
+Also, we can verify how the object has been created in the pools for
 the `ssd` placement target:
 
 * Bucket index OMAP files:
@@ -359,16 +358,16 @@ e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1_test-file
 
 === Using tags to specify the desired placement target upon bucket creation
 
-With the example we have documented above we will store all the user
+With the example we have documented above, we will store all the user
 data in the `ssd` placement target for all the buckets of the
-`test-ssd-placement-target` user. In some ocasions, we can allow the
+`test-ssd-placement-target` user. On some occasions, we can allow the
 user to use the placement target they prefer per bucket.
 
-WARNING: A bucket’s placement target is selected on creation, and
+WARNING: A bucket’s placement target is selected on creation and
 cannot be modified.
 
 In our case, we are going to use the tag `allowed-ssd` to allow users to
-use other placement targets beside the default placement target.
+use other placement targets besides the default placement target.
 
 In the first place, we need to modify the zonegroup. We need to export
 the JSON file, modify the `tags` section and then import back the JSON
@@ -505,7 +504,7 @@ $ s3cmd -c ~/s3cmd-credentials/test-placement-target-no-tag.conf mb s3://test-bu
 Bucket 's3://test-bucket-test-placement-target-no-tag/' created
 ....
 
-Also, we can specify the region or placement target when using Python
+Also, we can specify the region or placement target using Python
 `boto3` AWS SDK as we can see in the following example:
 
 ....
@@ -566,7 +565,7 @@ storage classes.
 
 [TIP] 
 ====
-More info about this topic in the
+More info about this topic on the
 https://docs.ceph.com/en/latest/radosgw/placement/[Ceph upstream
 documentation].
 ====
@@ -577,11 +576,11 @@ documentation].
 
 [TIP]
 ====
-Before creating the pools we have to add the new hosts/OSDs and
+Before creating the pools, we have to add the new hosts/OSDs and
 create a different CRUSH rule.
 ====
 
-First thing we need to do is to create new pools where the objects are
+First thing we need to do is create new pools where the objects are
 going to be stored. We can use the following commands:
 
 * *Master zone:*
@@ -793,3 +792,5 @@ configuration. In this specific case, having a good amount of all-flash
 devices to store Bluestore WAL/RocksDB really helps to improve the
 overall cluster performance.
 ====
+
+
