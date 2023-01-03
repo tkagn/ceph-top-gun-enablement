@@ -192,7 +192,7 @@
 <p>Review the RGW frontends</p>
 </li>
 <li>
-<p>Undestanding RGW Rados Pools</p>
+<p>Understanding RGW Rados Pools</p>
 </li>
 <li>
 <p>Detailed overview of Bucket Index &amp; Bucket Sharding</p>
@@ -214,7 +214,7 @@
 <h2 id="_radosgw_frontends"><a class="anchor" href="#_radosgw_frontends"></a>1. RadosGW Frontends</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The Ceph Object Gateway exposes its RESTful interfaces over HTTP, RGW currently
+<p>The Ceph Object Gateway exposes its RESTful interfaces over HTTP. RGW currently
 supports two embedded HTTP frontend libraries that can be configured with
 <code>rgw_frontends</code> :</p>
 </div>
@@ -224,13 +224,13 @@ supports two embedded HTTP frontend libraries that can be configured with
 <p>CivetWeb web server. CivetWeb is a C/C++ embeddable web server.</p>
 </li>
 <li>
-<p>Beast. The beast frontend uses the Boost.Beast library for HTTP parsing and the Boost.Asio library for asynchronous network i/o.</p>
+<p>Beast. The beast front end uses the Boost Beast library for HTTP parsing and the Boost.Asio library for asynchronous network i/o.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>In the current versions of Ceph Beast is the default frontend used, It provides
-increased performance that it&#8217;s predecesor Civetweb.</p>
+<p>In the current versions of Ceph, Beast is the default frontend used, It provides
+increased performance than it&#8217;s predecessor, Civetweb.</p>
 </div>
 <div class="paragraph">
 <p>Reference the
@@ -265,7 +265,7 @@ spec:
 <h2 id="_radosgw_pools"><a class="anchor" href="#_radosgw_pools"></a>2. RadosGW pools</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The Ceph Object Gateway uses several pools for its various storage needs, which are listed in the Zone object. A single zone named default is created automatically with pool names starting with default.rgw.</p>
+<p>The Ceph Object Gateway uses several pools for its various storage needs, listed in the Zone object. A single zone named default is created automatically with pool names starting with default.rgw.</p>
 </div>
 <div class="paragraph">
 <p>When radosgw first tries to operate on a zone pool that does not exist, it will create that pool with the default values from osd pool default pg num and osd pool default pgp num. These defaults are sufficient for some pools, but others (especially those listed in placement_pools for the bucket index and data) will require additional tuning.</p>
@@ -303,11 +303,11 @@ Domain Root Pool
 .rgw.control
 Control Pool
 .rgw.gc
-Garbage Collection pool, contains hash buckets containing the IDs of the objects to be deleted
+The garbage Collection pool, contains hash buckets containing the IDs of the objects to be deleted
 .log
 Will log bucket and object actions by the RGW
 .intent-log
-Store a copy of the object update request so that it can be used for undo/redo in case object request fails
+Store a copy of the object update request so that it can be used for undo/redo in case the object request fails
 .usage
 Contains a log of usage per user
 .users
@@ -315,7 +315,7 @@ Contains access and secret keys, mapped to user id
 .users.email
 Contains emails associated with a user
 .users.swift
-Contains swift subuser information
+Contains swift sub-user information
 .users.uid
 Contains a mapping of a user&#8217;s unique uid
 .rgw.buckets.index
@@ -390,7 +390,7 @@ users.uid</pre>
 <div class="paragraph">
 <p>Rados Gateway maintains an index per bucket that holds the list and the
 metadata of all the objects it contains, the Index holds a key-value map in
-rados objects, The value holds basic metadata for each object like: header, number of objects, total size,</p>
+rados objects, The value holds basic metadata for each object like header, number of objects, total size,</p>
 </div>
 <div class="paragraph">
 <p>The bucket index is also used for multiple tasks:</p>
@@ -415,11 +415,11 @@ rados objects, The value holds basic metadata for each object like: header, numb
 </ul>
 </div>
 <div class="paragraph">
-<p>Each Bucket Index is an Omap entry in RocksDB, Omap is a key-value store, associated with an object, in a way similar to how Extended Attributes associate with a POSIX file. An object’s omap is not physically located in the object’s storage, Omaps are stores in RocksDB.</p>
+<p>Each Bucket Index is an Omap entry in RocksDB, Omap is a key-value store associated with an object in a way similar to how Extended Attributes associate with a POSIX file. An object’s omap is not physically located in the object’s storage, Omaps are stored in RocksDB.</p>
 </div>
 <div class="paragraph">
 <p>We can also create Indexless buckets:
-Provides a mechanism in which RadosGW does not track objects in specific buckets This removes a resource contention Reduces the number of round trips that RadosGW needs to make to the RADOS backend Not supported on multi-site configurations</p>
+Provides a mechanism in which RadosGW does not track objects in specific buckets. This removes resource contention and reduces the number of round trips RadosGW needs to make to the RADOS backend. Not supported on multi-site configurations</p>
 </div>
 <div class="paragraph">
 <p>Bucket Index pool for the default zone:</p>
@@ -431,8 +431,8 @@ Provides a mechanism in which RadosGW does not track objects in specific buckets
 </div>
 </div>
 <div class="paragraph">
-<p>We can list the Bucket Index for a certain bucket using the <code>radosgw-admin bi
-list command</code>, were we can see the metadata it stores.</p>
+<p>We can list the Bucket Index for a specific bucket using the <code>radosgw-admin bi
+list command</code>, where we can see the metadata it stores.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -473,7 +473,7 @@ list command</code>, were we can see the metadata it stores.</p>
 </div>
 <div class="paragraph">
 <p>If we take a look at the objects in pool <code>default.rgw.buckets.index</code> , we have
-several .dir objects,  By default it is a single RADOS .dir object per bucket, but
+several .dir objects,  By default, it is a single RADOS .dir object per bucket, but
 it is possible since Hammer to shard that map over multiple RADOS objects. We
 will cover Bucket sharding in the next section.</p>
 </div>
@@ -494,8 +494,8 @@ will cover Bucket sharding in the next section.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Each .dir object is bucket index, we have 11 because it&#8217;s the default number of
-shards per bucket. the .dir is formated in the following way
+<p>Each .dir object is a bucket index; we have 11 because it&#8217;s the default number of
+shards per bucket. the .dir is formatted in the following way
 .dir.&lt;maker&gt;.&lt;Shard Number&gt;</p>
 </div>
 <div class="paragraph">
@@ -508,7 +508,7 @@ shards per bucket. the .dir is formated in the following way
 </div>
 </div>
 <div class="paragraph">
-<p>Now that we now that the marker for bucket1 is
+<p>Now that we know that the marker for bucket1 is
 <code>7fb0a3df-9553-4a76-938d-d23711e67677.34162.1</code>. Let&#8217;s upload an object to
 bucket1 called file1:</p>
 </div>
@@ -530,8 +530,8 @@ file1</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>If we check the values we can see that the key/value entry in the bucket index
-omap for bucket1 is 217 bytes in size, in the hex translation we see some info
+<p>If we check the values, we can see that the key/value entry in the bucket index
+omap for bucket1 is 217 bytes in size. In the hex translation, we see some info
 like the object name</p>
 </div>
 <div class="listingblock">
@@ -545,7 +545,7 @@ value (217 bytes) :
 </div>
 </div>
 <div class="paragraph">
-<p>If we add more objects to our buckete we will see new key/value entries for
+<p>If we add more objects to our bucket we will see new key/value entries for
 each object:</p>
 </div>
 <div class="listingblock">
@@ -558,8 +558,8 @@ file10</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>We can check the usage of the <code>default.rgw.buckets.index</code> and it&#8217;s 0 bytes,
-altough we have 11 Objects(11 index shards of our only bucket, bucket1), Why is
+<p>We can check the usage of the <code>default.rgw.buckets.index</code>, and it&#8217;s 0 bytes,
+although we have 11 Objects(11 index shards of our only bucket, bucket1), Why is
 that?</p>
 </div>
 <div class="listingblock">
@@ -573,15 +573,15 @@ default.rgw.buckets.index/.dir.7fb0a3df-9553-4a76-938d-d23711e67677.34162.1.2 mt
 </div>
 </div>
 <div class="paragraph">
-<p>As we mentioned before bucket index objects are Omaps that are stored in the rocksdb database of each OSD, not on the actual pool default.rgw.buckets.index
-That is why it&#8217;s important to use a fast/flash device for our DB partition, as
+<p>As we mentioned before, bucket index objects are Omaps that are stored in the rocksdb database of each OSD, not on the actual pool default.rgw.buckets.index
+That is why it&#8217;s essential to use a fast/flash device for our DB partition, as
 the DB partition holds the RocksDB database and the Omaps for our bucket index,
 having fast media in the DB partition means faster access to our bucket index,
 and quicker listing/access to the objects in our buckets.</p>
 </div>
 <div class="paragraph">
-<p>One final note, if we want to know on wich OSDs our bucket index Omaps are
-stored we can use the following command:</p>
+<p>One final note, if we want to know on which OSDs our bucket index Omaps are
+stored, we can use the following command:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -591,9 +591,9 @@ osdmap e90 pool 'default.rgw.buckets.index' (9) object '.dir.7fb0a3df-9553-4a76-
 </div>
 <div class="paragraph">
 <p>Our Bucket Index log for shard 2 of bucket1 is on OSD 5,0 and 10(replica 3, the
-primary is OSD.5), If needed for trobleshooting we could then further
+primary is OSD.5), If needed for troubleshooting, we could then further
 investigate in rocksdb with the ceph-objectstore-tool, more information on how
-to use this tool on a conteinerized setup[link]</p>
+to use this tool on a containerised setup[link]</p>
 </div>
 </div>
 </div>
@@ -601,7 +601,7 @@ to use this tool on a conteinerized setup[link]</p>
 <h2 id="_bucket_sharding"><a class="anchor" href="#_bucket_sharding"></a>4. Bucket Sharding</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Sharding is the process of breaking down data onto multiple locations so as to increase parallelism, as well as distribute the load. This is a common feature used in databases.</p>
+<p>Sharding is the process of breaking down data into multiple locations to increase parallelism, as well as distribute the load. This is a common feature used in databases.</p>
 </div>
 <div class="paragraph">
 <p>The concept of sharding is used in Ceph object storage for splitting the bucket
@@ -611,12 +611,12 @@ index in RADOSGW</p>
 <p>RADOS Gateway keeps an index for all the objects in its buckets for faster and easier lookup.</p>
 </div>
 <div class="paragraph">
-<p>When the number of objects increases, the size of the RADOS object increases as well. Two problems arise due to the increased index size.</p>
+<p>When the number of objects increases, the RADOS object&#8217;s size also increases. Two problems arise due to the increased index size.</p>
 </div>
 <div class="paragraph">
-<p>RADOS does not work well  with large objects since it’s not designed as such. Operations such as recovery, scrubbing etc.. work on a single object. If the object size increases, OSDs may start hitting timeouts because reading a large object may take a long time. This is one of the reason that all RADOS client interfaces such as RBD, RGW, CephFS use a standard 4MB object size.
-Since the index is stored in a single RADOS object, only a single operation can be done on it at any given time. When the number of objects increases, the index stored in the RADOS object grows. Since a single index is handling a large number of objects, and there is a chance the number of operations also increases, parallelism is not possible which can end up being a bottleneck. Multiple operations will need to wait in a queue since a single operation is possible at a time.
-In order to work around these problems, the bucket index is sharded into multiple parts. Each shard is kept on a separate RADOS object within the index pool.</p>
+<p>RADOS does not work well with large objects since it’s not designed as such. Operations such as recovery, scrubbing etc.. work on a single object. If the object size increases, OSDs may start hitting timeouts because reading a large object may take a long time. This is one reason that all RADOS client interfaces, such as RBD, RGW, CephFS use a standard 4MB object size.
+Since the index is stored in a single RADOS object, only a single operation can be done at any given time. When the number of objects increases, the index stored in the RADOS object grows. Since a single index is handling a large number of objects, and there is a chance the number of operations also increases, parallelism is not possible, which can become a bottleneck. Multiple operations must wait in a queue since a single operation is possible.
+The bucket index is divided into multiple parts to work around these problems. Each shard is kept on a separate RADOS object within the index pool.</p>
 </div>
 <div class="paragraph">
 <p>Sharding is configured with the tunable bucket_index_max_shards. By default,
@@ -648,7 +648,7 @@ this tunable is set to 11.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>At bucket creation time the number of shards is defined by the parameter bucket_index_max_shards set at zonegroup level and it is used for all buckets.</p>
+<p>At bucket creation time, the number of shards is defined by the parameter bucket_index_max_shards set at zonegroup level, and it is used for all buckets.</p>
 </div>
 <div class="paragraph">
 <p>If a different number of shards is required for a specific bucket, it is possible to change it.</p>
@@ -656,7 +656,7 @@ this tunable is set to 11.</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Red Hat Recommends a maximum of 102,400 objects per bucket index shard</p>
+<p>Red Hat recommends a maximum of 102,400 objects per bucket index shard</p>
 </li>
 <li>
 <p>The current maximum supported number of bucket index shards is 65521</p>
@@ -669,22 +669,22 @@ this tunable is set to 11.</p>
 <h2 id="_dynamic_bucket_re_sharding"><a class="anchor" href="#_dynamic_bucket_re_sharding"></a>5. Dynamic Bucket Re-Sharding</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Since Luminous we have a new RGW capability to automatically manage the sharding of RGW bucket index objects. This completely automates management of RGW&#8217;s internal index objects</p>
+<p>Since Luminous we have a new RGW capability to manage the sharding of RGW bucket index objects automatically. This completely automates the management of RGW&#8217;s internal index objects</p>
 </div>
 <div class="paragraph">
-<p>One property of RADOS (Ceph&#8217;s underlying object store) is that it doesn&#8217;t keep an index for all of the objects in the system. Instead, it leverages the CRUSH algorithm to calculate the location of any object based on its name, cluster configuration, and cluster state. This is a scalability enabler: the overall IO capacity can scale with the number of OSDs in the system since there aren&#8217;t any metadata servers or lookups that need to be used for these IO operations. The RADOS gateway (RGW), which provides an S3-compatible object storage service on top of RADOS, leverages this property, and indeed, when accessing RGW objects there is no need to touch any index.</p>
+<p>One property of RADOS (Ceph&#8217;s underlying object store) is that it doesn&#8217;t keep an index for all of the objects in the system. Instead, it leverages the CRUSH algorithm to calculate the location of any object based on its name, cluster configuration, and cluster state. This is a scalability enabler: the overall IO capacity can scale with the number of OSDs in the system since there aren&#8217;t any metadata servers or lookups that need to be used for these IO operations. The RADOS gateway (RGW), which provides an S3-compatible object storage service on top of RADOS, leverages this property. Indeed, when accessing RGW objects, there is no need to touch any index.</p>
 </div>
 <div class="paragraph">
-<p>However, RGW still maintains an index per bucket, in which it holds a list and metadata of all the objects it contains. This is needed since RGW needs to be able to provide this data when requested (for example, when listing RGW bucket contents), and RADOS itself does not provide an efficient listing capability. This bucket index is also being used for other tasks, like maintaining a journal for versioned operations, bucket quota metadata, and a log for multi-zone synchronization. The bucket index does not affect read operations on objects, but it does add extra operations when writing and modifying RGW objects.</p>
+<p>However, RGW still maintains an index per bucket, which holds a list and metadata of all the objects it contains. This is needed since RGW needs to be able to provide this data when requested (for example, when listing RGW bucket contents), and RADOS itself does not provide an efficient listing capability. This bucket index is also used for other tasks, like maintaining a journal for versioned operations, bucket quota metadata, and a log for multi-zone synchronization. The bucket index does not affect read operations on objects but adds extra operations when writing and modifying RGW objects.</p>
 </div>
 <div class="paragraph">
-<p>Luminous finally introduces a dynamic bucket resharding capability. Bucket indexes will now reshard automatically as the number of objects in the bucket grows. Furthermore, there is no need to stop IO operations that go to the bucket (although some concurrent operations may experience additional latency when resharding is in progress). The radosgw process automatically identifies buckets that need to be resharded (if number of the objects per shard is loo large), and schedules a resharding for these buckets. A special thread is responsible for processing the scheduled reshard operations.</p>
+<p>Luminous finally introduces a dynamic bucket resharding capability. Bucket indexes will now reshard automatically as the number of objects in the bucket grows. Furthermore, there is no need to stop IO operations that go to the bucket (although some concurrent operations may experience additional latency when resharding is in progress). The radosgw process automatically identifies buckets that need to be resharded (if the number of the objects per shard is too large), and schedules a resharding for these buckets. A special thread is responsible for processing the scheduled reshard operations.</p>
 </div>
 <div class="paragraph">
-<p>The feature itself is enabled by default; no action is needed and administrators should no longer have to worry about this implementation detail.</p>
+<p>The feature is enabled by default; no action is needed, and administrators should no longer worry about this implementation detail.</p>
 </div>
 <div class="paragraph">
-<p>The process for dynamic bucket resharding periodically checks all the Rados Gateway buckets and detects buckets that require resharding. If a bucket has grown larger than the value specified in the rgw_max_objs_per_shard parameter, Rados Gateway reshards the bucket dynamically in the background.</p>
+<p>The process for dynamic bucket resharding periodically checks all the Rados Gateway buckets and detects buckets that require resharding. If a bucket has grown over the value specified in the rgw_max_objs_per_shard parameter, Rados Gateway reshards the bucket dynamically in the background.</p>
 </div>
 <div class="paragraph">
 <p>Dynamic Resharding process can be monitored and controlled with the <code>radosgw-admin reshard</code>:</p>
@@ -709,7 +709,7 @@ Expected one of the following:
 <h2 id="_radosgw_data_layout"><a class="anchor" href="#_radosgw_data_layout"></a>6. RadosGW data Layout</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Although RADOS only knows about pools and objects with their Extended Attributes (xattrs) and object map (OMAP), conceptually Ceph Object Gateway organizes its data into three different kinds:</p>
+<p>Although RADOS only knows about pools and objects with their Extended Attributes (xattrs) and object map (OMAP), conceptually, Ceph Object Gateway organizes its data into three different kinds:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -747,7 +747,7 @@ Expected one of the following:
 </ul>
 </div>
 <div class="paragraph">
-<p>They are represented in the default.rgw.meta pool with root namespace. Bucket record is loaded in order to obtain a marker, which serves as a bucket ID.</p>
+<p>They are represented in the default.rgw.meta pool with root namespace. A bucket record is loaded to obtain a marker, which serves as a bucket ID.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -792,7 +792,7 @@ When accessing a user’s data, the user record is loaded from an object USER_ID
 <div class="sect2">
 <h3 id="_data"><a class="anchor" href="#_data"></a>6.3. Data</h3>
 <div class="paragraph">
-<p>The object is located in the default.rgw.buckets.data pool. Object name is MARKER_KEY, for example default.7593.4_image.png, where the marker is default.7593.4 and the key is image.png. These concatenated names are not parsed and are passed down to RADOS only.</p>
+<p>The object is located in the default.rgw.buckets.data pool. Object name is MARKER_KEY, for example, default.7593.4_image.png, where the marker is default.7593.4, and the key is image.png. These concatenated names are not parsed and are passed down to RADOS only.</p>
 </div>
 <div class="paragraph">
 <p>Get the name of the data pool for our default zone:</p>
@@ -839,7 +839,7 @@ When accessing a user’s data, the user record is loaded from an object USER_ID
 </div>
 </div>
 <div class="paragraph">
-<p>You can also use the radosgw-admin radosls command to list rados objects for a
+<p>You can also use the <code>radosgw-admin rados ls</code> command to list rados objects for a
 bucket:</p>
 </div>
 <div class="listingblock">
@@ -851,7 +851,7 @@ bucket:</p>
 <p>An S3/RGW object might consist of several RADOS objects, the first of which is the head that contains the metadata, such as manifest, Access Control List (ACL), content type, ETag, and user-defined metadata. The metadata is stored in xattrs.</p>
 </div>
 <div class="paragraph">
-<p>In our example we have a one to one relation because the objects I have uploaded are small in size only 4kb in size, If I upload a bigger object it will get split in 4MB objects</p>
+<p>In our example, we have a one-to-one relation because the objects I have uploaded are small in size, only 4kb, If I upload a bigger object it will get split into 4MB objects</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -867,7 +867,7 @@ default.rgw.buckets.data/7fb0a3df-9553-4a76-938d-d23711e67677.34162.1_file1 mtim
 </div>
 </div>
 <div class="paragraph">
-<p>We can see that for a single file uploaded we now have several objects in
+<p>We can see that for a single file uploaded, we now have several objects in
 rados, if the upload data size is greater than <code>rgw_obj_stripe_size</code> by default
 set to 4MB:</p>
 </div>
@@ -945,8 +945,8 @@ default.rgw.buckets.data/7fb0a3df-9553-4a76-938d-d23711e67677.34162.1__shadow_bi
 </div>
 </div>
 <div class="paragraph">
-<p>If the S3 uploaded object is 20MB in size why do we only have two 4MB shadow
-files?. The answer for that is the multipart upload feature, covered in the
+<p>If the S3 uploaded object is 20MB in size, why do we only have two 4MB shadow
+files?. The answer to that is the multipart upload feature, covered in the
 next section</p>
 </div>
 <div class="listingblock">
@@ -1001,15 +1001,15 @@ next section</p>
 <p>Multipart Upload Initiation: When a request comes to upload an object file, the first thing you get is the Upload ID. This is a unique number/identifier for your upload.</p>
 </li>
 <li>
-<p>Parts Upload: It’s important to remember that besides the upload ID, we need the part ID. It means that for every upload, there’s Upload ID and Part ID. Please note, if you upload a new file with an existing Part ID, this part will be overwritten.</p>
+<p>Parts Upload: It’s important to remember that we need the part ID beside the upload ID. It means that there’s an Upload ID and Part ID for every upload. Please note if you upload a new file with an existing Part ID, this part will be overwritten.</p>
 </li>
 <li>
-<p>Multipart Upload Completion or Abort: In order to complete the multipart process, we need to finish uploading all our parts. Only when the process is completed, we get the ACK that all the parts are okay, and only then can we mark the upload as completed. Please note that if the upload process is aborted, then the multipart process gets stuck and never ends, unless there’s a lifecycle rule, or you re-upload the multipart objects files again.</p>
+<p>Multipart Upload Completion or Abort: To complete the multipart process, we must finish uploading all our parts. Only when the process is completed do we get the ACK that all the parts are okay, and only then can we mark the upload as completed. Please note that if the upload process is aborted, the multipart process gets stuck and never ends unless there’s a lifecycle rule or you re-upload the multipart objects files.</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p>By default the chuck size of the aws cli can be configued with the following options in the .aws/config file , the default chunksize is 8MB</p>
+<p>By default, the chuck size of the AWS cli can be configured with the following options in the .aws/config file, the default chunk size is 8MB</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1017,7 +1017,7 @@ next section</p>
 <p>multipart_threshold is the transfer size threshold for which multipart uploads, downloads, and copies will automatically be triggered. For our script, files larger than 5GB will be uploaded with multipart.</p>
 </li>
 <li>
-<p>max_concurrent_requests is the maximum number of threads that will used.</p>
+<p>max_concurrent_requests is the maximum number of threads that will be used.</p>
 </li>
 <li>
 <p>multipart_chunksize is the chuck size the parts will be split in.</p>
@@ -1043,7 +1043,7 @@ s3 =
 <p>UploadID: .2~E_PYNwiBq0la0EuZcCOY30KgmRrf1pV. | PartID: . 1 (at the end of the line)</p>
 </div>
 <div class="paragraph">
-<p>So let&#8217;s check it out with and example, we will set the client chunksize to
+<p>So let&#8217;s check it out with an example, we will set the client chunk size to
 5MB, and upload a 20MB file</p>
 </div>
 <div class="listingblock">
@@ -1053,7 +1053,7 @@ s3 =
 </div>
 </div>
 <div class="paragraph">
-<p>We are sending 5 MB chunks to RGW, RGW has a stripe width of 4 MB, this means RGW will take first 4 MB and create as "multipart" file, and then a 1 MB "shadow" as a tail file.</p>
+<p>We are sending 5 MB chunks to RGW, RGW has a stripe width of 4 MB, which means RGW will take the first 4 MB and create a "multipart" file and then a 1 MB "shadow" as a tail file.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1070,7 +1070,7 @@ s3 =
 </div>
 </div>
 <div class="paragraph">
-<p>The Multipart header file is 4MB and the Tail Shadow file is 1MB</p>
+<p>The Multipart header file is 4MB, and the Tail Shadow file is 1MB</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1083,8 +1083,8 @@ default.rgw.buckets.data/7fb0a3df-9553-4a76-938d-d23711e67677.34162.1__shadow_5c
 <div class="paragraph">
 <p>These parts are not assembled or merged on the RGW, this is their final resting
 status. The file "7fb0a3df-9553-4a76-938d-d23711e67677.34162.1_5chuncks" is
-called a header file, it contains the metadata of the full multipart
-file/object, it is not a merged file from all parts. From Rados it&#8217;s a 0 byte file</p>
+a header file; it contains the metadata of the full multipart
+file/object. It is not a merged file from all parts. From Rados, it&#8217;s a 0-byte file</p>
 </div>
 <div class="listingblock">
 <div class="content">

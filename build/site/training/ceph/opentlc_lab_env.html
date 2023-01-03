@@ -197,7 +197,7 @@
 <p>Review server access considerations</p>
 </li>
 <li>
-<p>Install Red Hat<sup>&#174;</sup> Ceph<sup>&#174;</sup> Storage using the <code>cephadm</code> utility</p>
+<p>Install Ceph Storage using the <code>cephadm</code> utility</p>
 </li>
 </ul>
 </div>
@@ -212,10 +212,7 @@
 <p>The lab environment consists of 13 virtual servers, one of which is a workstation/bastion host. In this section, you provision the lab environment, which sets up the components required for the lab.</p>
 </div>
 <div class="paragraph">
-<p>The lab environment is a playground provided with instructions on how to set up some of the scenarios. The lab is a guide and does not provide step-by-step instructions, nor does it provide details on implementing best practices. For topics or scenarios that are not covered in this lab, or commands that do not provide the expected output, refer to Red Hat&#8217;s documentation.</p>
-</div>
-<div class="paragraph">
-<p>For example, the lab provides information on how to configure four MONs. A best practice in a production environment is to configure an odd number of MONs, such as three or five. You have the option in this lab to use the <code>cephadm</code> command line tool to configure only three MONs.</p>
+<p>The lab environment is a playground with instructions on setting up some of the scenarios. The lab is a guide and does not provide step-by-step instructions, nor does it provide details on implementing best practices. For topics or scenarios that are not covered in this lab, or commands that do not provide the expected output, refer to Red Hat&#8217;s documentation.</p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
@@ -299,11 +296,6 @@ If you do not remember your username or password, go to the <a href="https://www
 </li>
 </ol>
 </div>
-<div class="imageblock unresolved">
-<div class="content">
-<img src="images/Registry-Login-01.png" alt="Registry Login 01">
-</div>
-</div>
 </div>
 </div>
 </div>
@@ -311,7 +303,7 @@ If you do not remember your username or password, go to the <a href="https://www
 <h2 id="_explore_lab_environment_and_server_list"><a class="anchor" href="#_explore_lab_environment_and_server_list"></a>2. Explore Lab Environment and Server List</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Due to the nature of OpenStack<sup>&#174;</sup> and storage, the lab environment for this course is larger and more complex than most. Elements such as Red Hat Ceph Storage, high availability, shared storage, and others require several servers and enhanced networking. The Ravello lab environment that is provisioned for each student provides all of these requirements.</p>
+<p>The Ceph lab environment provisioned for each student provides all of the requirements to fulfil the exercises.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -320,7 +312,7 @@ If you do not remember your username or password, go to the <a href="https://www
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The lab environment is cloud-based, so you can access it over the Internet from anywhere. However, do not expect the performance to match a dedicated environment.
+The lab environment is cloud-based, so that you can access it over the Internet from anywhere. However, do not expect the performance to match a dedicated environment.
 </td>
 </tr>
 </table>
@@ -333,7 +325,7 @@ The lab environment is cloud-based, so you can access it over the Internet from 
 </td>
 <td class="content">
 <div class="paragraph">
-<p>You are able to access any system in your lab environment by using the Novello virtual console, the link to which is provided in the email message you received with information about accessing your lab environment.</p>
+<p>You can access any system in your lab environment using the virtual console, the link provided in the email message you received with information about accessing your lab environment.</p>
 </div>
 </td>
 </tr>
@@ -347,7 +339,7 @@ The lab environment is cloud-based, so you can access it over the Internet from 
 </td>
 <td class="content">
 <div class="paragraph">
-<p>While you have root access to all of the systems, including the workstation node, and you are able to make any configuration changes necessary, do not enable root login from SSH to the workstation node. The default password is not secure and your machine may be compromised and subsequently deleted without warning.</p>
+<p>While you have root access to all of the systems, including the workstation node, and you can make any configuration changes necessary, do not enable root login from SSH to the workstation node. The default password is not secure, and your machine may be compromised and subsequently deleted without warning.</p>
 </div>
 </td>
 </tr>
@@ -403,13 +395,13 @@ The lab environment is cloud-based, so you can access it over the Internet from 
 <h3 id="_prepare_the_workstation"><a class="anchor" href="#_prepare_the_workstation"></a>3.1. Prepare the workstation</h3>
 <div class="paragraph">
 <p>Once you have logged in via SSH to your opentlc workstation, and used sudo to
-scalate into
+escalate into
 root,  we are going to
-run a playbook to get the pre-reqs for the labs in place.</p>
+run a playbook to get the prereqs for the labs in place.</p>
 </div>
 <div class="paragraph">
-<p>Clone the cephadm automation repo, you will need to authenticate to get access,
-in this example we are using a private key to authenticate against github.</p>
+<p>Clone the cephadm automation repo. You will need to authenticate to get access,
+in this example, we use a private key to authenticate against GitHub.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -429,8 +421,8 @@ in this example we are using a private key to authenticate against github.</p>
 <div class="sect2">
 <h3 id="_prepare_ceph_nodes_for_deployment"><a class="anchor" href="#_prepare_ceph_nodes_for_deployment"></a>3.2. Prepare Ceph nodes for deployment</h3>
 <div class="paragraph">
-<p>Once the client playbook finishes we can start preparing our ceph clusters, we
-have 8 servers available, four per ceph cluster.</p>
+<p>Once the client playbook finishes, we can start preparing our ceph clusters. We
+have eight servers available, four per ceph cluster.</p>
 </div>
 <div class="paragraph">
 <p><strong>Ceph Cluster1:</strong> ceph-node01,ceph-node02,ceph-node03,proxy01</p>
@@ -439,7 +431,7 @@ have 8 servers available, four per ceph cluster.</p>
 <p><strong>Ceph Cluster2:</strong> ceph-mon01,ceph-mon02,ceph-mon03,proxy02</p>
 </div>
 <div class="paragraph">
-<p>The previous client playbook created 2 inventory files for us.</p>
+<p>The previous client playbook created two inventory files for us.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -488,7 +480,7 @@ workstation.example.com</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>To get all the pre-requisites ready to deploy our ceph clusters we can run the
+<p>To get all the pre-requisites ready to deploy our ceph clusters, we can run the
 <code>cephadmdeploy/ansible-cephadm-deploy/deploy-cephadm.yaml</code> for each of our
 clusters.</p>
 </div>
@@ -501,14 +493,14 @@ clusters.</p>
 <td class="content">
 <div class="paragraph">
 <p>This playbook doesn&#8217;t deploy ceph it just prepares the pre-reqs needed, repos,
-dns name resolution, etc</p>
+DNS name resolution, etc</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>For that first we need to configure a group_vars file</p>
+<p>For that first, we need to configure a group_vars file</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -540,7 +532,7 @@ to the latest RHEL 8 minor version.</p>
 </table>
 </div>
 <div class="paragraph">
-<p>For each cluster we run:</p>
+<p>For each cluster, we run the following:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -548,7 +540,7 @@ to the latest RHEL 8 minor version.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Once the playbook finishes you are ready to start the ceph deployment, if
+<p>Once the playbook finishes, you are ready to start the ceph deployment. If
 needed several scripts have been created in the <code>/root</code> filesystem of our admin host
 <code>ceph-node01.example.com</code></p>
 </div>
@@ -563,7 +555,7 @@ zap-disks.sh &lt;--- Zaps Disks</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The cluster-install.sh script is using for the cephadm bootstrap a spec file <code>ceph-node01.example.com</code>, you can edit and modify
+<p>The cluster-install.sh script is used for the cephadm bootstrap a spec file <code>ceph-node01.example.com</code>. You can edit and modify
 this file to your needs:</p>
 </div>
 <div class="listingblock">
@@ -573,7 +565,7 @@ this file to your needs:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>For a full automated deployment we can run:</p>
+<p>For a fully automated deployment, we can run:</p>
 </div>
 <div class="listingblock">
 <div class="content">

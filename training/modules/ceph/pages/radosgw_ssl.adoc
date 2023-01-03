@@ -12,21 +12,21 @@
 
 == Introduction
 
-The first ingredient we need to configure SSL endpoint is the "SSL Certificate" itself, which must be obtained through an official certification authority, or CA. It’s the CA’s responsibility to confirm the certificate’s identity, as well as assert for its authenticity. For demonstration purposes, we’ll use a self-sign certificate. For production environment acquiring an SSL certificate through an authorized CA is recommended.
+The first ingredient we need to configure SSL endpoint is the "SSL Certificate" itself, which must be obtained through an official certification authority, or CA. It’s the CA’s responsibility to confirm the certificate’s identity, as well as assert its authenticity. For demonstration purposes, we’ll use a self-sign certificate. Acquiring an SSL certificate through an authorised CA is recommended for a production environment.
 
 == Configuring SSL for the RGW daemon
 
-To configure SSL in our RGW daemon we are going to use a RGW spec definition.
+To configure SSL in our RGW daemon, we will use an RGW spec definition.
 
 [NOTE]
 ====
-Some parameters such as the network to be used by RGW instances or the ssl certificate content can only be defined by using the service speficiation file.
+Some parameters, such as the network to be used by RGW instances or the SSL certificate content, can only be defined by using the service specification file.
 ====
 
 
-We have pre-created a self signed certificate that you can use as your RGW
-instance certificate, it's available in the admin node of the cluster for
-example `ceph-node01.example.com` in the `/root/certificates` folder
+We have pre-created a self-signed certificate that you can use as your RGW
+instance certificate. It's available in the admin node of the cluster, for
+example, `ceph-node01.example.com` in the `/root/certificates` folder
 
 ----
 # ls -l /root/certificates/
@@ -37,9 +37,9 @@ total 8
 
 [TIP]
 ====
-If any modifications are need to the certificates, like a different SAN or just
-creating a new certificate the CA cert/key is available on the `workstation`
-machines on the same path `/root/certificates/`
+If any modifications are needed to the certificates, like a different SAN or just
+creating a new certificate, the CA cert/key is available on the `workstation.example.com`
+machine on the same path `/root/certificates/`
 ====
 
 The Certificate has a SAN for ceph-node02, so we are going to configure the RGW
@@ -52,7 +52,7 @@ service to run on `node ceph-node02.example.com`
 ----
 
 We are going to add a label called `rgws` to host `ceph-node02.example.com` so
-we later can use the label in the rgw spec placement section.
+we later can use the label in the RGW spec placement section.
 
 ----
 # ceph orch host label add ceph-node02 rgws
@@ -67,8 +67,8 @@ proxy01     192.168.56.25  mgmt
 4 hosts in cluster
 ----
 
-Here is a cephadm sample spec file, were we create a new RGW service with SSL
-using port 8443, for placement we are using lables, it will select a host with
+Here is a cephadm sample spec file, where we create a new RGW service with SSL
+using port 8443, for placement we are using labels, it will select a host with
 the label rgws set, we also need to copy and paste the certificate and key into the
 spec file.
 
@@ -115,16 +115,16 @@ HTTPS/SSL.
 
 == Configuring SSL for the Ingress Service
 
-When using the cephadm Ingress service que can configure the SSL termination at
+When using the cephadm Ingress service can configure the SSL termination at
 the HAproxy level. 
 
-If the RGW service is configured with SSL enabled, then the ingress service will use the ssl and verify none options in the backend configuration. Trust verification is disabled because the backends are accessed by IP address instead of FQDN.
 
-When doing the SSL termination at the HAproxy/Load Balancer level we need to
-disable SSL in the RGW daemons, in the previous exercise we enabled SSL on our
+
+When doing the SSL termination at the HAproxy/Load Balancer level, we need to
+disable SSL in the RGW daemons. In the previous exercise, we enabled SSL on our
 RGW service, so the first step will be to disable SSL from our RGW service.
 
-We are going to continue using RGW specification files. we are modifiying the
+We are going to continue using RGW specification files. we are modifying the
 following things in our spec file:
 
 - count: 2 , we need at least 2 RGW daemons running for the Ingress service to
@@ -151,7 +151,7 @@ spec:
 EOF
 ----
 
-We add the rgw label to node proxy01 so the second instance of our RGW service
+We add the rgw label to node proxy01, so the second instance of our RGW service
 gets deployed in node proxy01
 
 ----
@@ -159,7 +159,7 @@ gets deployed in node proxy01
 Added label rgw to host proxy01
 ----
 
-We now apply the spec file so the configuration changes take place.
+We now apply the spec file, so the configuration changes take place.
 
 ----
 # ceph orch apply -i /root/rgw-nossl.spec
@@ -206,8 +206,8 @@ Scheduled ingress.rgw.default update...
 
 [NOTE]
 ====
-It could be the case that you get one haproxy instance in failed state, this is
-becasue resource contention in out lab nodes, the problem get's fixed with a
+It could be that you get one haproxy instance in a failed state. This is
+because of resource contention in our lab nodes. The problem gets fixed with a
 restart of the haproxy daemon
 
 ----
@@ -253,10 +253,11 @@ backend backend
     server rgw.objectgw.proxy01.dcsrvq 192.168.56.25:8080 check weight 100
 ----
 
-Let's test with curl command against the VIP that has a FQDN of
+Let's test with curl command against the VIP that has an FQDN of
 `https://s3zone1.example.com`
 
 ----
 # curl https://s3zone1.example.com
 <?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>
 ----
+

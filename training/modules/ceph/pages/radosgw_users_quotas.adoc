@@ -4,17 +4,17 @@
 
 == RadosGW Users
 
-User management is performed different as traditional user management in Ceph clusters (cephx)
+User management is performed differently from traditional user management in Ceph clusters (cephx)
 
 Two user types:
 
 - User: reflects a user of the S3 interface
-- Subuser: reflects a user of the Swift interface. A subuser is associated to a user
+- Subuser: reflects a user of the Swift interface. A sub-user is associated with a user
 
 NOTE: Swift users are out of the scope of this workshop
 
 
-When creating RADOS Gateway users, both the --uid and --display-name options are required, and specify a unique account name and a human friendly display name. Use the -- access-key and --secret options to specify a custom AWS account and secret key for the RADOS user.
+When creating RADOS Gateway users, both the --uid and --display-name options are required and specify a unique account name and a human-friendly display name. Use the -- access-key and --secret options to specify a custom AWS account and secret key for the RADOS user.
 
 ----
 # radosgw-admin user create --uid='user2' --display-name='Second User' --access-key='S3user2' --secret-key='S3user2key'
@@ -67,7 +67,7 @@ If the access key and secret key are not specified, the radosgw-admin command au
 Each S3 user is defined by an access key and a secret key
 ====
 
-You can check user info, usage stats with the following commands:
+You can check user info, and usage stats with the following commands:
 
 ----
 # radosgw-admin user stats --uid='user2'
@@ -397,7 +397,7 @@ Quotas Can be Applied to:
 
 Quota Usage example, setting enabling the `user_quota`, note that the same can be done at the bucket level with `bucket_quota`
 
-1.create a user.
+1.Create a user.
 
 ----
 # USER_ACCESS_KEY=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 20 | head -n 1)
@@ -433,5 +433,5 @@ upload failed: ../etc/hosts to s3://quota/5 An error occurred (QuotaExceeded) wh
 
 [WARNING]
 ====
-The Quota may take some time to get enforced until the user usage stats get updated, allowing to slighty go over the specified limits
+The Quota may take some time to get enforced until the user usage stats get updated, allowing to slightly go over the specified limits
 ====

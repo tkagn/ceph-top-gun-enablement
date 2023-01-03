@@ -5,6 +5,7 @@
 * Introduction to RadosGW
 * Hands-On. Deploy RGW with Cephadm
 * Hands-On. Verify S3/RGW Access with S3 client
+* Hands-On. S3 Access: Path Style vs Hosted Style
 
 :numbered:
 
@@ -12,8 +13,8 @@
 == Introducing Object Storage
 
 Object storage stores data as discrete items, each individually called an object. Unlike files in a file
-system, objects are not organized in a tree of directories and subdirectories. Instead, objects are
-stored in a flat namespace. Each object is retrieved by using the object's unique object ID, also
+system, objects are not organised in a tree of directories and subdirectories. Instead, objects are
+stored in a flat namespace. Each object is retrieved using the object's unique object ID, also
 known as an object key.
 
 Applications do not use normal file-system operations to access object data. Instead, applications
@@ -21,10 +22,10 @@ access a REST API to send and receive objects. Red Hat Ceph Storage supports the
 common object APIs, Amazon S3 (Simple Storage Service) and OpenStack Swift (OpenStack
 Object Storage).
 
-Amazon S3 calls the flat namespace for object storage a bucket while OpenStack Swift calls it
+Amazon S3 calls the flat namespace for object storage a bucket, while OpenStack Swift calls it
 a container. Because a namespace is flat, neither buckets nor containers can be nested. Ceph
 typically uses the term bucket, as does this lecture.
-A single user account can be configured for access to multiple buckets on the same storage
+A single user account can be configured to access multiple buckets on the same storage
 cluster. Buckets can each have different access permissions and be used to store objects for
 different use cases.
 
@@ -32,12 +33,12 @@ The advantage of object storage is that it is easy to use, expand, and scale. Be
 has a unique ID, it can be stored or retrieved without the user knowing the object's location.
 Without the directory hierarchy, relationships between objects are simplified.
 Objects, similar to files, contain a binary data stream and can grow to arbitrarily large sizes.
-Objects also contain metadata about the object data, and natively support extended metadata
-information, typically in the form of key-value pairs. You can also create your own metadata keys
+Objects also contain metadata about the object data and natively support extended metadata
+information, typically in key-value pairs. You can also create metadata keys
 and store custom information in the object as key values.
 
 == Introducing RadosGW
-The RADOS Gateway, also called the Object Gateway (RGW), is a service that provides access to
+The RADOS Gateway also called the Object Gateway (RGW), is a service that provides access to
 the Ceph cluster for clients using standard object storage APIs. The RADOS Gateway supports
 both the Amazon S3 and OpenStack Swift APIs.
 
@@ -51,7 +52,7 @@ the RADOS Gateway uses librados module calls to communicate with the Ceph cluste
 
 The RGW is a separate service that externally connects to a Ceph cluster and provides object storage
 access to its clients. In a production environment, it's recommended that you run more than
-one instance of the RGW, masked by a Load Balancer,
+one instance of the RGW masked by a Load Balancer,
 
 image::rgw-lb.webp[RGW LoadBalancer]
 
@@ -59,19 +60,22 @@ image::rgw-lb.webp[RGW LoadBalancer]
 
 Ceph Object Gateway supports two interfaces:
 
-* _S3-compatibility_, which provides object storage functionality with an interface that is compatible with a large subset of the Amazon S3 RESTful API.
+* _S3-compatibility_provides object storage functionality with an interface compatible with a large subset of the Amazon S3 RESTful API.
 * _Swift-compatibility_, which provides object storage functionality with an interface that is compatible with a large subset of the OpenStack Swift API.
 
 `cephadm` deploys RGW as a collection of daemons that manage a single-cluster deployment or a particular realm and zone in a multisite deployment.
 Note that with `cephadm`, the RGW daemons are configured via the monitor configuration database instead of via a `ceph.conf` file or the command line. If that configuration is not already in place (usually in the client.rgw.<something> section), then the RGW daemons start up with default settings (for example, binding to port 80).
 
-There are many ways to deploy the RADOS object gateway on of which is through a single command that creates an object gateway across two random servers. You use a step-by-step method to gain a better understanding of the deployment process.
+There are many ways to deploy the RADOS object gateway one of which is through
+a single cephadm command that creates an object gateway across two random servers.
 
-In this section, you create a realm, a zone group, and a zone, and then specify a placement specification with the host name when you deploy the RGW daemons.
+In this lab we are going to follow a step-by-step approach to better understand the deployment process.
+
+First we will create a realm, a zone group, and a zone, and then specify a placement specification with the hostname when you deploy the RGW daemons.
 
 image::gateway-realm.png[RGW Realm,740,580]
 
-Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_osd` configuration setting is lower than required. When you create more than seven pools each of PGs and PGPs, with the pool size being 32, then you must increase the value of `mon_max_pg_per_osd` from `256` to `512` in order to create the additional pools.
+Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_osd` configuration setting is lower than required. When you create more than seven pools each of PGs and PGPs, with the pool size being 32, you must increase the value of `mon_max_pg_per_osd` from `256` to `512` to create the additional pools.
 
 . Update the value of the `mon_max_pg_per_osd` configuration variable to `512`:
 +
@@ -282,7 +286,7 @@ Scheduled multi.zone1 update...
 
 [TIP]
 ====
-Use the client.rgw.* section in the centralized configuration database to define parameters and characteristics for new RADOS Gateway daemons.
+Use the client.rgw.* section in the centralised configuration database to define parameters and characteristics for new RADOS Gateway daemons.
 ====
 
 . Verify that the RGW service is available:
@@ -324,7 +328,7 @@ rgw.multi.zone1.proxy01.mhawfj   proxy01      *:8000       running (4m)     3m a
 
 NOTE: The Ceph orchestrator service names the daemons by using the format rgw.<realm>.<zone>.<host>.<random-string>
 
-. Also verify that the RGW daemons are running:
+. Also, verify that the RGW daemons are running:
 +
 [source,sh]
 ----
@@ -389,9 +393,9 @@ tcp6       0      0 :::80                   :::*                    LISTEN      
 
 == Create RADOS Gateway User Accounts
 
-To access Red Hat Ceph Storage over object storage interfaces--that is, via Swift or S3--you must configure a Ceph RADOS Gateway component. In this section, you configure `proxy01` as a Ceph RADOS Gateway and then test S3 and Swift from `ceph-mon01` or from `workstation`.
+To access Red Hat Ceph Storage over object storage interfaces via Swift or S3, you must configure a Ceph RADOS Gateway component. In this section, you configure `proxy01` as a Ceph RADOS Gateway and then test S3 and Swift from `ceph-mon01`.
 
-You begin by logging into `ceph-mon01` to create RADOS Gateway user accounts to be used by S3 and Swift APIs to access Red Hat Ceph Storage via an object storage interface.
+You begin by logging into `ceph-mon01` to create RADOS Gateway user accounts to be used by S3 to access Ceph Storage via an object storage S3 cli client .
 
 . Log in to `ceph-mon01`.
 . Create an RGW user for S3 access:
@@ -456,7 +460,7 @@ You begin by logging into `ceph-mon01` to create RADOS Gateway user accounts to 
 
 The Amazon S3 API enables developers to manage object storage resources using an Amazon
 S3 compatible interface. Applications implemented with the S3 API can inter-operate with other
-S3-compatible object storage services besides the RADOS Gateway, and migrate storage from
+S3-compatible object storage services, besides the RADOS Gateway, migrate storage from
 other locations to your Ceph storage cluster. In a hybrid cloud environment, you can configure
 your applications to use different authentication keys, regions, and vendor services to mix private
 enterprise and public cloud resources and storage locations seamlessly using the same API.
@@ -482,9 +486,9 @@ API.
 * https://github.com/peak/s5cmd[s5cmd]
 * AWS CLI
 
-We will be using the AWS CLI during the lab, the nodes have the AWS CLI binary
-available you will just need to configure it, using the configure option, you
-can create a new RGW user or use the previous created user, you will need the
+We will be using the AWS CLI during the lab; the nodes have the AWS CLI binary
+available, you will just need to configure it; using the configure option, you
+can create a new RGW user or use the previously created user, you will need the
 Access and Secret key.
 
 ----
@@ -494,8 +498,8 @@ AWS Secret Access Key [****************QUH0]:
 Default region name [Default]:
 ----
 
-Once configured you need to use the --endpoint option and point it to your
-configure RGW http endpoint, for example: 
+Once configured, you need to use the --endpoint option and point it to your
+configure RGW HTTP endpoint, for example: 
 
 ----
 [ceph: root@node /]# aws --endpoint http://ceph-node01:8080 s3 mb s3://demobucket
@@ -512,27 +516,27 @@ The S3 API currently supports two different bucket addressing models: path-style
 
 S3 endpoint URL: “https://s3.example.com/bucket-name/object_key"
 
-If you notice that the S3 buckets name and objects keys always in the same subdomain which in this case s3.example.com
+If you notice that the S3 bucket name and object keys are always in the same subdomain, which in this case is s3.example.com
 
 *In hosted-style URLs*, the bucket name will be included on the subdomain so we can have distinct DNS subdomains for the buckets, examples:
 
 https://bucket-name.s3.example.com/object_key
 
-Hosted style URL's can help with DNS resolution, scaling, security, traffic management, and DDoS protection more challenging with this old centralized model than unique, virtual-hosted style subdomains.
+Hosted-style URL's can help with DNS resolution, scaling, security, traffic management, and DDoS protection more challenging with this old centralised model than unique, virtual-hosted-style subdomains.
 
 === How to enable hosted-style URLs in RadosGW
 
-By default RGW will work in the path-style URLs format, if we want to access a bucket using the hosted-style URLs some small configuration options are needed.
+By default, RGW will work in the path-style URL format; if we want to access a bucket using the hosted-style URLs, some minimal configuration is needed.
 
-The first thing would be getting DNS resolution ready, we will need to get a
-wildcard in place so any dns query that asks for *.bucket.example.com points to
-our RGW instance, in our lab we are using dnsmasq for DNS resoultion so we are
-going to add a new line to the dnsmasq config, to get the DNS bucket resolution
+The first thing would be getting DNS resolution ready; we will need to get a
+wildcard DNS entry in place, so any DNS query that asks for *.bucket.example.com points to
+Our Load Balancer or RGW instance, in our lab, we are using dnsmasq for DNS resolution so we are
+going to add a new line to the dnsmasq config to get the DNS bucket resolution
 working.
 
 [NOTE]
 ====
-There are certain applications that only work with hosted-style bucket access
+Certain applications only work with hosted-style bucket access
 ====
 
 [TIP]
@@ -541,9 +545,11 @@ RGW prefers the first method(Path Style), because the second
 method(hosted-style) requires added operations like domain certification and DNS wild cards.
 ====
 
-In this example IP 172.16.7.24 is for proxy01 were we have our RGW instance
-running:
+In this example, IP 172.16.7.24 is for proxy01 where we have our RGW instance
+running, we add it at the end of the `/etc/dnsmasq.conf` of the `workstation`
+server and finally restart dnsmasq.
 
+On the `workstation.example.com` node:
 ----
 # echo "address=/.bucket.example.com/172.16.7.24" >> /etc/dnsmasq.conf
 # systemctl restart dnsmasq
@@ -552,20 +558,20 @@ PING bucket1.bucket.example.com (172.16.7.24) 56(84) bytes of data.
 64 bytes from proxy01 (172.16.7.24): icmp_seq=1 ttl=64 time=2.18 ms
 ----
 
-Now that DNS resoution is working we need to configure our RGW instance, we can
-configure the hosted-style url access in two ways:
+Now that DNS resolution is working, we need to configure our RGW instance; we can
+configure the hosted-style URL access in two ways:
 
 - Add the cname.domain.com to the rgw_dns_name config parameter per RGW instance
 - add cname.domain.com to the list of hostnames in your zonegroup configuration
 
-Lets get the name of our RGW instance
+Let's get the name of our RGW instance
 
 ----
 # ceph orch ps | grep rgw
 rgw.multi.zone1.proxy01.yrtaci  proxy01      *:8000       running (63m)      2m ago   63m    65.5M        -  16.2.8-85.el8cp  b2c997ff1898  323585d51d1e  
 ----
 
-And use the name of the RGW instance adding client.  configure our dns bucket subdomain
+And use the name of the RGW instance adding the client.  configure our DNS bucket subdomain
 ----
 # ceph config ls | grep rgw_dns_name
 rgw_dns_name
@@ -573,10 +579,10 @@ rgw_dns_name
 # ceph config set client.rgw.multi.zone1.proxy01.yrtaci rgw_dns_name bucket.example.com
 ----
 
-Just so it's obivious that we are sucesfully using the hosted-style access, I'm
+Just so it's evident that we are successfully using the hosted-style access, I'm
 going to do the following steps:
 
-Create a bucket called bucket2 for example
+Create a bucket called bucket2, for example
 
 ----
 # aws --endpoint http://proxy01:8000 s3 mb s3://bucket2 --region multizg
@@ -590,7 +596,7 @@ Upload an object
 upload: ../etc/hosts to s3://bucket2/hosts
 ----
 
-Modify the object ACL to give it public-read access, so it can be access by an
+Modify the object ACL to give it public-read access so that it can be accessed by an
 anonymous user with curl
 
 ----
@@ -598,7 +604,7 @@ anonymous user with curl
 ----
 
 Now I can access the object using curl with the hosted-style access, the bucket
-name is in the URL as a subdomain, and the object is access directly without
+name is in the URL as a subdomain, and the object is accessed directly without
 specifying the name of the bucket
 
 ----
@@ -607,7 +613,7 @@ specifying the name of the bucket
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 ----
 
-If I remove the rgw_dns_name configuration we can see what happens
+If I remove the rgw_dns_name configuration, we can see what happens
 
 ----
 # ceph config rm client.rgw.multi.zone1.proxy01.fybord rgw_dns_name
@@ -617,14 +623,15 @@ Scheduled to restart rgw.multi.zone1.proxy01.fybord on host 'proxy01'
 <?xml version="1.0" encoding="UTF-8"?><Error><Code>NoSuchBucket</Code><BucketName>hosts</BucketName><RequestId>tx00000809c18c68dcf0c57-0063b30865-858d-zone1</RequestId><HostId>858d-zone1-multizg</HostId></Error>
 ----
 
-It will only work with path-style:
+It will only work with path style:
 ----
 # curl http://bucket2.bucket.example.com:8000/bucket2/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 ----
 
 
-The second way and the recomended way of enabling hosted-style access is
-configuring our dns host cname at zonegroup configuration level:
+The second way and recommended way of enabling hosted-style access is configuring our DNS host cname at the zone group configuration level:
 
 
 ----
@@ -678,7 +685,7 @@ configuring our dns host cname at zonegroup configuration level:
 #  radosgw-admin period update --commit
 ----
 
-We do the same test as before, and check that we can access using the
+We do the same test as before and check that we can access using the
 hosted-style access
 
 ----
@@ -686,3 +693,5 @@ hosted-style access
 127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
 ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 ----
+
+

@@ -4,7 +4,7 @@
 * Provision the lab environment
 * Become familiar with the lab environment
 * Review server access considerations
-* Install Red Hat^(R)^ Ceph^(R)^ Storage using the `cephadm` utility
+* Install Ceph Storage using the `cephadm` utility
 
 :numbered:
 
@@ -14,9 +14,7 @@
 
 The lab environment consists of 13 virtual servers, one of which is a workstation/bastion host. In this section, you provision the lab environment, which sets up the components required for the lab.
 
-The lab environment is a playground provided with instructions on how to set up some of the scenarios. The lab is a guide and does not provide step-by-step instructions, nor does it provide details on implementing best practices. For topics or scenarios that are not covered in this lab, or commands that do not provide the expected output, refer to Red Hat's documentation.
-
-For example, the lab provides information on how to configure four MONs. A best practice in a production environment is to configure an odd number of MONs, such as three or five. You have the option in this lab to use the `cephadm` command line tool to configure only three MONs.
+The lab environment is a playground with instructions on setting up some of the scenarios. The lab is a guide and does not provide step-by-step instructions, nor does it provide details on implementing best practices. For topics or scenarios that are not covered in this lab, or commands that do not provide the expected output, refer to Red Hat's documentation.
 
 . Navigate to the link:https://labs.opentlc.com[OPENTLC lab portal^] and log in with your username and password.
 
@@ -51,23 +49,21 @@ In this section, you verify that you can access `registry.redhat.io` and retriev
 
 . Select your account name, and note your username and password from the *Token Information* tab:
 
-image::images/Registry-Login-01.png[]
-
 == Explore Lab Environment and Server List
 
-Due to the nature of OpenStack^(R)^ and storage, the lab environment for this course is larger and more complex than most. Elements such as Red Hat Ceph Storage, high availability, shared storage, and others require several servers and enhanced networking. The Ravello lab environment that is provisioned for each student provides all of these requirements.
+The Ceph lab environment provisioned for each student provides all of the requirements to fulfil the exercises.
 
 [NOTE]
-The lab environment is cloud-based, so you can access it over the Internet from anywhere. However, do not expect the performance to match a dedicated environment.
+The lab environment is cloud-based, so that you can access it over the Internet from anywhere. However, do not expect the performance to match a dedicated environment.
 
 [NOTE]
 ====
-You are able to access any system in your lab environment by using the Novello virtual console, the link to which is provided in the email message you received with information about accessing your lab environment.
+You can access any system in your lab environment using the virtual console, the link provided in the email message you received with information about accessing your lab environment.
 ====
 
 [WARNING]
 ====
-While you have root access to all of the systems, including the workstation node, and you are able to make any configuration changes necessary, do not enable root login from SSH to the workstation node. The default password is not secure and your machine may be compromised and subsequently deleted without warning.
+While you have root access to all of the systems, including the workstation node, and you can make any configuration changes necessary, do not enable root login from SSH to the workstation node. The default password is not secure, and your machine may be compromised and subsequently deleted without warning.
 ====
 
 . Verify that your environment is ready for use by connecting to your administration host through SSH using the details provided in the external provisioning email, which includes your username and password:
@@ -91,12 +87,12 @@ While you have root access to all of the systems, including the workstation node
 === Prepare the workstation
 
 Once you have logged in via SSH to your opentlc workstation, and used sudo to
-scalate into
+escalate into
 root,  we are going to
-run a playbook to get the pre-reqs for the labs in place.
+run a playbook to get the prereqs for the labs in place.
 
-Clone the cephadm automation repo, you will need to authenticate to get access,
-in this example we are using a private key to authenticate against github.
+Clone the cephadm automation repo. You will need to authenticate to get access,
+in this example, we use a private key to authenticate against GitHub.
 
 ----
 GIT_SSH_COMMAND="ssh -i key.rsa" git clone git@github.com:likid0/cephadmdeploy.git
@@ -111,14 +107,14 @@ We then run the client/workstation playbook.
 
 === Prepare Ceph nodes for deployment
 
-Once the client playbook finishes we can start preparing our ceph clusters, we
-have 8 servers available, four per ceph cluster.
+Once the client playbook finishes, we can start preparing our ceph clusters. We
+have eight servers available, four per ceph cluster.
 
 *Ceph Cluster1:* ceph-node01,ceph-node02,ceph-node03,proxy01
 
 *Ceph Cluster2:* ceph-mon01,ceph-mon02,ceph-mon03,proxy02
 
-The previous client playbook created 2 inventory files for us.
+The previous client playbook created two inventory files for us.
 
 ----
 # cat /root/cluster1
@@ -164,17 +160,17 @@ proxy02.example.com
 workstation.example.com
 ----
 
-To get all the pre-requisites ready to deploy our ceph clusters we can run the
+To get all the pre-requisites ready to deploy our ceph clusters, we can run the
 `cephadmdeploy/ansible-cephadm-deploy/deploy-cephadm.yaml` for each of our
 clusters.
 
 [NOTE]
 ====
 This playbook doesn't deploy ceph it just prepares the pre-reqs needed, repos,
-dns name resolution, etc
+DNS name resolution, etc
 ====
 
-For that first we need to configure a group_vars file
+For that first, we need to configure a group_vars file
 
 ----
 cat << EOF > cephadmdeploy/ansible-cephadm-deploy/group_vars/all.yaml
@@ -195,13 +191,13 @@ If `update_cluster_os: true` is set to true a full OS upgrade will take place
 to the latest RHEL 8 minor version.
 ====
 
-For each cluster we run:
+For each cluster, we run the following:
 
 ----
 # ansible-playbook -i /root/cluster1 cephadmdeploy/ansible-cephadm-deploy/deploy-cephadm.yaml
 ----
 
-Once the playbook finishes you are ready to start the ceph deployment, if
+Once the playbook finishes, you are ready to start the ceph deployment. If
 needed several scripts have been created in the `/root` filesystem of our admin host
 `ceph-node01.example.com`
 
@@ -214,7 +210,7 @@ cluster-wait-until-installed.sh  <--- waits until ceph is healthy
 zap-disks.sh <--- Zaps Disks
 ----
 
-The cluster-install.sh script is using for the cephadm bootstrap a spec file `ceph-node01.example.com`, you can edit and modify
+The cluster-install.sh script is used for the cephadm bootstrap a spec file `ceph-node01.example.com`. You can edit and modify
 this file to your needs:
 
 ----
@@ -222,9 +218,10 @@ this file to your needs:
 -rw-r--r-- 1 root root 1240 Dec 27 16:13 /root/cluster-spec.yaml
 ----
 
-For a full automated deployment we can run:
+For a fully automated deployment, we can run:
 
 ----
 # bash cephadm-ansible-run.sh && bash zap-disks.sh && bash cluster-install.sh &&
 bash cluster-postinstall.sh
 ----
+

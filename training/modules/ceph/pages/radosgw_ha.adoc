@@ -6,41 +6,40 @@
 :source-highlighter: pygments
 :source-language: shell
 :numbered:
-// Activate experimental attribute for Keyboard Shortcut keys
-:experimental:
+
 
 
 == Introduction
 
-To avoid single points of failure in our Ceph RGW deployment we need to provide
+To avoid single points of failure in our Ceph RGW deployment, we need to provide
 an S3/RGW endpoint that can tolerate the failure of one or more RGW services.
-RGW is a restfull HTTP endpoint, so it can be loadbalanced for HA and increased
-performance in many ways. There are some great examples in this
+RGW is a restful HTTP endpoint that can be load-balanced for HA and increase
+performance. There are some great examples of different RadosGW load-balancing mechanisms in this
 https://github.com/mmgaggle/ceph-lb[repo]
 
 Since RHCS 5.1, Ceph provides a cephadm service called ingress that provides an
-HA and loadbalancing stack based on keepalive and haproxy.
+HA and load-balancing stack based on keepalive and haproxy.
 
-The ingress service allows you to create a high availability endpoint for RGW with a minimum set of configuration options. The orchestrator will deploy and manage a combination of haproxy and keepalived to provide load balancing on a floating virtual IP.
-If SSL is used, then SSL must be configured and terminated by the ingress service and not RGW itself.
+The ingress service allows you to create a high-availability endpoint for RGW with a minimum set of configuration options. The orchestrator will deploy and manage a combination of haproxy and keepalived to balance the load on a floating virtual IP.
+If SSL is used, then SSL must be configured and terminated by the ingress service, not RGW itself.
 
 image::ingress.png[HAproxy Ingress Service,840,680]
 
-There are N hosts where the ingress service is deployed. Each host has a haproxy daemon and a keepalived daemon. A virtual IP is automatically configured on only one of these hosts at a time.
+There are N hosts where the ingress service is deployed. Each host has a haproxy daemon and a keepalived daemon. A virtual IP is automatically configured on only one of these hosts simultaneously.
 
-Each keepalived daemon checks every few seconds whether the haproxy daemon on the same host is responding. Keepalived will also check that the master keepalived daemon is running without problems. If the “master” keepalived daemon or the active haproxy is not responding, one of the remaining keepalived daemons running in backup mode will be elected as master, and the virtual IP will be moved to that node.
+Each keepalived daemon checks every few seconds whether the haproxy daemon on the same host is responding. Keepalived will also check that the master keepalived daemon is running without problems. Suppose the “master” keepalived daemon or the active haproxy is not responding. In that case, one of the remaining keepalived daemons running in backup mode will be elected as master, and the virtual IP will be moved to that node.
 
 The active haproxy acts like a load balancer, distributing all RGW requests between all the RGW daemons available.
 
 == Deploying a new RGW daemon
 
-Currently in our lab we have single RGW service/deamon running, we need at
-least two RGW services configured with the same Real/Zonegroup/Zone and running
-on different nodes, to be able to provide HA.
+Currently, in our lab, we have a single RGW service/daemon running. We need at
+At least two RGW services configured with the same Real/Zonegroup/Zone and running
+on different nodes to be able to provide HA.
 
-So we are going to increase the count of RGW daemons for service multi.zone1
+So we will increase the count of RGW daemons for service multi.zone1
 that was previously created to 2, and we will deploy the new daemon on
-ceph-node02, just as a reminder we can use the --dry-run parameter with cephadm
+ceph-node02, just as a reminder, we can use the --dry-run parameter with cephadm
 to see what actions will be taken:
 
 ----
@@ -69,10 +68,10 @@ rgw.multi.zone1.proxy01.mhawfj      proxy01      *:8000       running (30m)     
 
 == Deploying the Ingress Service
 
-Now that we have 2 rgw instances running we can deploy an ingress service to
-provide HA and loadbalancing of out S3 http endpoint, we beed a VIP for
-Keepalived to loadbalance, you can use `ip:` that has been pre-created and it has
-a dns entry `s3zone1.example.com` 
+Now that we have two RGW instances running, we can deploy an ingress service to
+provide HA and load-balancing of out S3 HTTP endpoint, we need a VIP for
+Keepalived to load-balance, you can use `ip:` that has been pre-created, and it has
+a DNS entry `s3zone1.example.com` 
 
 ----
 # host s3zone1.example.com
@@ -105,7 +104,7 @@ SERVICESPEC PREVIEWS
 Scheduled ingress.ingress.multi.zone1 update...
 ----
 
-The services will take a while to get configured and running, we can check with
+The services will take a while to get configured and running. We can check with
 the ceph orch ps command:
 
 ----
@@ -123,7 +122,7 @@ curl http://s3zone1.example.com
 <?xml version="1.0" encoding="UTF-8"?><ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>anonymous</ID><DisplayName></DisplayName></Owner><Buckets></Buckets></ListAllMyBucketsResult>
 ----
 
-The haproxy configuration can checked with:
+The haproxy configuration can be checked with the following:
 
 ----
 # cephadm enter --name haproxy.ingress.multi.zone1.ceph-node02.vyqujm cat /var/lib/haproxy/haproxy.cfg
@@ -140,7 +139,7 @@ backend backend
     server rgw.multi.zone1.proxy01.mhawfj 192.168.56.24:8000 check weight 100
 ----
 
-Keepalived config can also be checked with:
+The Keepalived config can also be checked with the following:
 
 ----
 # cephadm enter --name keepalived.ingress.multi.zone1.ceph-node02.yyelgh cat /etc/keepalived/keepalived.conf
@@ -166,10 +165,11 @@ vrrp_instance VI_0 {
 ----
 
 NOTICE: One thing to take into account with Ingress service and keepalived is that it
-uses the vrrp protocol, so vrrp comunications need to be allowed in the
+uses the vrrp protocol, so vrrp communications need to be allowed in the
 network.
 
-Now that we have the Ingress service working, and the Client requests are being
-loadbalanced between both RGW services, you can shutodown a node, and check
-with and s3client that you can still interact with the S3 endpoint, uploading
-some files for example.
+Now that we have the Ingress service working and the Client requests are being
+load-balanced between both RGW services, you can shutdown a node and check
+with and s3 client that you can still interact with the S3 endpoint, uploading
+some files, for example.
+
