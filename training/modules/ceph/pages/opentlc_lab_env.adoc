@@ -205,7 +205,7 @@ needed several scripts have been created in the `/root` filesystem of our admin 
 # ssh ceph-node01.example.com ls *.sh
 cephadm-ansible-run.sh   <--- runs Cephadm-ansible preflight playbook
 cluster-install.sh       <--- Deploys the cephcluster with cephadm
-cluster-postinstall.sh   <--- Configures Ceph post deploy
+cluster-postinstall.sh   <--- Configures Ceph post deploy, ceph rbd pool and cephfs deployment
 cluster-wait-until-installed.sh  <--- waits until ceph is healthy
 zap-disks.sh <--- Zaps Disks
 ----
@@ -218,7 +218,7 @@ this file to your needs:
 -rw-r--r-- 1 root root 1240 Dec 27 16:13 /root/cluster-spec.yaml
 ----
 
-For a fully automated deployment, we can run:
+For a fully automated deployment of Ceph in the lab, we can run:
 
 ----
 # bash cephadm-ansible-run.sh && bash zap-disks.sh && bash cluster-install.sh &&

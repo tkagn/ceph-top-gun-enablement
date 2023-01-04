@@ -9,46 +9,46 @@ Connect/ OAuth 2.0 compliant identity services such as Keycloak. STS is a standa
 service that provides temporary tokens for an application or user to access an S3 endpoint after
 the user authenticates against an identity provider. 
 
-Ceph provides support for a subset of Amazon Secure Token Service (STS) APIs. Users first authenticate against STS and upon success receive a short lived s3 access and secret key that can be used in subsequent requests.
+Ceph supports a subset of Amazon Secure Token Service (STS) APIs. Users first authenticate against STS and, upon success, receive a short-lived s3 access and secret key that can be used in subsequent requests.
 
-In Ceph RGW STS can be configured to work with several authentication methods such as LDAP, keystone or OpenID connect.
+In Ceph RGW STS can be configured to work with several authentication methods such as LDAP, keystone, or OpenID connect.
 
-Workflow of STS shown in the next diagram.
+Workflow of STS is shown in the next diagram.
 
 image::STS_overview.png[STS Overview]
 
-We also need to introduce the concept of an Amazon Resource Name (ARN), Permission Policies, Bucket Policy and Roles.
+We also need to introduce the concept of an Amazon Resource Name (ARN), Permission Policies, Bucket Policies and Roles.
 
-A ARN is used to identify a user, group or a role amongst others. The ARN of a username has the general format of arn:aws:iam:::user1. ARNS are important as they are the required in the permission policy language that S3 uses.
+An ARN is used to identify a user, group or role amongst others. The ARN of a username has the general format of arn:aws:iam:::user1. ARNS are important as they are required in the permission policy language that S3 uses.
 
 A permission policy instructs what actions are allowed or denied on a set of resources by a set of principals. Principals are identified via an ARN.
 
 Permission policies are used in two instances: bucket policy and role policy.
 
-A bucket policy determines what actions can be performed inside a s3 bucket and is generally used to restrict who can read/write objects. The bucket policy is administered via the S3 API and can be self-managed by end users if they have appropriate permissions defined.
+A bucket policy determines what actions can be performed inside an s3 bucket and is generally used to restrict who can read/write objects. The bucket policy is administered via the S3 API and can be self-managed by end users if they have appropriate permissions defined.
 
-A role is similar to a user and has its own ARN in the general format of arn:aws:iam:::role/rolename. In a bucket policy instead of giving access to users based on their user ARN, a role ARN can be used instead. Users are then able to assume the role based on another permission policy which we refer to as the assume-role-policy-doc. The assume-role-policy-doc grants access to the roles if the user is able to meet its conditions.
+A role is similar to a user and has its own ARN in the general format of arn:aws:iam:::role/rolename. In a bucket policy, instead of giving access to users based on their user ARN, a role ARN can be used instead. Users can then assume the role based on another permission policy which we refer to as the assume-role-policy-doc. The assume-role-policy-doc grants access to the roles if the user can meet its conditions.
 
-If you choose to use the STS protocol be aware that several commercial off the shelf products will not be able to use the STS protocol due to lack of engineering. For example Quay has no option to use STS. Therefore if you will likely need to position local users as a fall back option for such applications.
+If you choose to use the STS protocol, be aware that several commercials off-the-shelf products will not be able to use the STS protocol due to a lack of engineering. For example, Quay currently has no option to use STS. Therefore, you will likely need to configure local users as a fallback option for such applications.
 
 
 == RGW local user database using STS.
-RadosGW by default has a local user database to manage authentication and authorization, the user information and credentials are stored in a rados pool, so there is no extra work needed to setup this authentication setup, it works with STS, an admin user can create roles and policies for the roles and then indicate the RGW local users that will be authorized to assume the new role.
+RadosGW, by default, has a local user database to manage authentication and authorization. The user information and credentials are stored in a rados pool, so no extra work is needed to set up this authentication setup. It works with STS. An admin user can create roles and policies for the roles and then indicate the RGW local users authorised to assume the new role.
 
 image::STS_local.png[STS local]
 
 == OAUTH(OIDC) + STS authentication.
 
-With OAUTH authentication we use an OIDC service to authenticate against, we need to have an OpenID Connect/ OAuth2 compatible service. Red Hat has tested the integration with RGW of the following OIDC products: Red Hat SSO and keycloak IDPs.
+With OAUTH authentication, we use an OIDC service to authenticate against. We need to have an OpenID Connect/ OAuth2 compatible service. Red Hat has tested the integration with RGW of the following OIDC products: Red Hat SSO and keycloak IDPs.
 
 image:::STS_oidc.png[STS OIDC]
 
-== STS woth Local RGW User Lab
+== STS with Local RGW User Lab
 
-In this module we are going to complete a lab using RGW local users with STS.
+In this module, we will complete a lab using RGW local users with STS.
 
-By default the STS API is disable in RGW, we need to enable the STS endpoint
-and restart the RGW daemons, the S3 and STS endpoints can be shared on the same
+By default, the STS API is disabled in RGW, we need to enable the STS endpoint
+and restart the RGW daemons. The S3 and STS endpoints can be shared on the same
 RGW endpoint.
 
 ----
@@ -57,7 +57,7 @@ RGW endpoint.
 # ceph orch restart rgw.multi.zone1
 ----
 
-Create 3 users, Admin who will own the bucket, and users: user1 and user2, that
+Create three users, Admin who will own the bucket, and users: user1 and user2, that
 will assume a role to gain access to the admin bucket.
 
 ----
@@ -106,8 +106,8 @@ We create a role called S3A-user13 that will give user1 and user3 to assume this
 ]
 ----
 
-You can also manage roles from the aws client, the user will need the required
-caps to work with roles, in this example when we created the admin user we used
+You can also manage roles from the AWS client. The user will need the required
+caps to work with roles. In this example, when we created the admin user, we used
 the `--admin` flag, but you could be more granular and use the specific `roles` cap
 
 ----
@@ -143,7 +143,7 @@ the `--admin` flag, but you could be more granular and use the specific `roles` 
 }
 ----
 
-We are now going to add a policy to the S3A-user13 role, the policy will allow to only list created buckets
+We are now going to add a policy to the S3A-user13 role. The policy will allow to only list created buckets
 
 ----
 cat << EOF > policy.json
@@ -160,8 +160,8 @@ Permission policy attached successfully
 
 ----
 
-Using user1  credentials we use the aws cli to assue the S3A-user13 user role,
-this will give a temporary authentication token to use
+Using user1  credentials, we use the AWS cli to assume the S3A-user13 user role,
+this will create a temporary authentication token to be used
 
 ----
 # aws --profile user1 --endpoint http://proxy01:8000 sts assume-role --role-arn arn:aws:iam:::role/S3A-user13 --role-session-name S3A-user13
@@ -181,14 +181,14 @@ this will give a temporary authentication token to use
 
 [NOTE]
 ====
-Session token is Opaque to end useri, it's Encrypted using AES 128, it
+The session token is Opaque to the end user, it's Encrypted using AES 128, it
 contains Authentication, Authorization information, Information about roles
 (permission policy) and Users. 
 ====
 
 
-We will create a new aws cli profile with the credentials provided by the sts
-assume role command, this credentials will give user1 access to list 
+We will create a new AWS cli profile with the credentials provided by the sts
+assume role command, these credentials will give user1 access to list 
 bucket bucket-data per the policy we added to the S3A-user13 role
 
 
@@ -203,7 +203,7 @@ aws_session_token = LONGOSETSIONTOKENpamGS6dXn3d3yiMKJUS6p2GhatKPzgXcGXB9nJi3rQ6
 2022-12-23 04:38:53       1330 hosts
 ----
 
-But with the same credentials we can't delete or upload objects to the bucket
+But with the same credentials, we can't delete or upload objects to the bucket
 as the role policy only allowed "s3:ListBucket" 
 
 ----
@@ -213,7 +213,7 @@ delete failed: s3://bucket-data/hosts An error occurred (AccessDenied) when call
 upload failed: ../etc/hosts to s3://bucket-data/file1 An error occurred (AccessDenied) when calling the PutObject operation: Unknown
 ----
 
-We can add a second policy to the role, that will Allow uploading and downloading objects to bucket-data
+We can add a second policy to the role that will Allow uploading and downloading objects to bucket-data
 
 ----
 # cat << EOF > policy2.json

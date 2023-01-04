@@ -16,7 +16,7 @@ bucket or role policies.
 We can apply the rules/policy that give access to the s3 resources in 2
 places, at the bucket level and at the role level.
 
-One of the advantages I see of applying the rules at the role level, is
+One of the advantages I see of applying the rules at the role level is
 that with one command using radosgw-admin role-policy list/get you can
 see all the rules/policies for that role. If you use bucket policies,
 you have to list the policies on all the buckets to get the
@@ -30,9 +30,9 @@ rgw policy-role list role1
 
 role1:
 
-    - bucket1/folder1 ro
-    - bucket2/folder2 rw
-    - bucket3/folder3/db  rw 
+    - bucket1/folder1 ro
+    - bucket2/folder2 rw
+    - bucket3/folder3/db  rw 
 ----
 
 To achieve the same with the policy in buckets you would need to run 3
@@ -56,12 +56,12 @@ role1: /folder3/db rw
 role3: /folder3/db2 rw
 ----
 
-In any case we are going  to share a couple of examples of each, role
-and bucket policy. 
+In any case we are going to share a couple of examples of each, role
+and bucket policy. 
 
 === Bucket Policy. 1st Example.
 
-The steps I have followed to setup this example with a rgw local user
+The steps I have followed to setup this example with an rgw local user
 called admin, I created the following resources:
 
 * A bucket called bucket-new
@@ -87,13 +87,13 @@ warning: line 8: 'log_file' in section 'client.rgw.cepha.rgw0' redefined
 }
 ....
 
-With all that in place I'm going to set the following bucket policy,
-with this policy we are setting the testrole as principal of the policy.
+With all that in place, I'm going to set the following bucket policy,
+with this policy we are setting the testrole as the principal of the policy.
 and we are giving access to the role to allow the following:
 
 * can list objects(not read/GET) at the bucket-new level
-* only write(PUT/DELETE) inside the write-folder/ folder and it's
-subfolders, 
+* only write(PUT/DELETE) inside the write-folder/ folder and its
+subfolders, 
 * and read(GET) the read-folder/ and it's subfolders.
 * With this config it will also be possible to list objects in other
 folders at the root level of the bucket, but the user won't be able to
@@ -168,11 +168,14 @@ We now apply the policy to the bucket:
 ....
 
 We are going to test our policies with Hadoop hdfs cli command, we are
-using the assume role credential provider(local RGW users) that is
-provided by Hadoop. 
+using the assumerole credential provider(local RGW users) that is
+provided by Hadoop. 
 
-*NOTE:* We could check the applied policies with any S3 client or
-library that supports S3 STS features, like for example the aws cli.
+[NOTE]
+====
+ We could check the applied policies with any S3 client or
+library that supports S3 STS features, like for example the AWS cli.
+====
 
 These are the options I used in the hadoop core-site.xml:
 
@@ -388,7 +391,7 @@ cat: s3a://bucket-new/folder2/host1: getFileStatus on s3a://bucket-new/folder2/h
 
 == Bucket Policy. 2nd Example. Use of NotResource
 
-The steps I have followed with a rgw local user called admin, I create:
+The steps I have followed with an rgw local user called admin, I create:
 
 * A bucket called bucket-data
 * Inside the bucket create a folder called write-folder
@@ -493,7 +496,7 @@ The policy we are using for the bucket is the following:
 ....
 
 
-[NOTE] 
+[NOTE] 
 ====
 We are using the NotResource and Effect Deny workaround
 because we found a bug when using the more straight forward approach to
@@ -563,7 +566,7 @@ statement we are allowing access to the bucket-data bucket:
 ....
 
 In the next statement we are allowing access to read/GET objects and
-subfolders under the read-folder: 
+subfolders under the read-folder: 
 
 ....
 {
@@ -634,7 +637,7 @@ same as the previous example except for the following:
 <property>
 ....
 
- 
+ 
 
 Some examples with the hdfs client, we are able to list all the folders
 at the root level of the bucket:
@@ -682,7 +685,7 @@ put: read-folder/hosts-file._COPYING_: put on read-folder/hosts-file._COPYING_: 
 ....
 
 
-If we now try to assume the writerole with the readuser, it will fail: 
+If we now try to assume the writerole with the readuser, it will fail: 
 
 ....
 [hadoop@hadoop hadoop]$ cat core-site.xml | grep -C 3 -E '(user|role.arn)'
@@ -779,7 +782,7 @@ Found 1 items
 
 Role policies are written in the same way as the bucket policies, the
 only difference is that the principal of the policy in a role policy is
-always the role, that is why  in role policies the principal statement
+always the role, which is why in role policies the principal statement
 is absent. A small example to understand this better:
 
 Bucket policy, has a principal with the role:
@@ -832,7 +835,7 @@ apply the role policy:
 
 In this example we are going to try and achieve the same thing we did
 with example number 2 of bucket policies, where we have a read and a
-write role, the readuser assuming the readrole will only be able to
+writing role, the readuser assuming the readrole will only be able to
 access the readfolder, and the writeuser assuming the writerole will
 only be able to access the writefolder.
 
@@ -849,7 +852,7 @@ The steps I have followed with a rgw local user called admin, I created:
 * A role document policy to give readuser access to the readrole.
 * A role document policy to give writeuser access to the writerole.
 
- 
+ 
 
 Once we have all this configuration in place, we can just double check
 the roles are in place:
@@ -973,7 +976,7 @@ RGW user, and assume the readrole:
 ....
 
 
-With this in place let’s test the access with the hdfs command. We can
+With this in place, let’s test the access with the hdfs command. We can
 access the bucket and we will be able to list all folders at the root
 level like expected:
 
