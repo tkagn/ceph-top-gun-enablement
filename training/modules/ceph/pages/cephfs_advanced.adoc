@@ -1,0 +1,53 @@
+= Ceph CephFS Deep Dive and Advanced Topics
+
+== Ceph File System IO-PATH
+
+All file data in CephFS is stored as RADOS objects. CephFS clients can directly access RADOS to operate on file data. MDS only handles metadata operations.
+
+To read/write a CephFS file, client needs to have ‘file read/write’ capabilities for corresponding inode. If client does not have required capabilities, it sends a ‘cap message’ to MDS, telling MDS what it wants. MDS will issue capabilities to client when it is possible. Once client has ‘file read/write’ capabilities, it can directly access RADOS to read/write file data. File data are stored as RADOS objects in the form of <inode number>.<object index>. See ‘Data Striping’ section of Architecture for more information. If the file is only opened by one client, MDS also issues ‘file cache/buffer’ capabilities to the only client. The ‘file cache’ capability means that file read can be satisfied by client cache. The ‘file buffer’ capability means that file write can be buffered in client cache.
+
+image:::cephfs_io_path.png[cephfs layout]
+
+== Cephfs File Layouts
+
+The layout of a file controls how its contents are mapped to Ceph RADOS objects. You can read and write a file’s layout using virtual extended attributes or xattrs.
+
+The name of the layout xattrs depends on whether a file is a regular file or a directory. Regular files’ layout xattrs are called ceph.file.layout, whereas directories’ layout xattrs are called ceph.dir.layout. Where subsequent examples refer to ceph.file.layout, substitute dir as appropriate when dealing with directories.
+
+Layout fields
+-------------
+
+*pool*
+
+    String, giving ID or name. String can only have characters in the set [a-zA-Z0-9\_-.]. Which RADOS pool a file's data objects will be stored in.
+
+*pool_id*
+
+    String of digits. This is the system assigned pool id for the RADOS pool whenever it is created.
+
+*pool_name*
+
+    String, given name. This is the user defined name for the RADOS pool whenever user creates it.
+
+*pool_namespace*
+
+    String with only characters in the set [a-zA-Z0-9\_-.].  Within the data pool, which RADOS namespace the objects will
+    be written to.  Empty by default (i.e. default namespace).
+
+*stripe_unit*
+
+    Integer in bytes.  The size (in bytes) of a block of data used in the RAID 0 distribution of a file. All stripe units for a file have equal size. The last stripe unit is typically incomplete–i.e. it represents the data at the end of the file as well as unused “space” beyond it up to the end of the fixed stripe unit size.
+
+
+*stripe_count*
+
+    Integer.  The number of consecutive stripe units that constitute a RAID 0 “stripe” of file data.
+
+*object_size*
+
+    Integer in bytes.  File data is chunked into RADOS objects of this size.
+
+
+
+
+== 

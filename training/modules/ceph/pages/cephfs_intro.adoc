@@ -350,8 +350,51 @@ With the kernel client to be able to use the mount `secretfile` option we need t
 have the ceph-common packages installed
 ====
 
-== Further Basic User Capabilities Examples
-When a client wants to operate on an inode, it will query the MDS in various ways, which will then grant the client a set of capabilities. These grant the client permissions to operate on the inode in various ways. One of the major differences from other network file systems (e.g NFS or SMB) is that the capabilities granted are quite granular, and it’s possible that multiple clients can hold different capabilities on the same inodes.
+== Some Basic Client Capabilities
+
+Use Ceph authentication capabilities to restrict your file system clients to the lowest possible level of authority needed.
+
+- *Path Restriction*
+
+To restrict clients to only mount and work within a certain directory, use path-based MDS authentication capabilities.
+
+----
+ceph fs authorize <fs_name> client.<client_id> <path-in-cephfs> rw
+----
+
+- *Free Space Reporting*
+
+By default, when a client is mounting a sub-directory, the used space (df) will be calculated from the quota on that sub-directory, rather than reporting the overall amount of space used on the cluster.
+
+If you would like the client to report the overall usage of the file system, and not just the quota usage on the sub-directory mounted, then set the following config option on the client:
+
+----
+client quota df = false
+----
+
+- *Layout & Quota Restriction*
+
+To set layouts or quotas, clients require the ‘p’ flag in addition to ‘rw’. This restricts all the attributes that are set by special extended attributes with a “ceph.” prefix, as well as restricting other means of setting these fields (such as openc operations with layouts).
+
+----
+client.0
+    key: AQAz7EVWygILFRAAdIcuJ12opU/JKyfFmxhuaw==
+    caps: [mds] allow rwp
+    caps: [mon] allow r
+    caps: [osd] allow rw tag cephfs data=cephfs_a
+----
+
+- *Snapshot Restrictions*
+
+To create or delete snapshots, clients require the ‘s’ flag in addition to ‘rw’. Note that when capability string also contains the ‘p’ flag, the ‘s’ flag must appear after it (all flags except ‘rw’ must be specified in alphabetical order).
+
+----
+client.0
+    key: AQAz7EVWygILFRAAdIcuJ12opU/JKyfFmxhuaw==
+    caps: [mds] allow rw, allow rws path=/bar
+    caps: [mon] allow r
+    caps: [osd] allow rw tag cephfs data=cephfs_a
+----
 
 
 === Read on / root FS, Read/Write only on /dir1
