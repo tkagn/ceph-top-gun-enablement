@@ -1,0 +1,209 @@
+= Cluster partitioning
+//++++
+//<link rel="stylesheet"  href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.1.0/css/font-awesome.min.css">
+//++++
+:icons: font
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+:source-highlighter: pygments
+:sectnums:
+:sectnumlevels: 6
+:toc: left
+:toclevels: 4
+
+
+The Ceph OSDs will be in charge of the protection of the data as well as the
+constant checking of the integrity of the data stored in the entire cluster.
+The cluster will be separated into logical partitions, known as pools. Each
+pool has the following properties that can be adjusted:
+
+* An ID (immutable)
+* A name
+* A number of `PGs` to distribute the objects across the OSDs
+* A `CRUSH` rule to determine the mapping of the `PGs` for this pool
+* A type of protection (Replication or Erasure Coding)
+* Parameters associated with the type of protection
+** Number of copies for replicated pools
+** K and M chunks for Erasure Coding
+* Various flags to influence the behavior of the cluster
+
+*Placement Groups*
+
+A Placement Group (`PG`) is a hash bucket that receives a series of objects. A
+`PG` belongs to one and only one Ceph pool and is protected by one (1) or more
+OSDs depending on the protection method assigned to the pool.
+
+An object belongs to one and only one `PG` while all objects that are store in the same
+`PG` return the same value as a hash result. The name of the object is used as
+the input to the hash calculation method together with the CRUSH Map.
+
+Before any IO issued on the client side the final placement of the object will
+be determined through a modulo calculation: `{poolid}.{object-name % pgp_num}`.
+Once the hash bucket ID is calculated, it is passed top the `CRUSH` function
+that will return the list of OSDs protecting this particular `PG`.
+
+.CRUSH hashing details
+image::./images/ceph101-crushhashdetail.png[CRUSH Hashing mechanism, align="center"]
+
+NOTE: The first OSD returned by the `CRUSH` function is the Primary OSD that
+the client will contact directly through the Ceph libraries.
+
+IMPORTANT: The client gets the latest copy of the cluster map from the Monitors
+upon initial connection to the Ceph cluster. Further updates can be provided
+by Monitors or OSDs depending on actual cluster state and when an IO is issued.
+
+The general way to look at a cluster in terms of `PG` allocation is to know how many `PGs`
+each OSD is protecting. The historic recommendation is to have between 100 and 200 `PGs`
+per OSD while never exceeding 300.
+
+The reason behind this recommendation is that too many `PGs` will cause an excessive
+memory pressure during OSD boot sequence but also during recovery and backfill operations
+as the OSD will build a list in memory of all the `PGs` that need to be taken care off.
+
+The general formula to use is, for a group of OSDs: `({number_of_osds} * {pgs_per_osd}) / {protection}`
+
+* `{number_of_osds}` is the actual number of OSDs that will host a group of pools
+* `{pgs_per_osd}` is the number of `PGs` you want to assign to each OSD
+* `{protection}` is the `size` parameter of your pools
+
+The result of this calculation will provide you with a number of `PGs`, let's say `x`. `x`
+has to be spread  across all the pools that will share the set of OSDs you run the
+calculation for. This spread is determined by the percentage of data between the pools.
+`x` is known as the cluster total number of placement groups.
+
+e.g. A pool that will have 5% of the data will received 5% of the `PGs`
+
+IMPORTANT: Ideally you want all final value assigned to a pool to be a power of 2.
+
+*Data protection*
+
+Ceph supports two types of data protection presented in the diagram below.
+
+.Ceph Data Protection
+image::./images/ceph101-dataprotection.png[Replicated Pools vs Erasure Coded Pools, scaledwidth="70%", align="center"]
+
+Replicated pools provide better performance in almost all cases at the cost
+of a lower usable to raw storage ratio (1 usable byte is stored using 3 bytes
+of raw storage) while Erasure Coding provides a cost efficient way to store
+data with less performance.
+
+The following recommended Erasure Coding
+profiles with their corresponding usable to raw ratio:
+
+* 4+2 (1:2 ratio)
+* 8+3 (1:1.375 ratio)
+* 8+4 (1:2 ratio)
+
+Another advantage of Erasure Coding (`EC`) is its ability to offer extreme
+resilience and durability as we can configure the number of parities being
+used. `EC` can be used for the RADOS Gateway access method, for the RBD
+access method (performance impact) and for CephFS although the two last use cases
+will exhibit poor performance compared to replicated pools during write IOs.
+
+*Pools and `PGs`*
+
+.Pools and `PGs`
+image::./images/ceph101-thefullpicture-new.png[From Object to OSD, scaledwidth="75%", align="center"]
+
+The diagram above shows the relationship end to end between the object at the
+access method level down to the OSDs at the physical layer.
+
+NOTE: A Ceph pool has no size and is able to consume the space available on any
+OSD where it's PGs are created. A Placement Group or `PG` belongs to only one
+pool and is protected by the number of OSDs configured through the `size` parameter
+of the pool.
+
+NOTE: An object belongs to one and only one placement group.
+
+*Pool parameters*
+
+Each pool will have a set of parameters that can mostly be changed dynamically
+via the command line interface. Those parameters are listed below.
+
+* `size`, the actual number of replicas or chunks (K+M) for the pool
+* `min_size`, the minimum number of replicas/chunks to be available for IOs
+* `pg_num`, the number of total `PGs` for this pool
+* `pgp_num`, the number of effective `PGs` for this pool and used by `CRUSH`
+* `crush_rule`, the `CRUSH` rule to use for this pool
+* `nodelete`, to do permit pool deletion
+* `nopgchange`, do not permit `PG` allocation change
+* `nosizechange`, do not permit changing the `size` or `min_size` parameter
+* `autoscale-mode`, how the autoscale module should treat this pool (`on|off|warn`)
+* `compression_algorithm`, the compression algorithm to use
+* `compression_mode`, sets the compression policy (`none|passive|aggressive|force`)
+* `compression_min_blob_size`, sets the minimum chunk size that can be compressed
+* `compression_max_blob_size`, sets the maximum chunk size that can be compressed
+* `allow_ec_overwrites`, to allow RBD and CephFS to use `EC`
+* `noscrub`, do not scrub this pool
+* `nodeep-scrub`, do not deep-scrub this pool
+* `fast_read`, to authorize IO return when enough data has been read from `EC`
+* `scrub_min_interval`, minimum interval between scrubs
+* `scrub_max_interval`, maximum interval between scrubs
+* `deep_scrub_interval`, interval between deep scrubs
+* `recovery_priority`, recovery priority alteration for this pool (-10 through +10)
+* `recovery_op_priority`, recovery op priority for this pool
+* `recovery_op_priority`, recovery op priority for this pool
+* `target_size_ratio`, percentage of data this pool will hold to influence autoscaler
+
+Introduced with `Pacific`:
+
+* `bulk`, increase `PG` allocation at creation time even if pool is empty
+* `pg_num_min`, minimum number of PGs on a pool via autoscaler
+* `pg_num_max`, maximum number of PGs on a pool via autoscaler
+* `pg_autoscale_bias`, Bias multiplication factor to be applied to the pool (default `1.0`), +
+the larger the bias the higher the number of `PGs` will be allocated to the pool.
+
+IMPORTANT: The `size` parameter of an `EC` pool can not be changed after creation.
+
+IMPORTANT: The ID of a pool can not be modified after creation.
+
+IMPORTANT: The `EC` profile of a pool can not be changed after creation.
+
+NOTE: The autoscaler can be turned off for all pools at once starting with `Quincy`.
+`cepg osd pool set noautoscale` and unset via `ceph osd pool unset noautoscale`.
+
+TIP: `Quincy` introduces the following additional CLI glags when creating pools.
+`--pg-num-min`, `--pg-num-max` and `--bulk`.
+
+TIP: Check inforation provided by the autoscaler using `ceph osd pool autoscale-status`.
+
+*Data Distribution*
+
+To leverage the Ceph architecture at its best, all access methods but
+librados, will access the data in the cluster through a collection of
+objects. Hence a 1GB block device will be a collection of objects, each
+supporting a set of device sectors. Therefore, a 1GB file is stored in a
+CephFS directory will be split into multiple objects. Also a 5GB S3 object
+stored through the RADOS Gateway will be divided in multiple objects.
+
+.Data Distribution
+image::./images/ceph101-rbdlayout.png[RADOS Block Device Layout, align="center"]
+
+NOTE: By default, each access method uses an object size of 4MB. The above
+diagram, using a 32MB RBD (Block Device) as an example, illustrates
+the logic and its impact on data distribution across the Ceph cluster.
+
+*IO Request Flow*
+
+Whatever the type of data protection you choose for a pool, the flow of
+and IO request will always be following the same rules:
+
+. Client calculates the placement of the object
+.. Open a storage context for a given pool
+.. Hash the name of the object modulo the effective number of `PGs` (`pgp_num`)
+.. CRUSH returns the mapping for the `PG`
+. Client connects to the Primary OSD
+.. Client issues IO request
+. Primary OSD protects the data
+.. Data is physically written to disk
+.. Data is shared with Secondary OSDs
+.. Secondary OSDs acknowledge when data is physically written to disk
+. Primary OSD acknowledges IO reuquest to client
+
+NOTE: When using replicated pools the same data is written on all OSDs. When
+using Erasure Coding the Primary OSD splits the data in `K` chunks, calculates
+`M` coding chunks and each `K` or `M` chunk is dispatched by the Primary
+OSD according to the map returned by CRUSH.
+

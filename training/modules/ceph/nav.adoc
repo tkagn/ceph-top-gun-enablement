@@ -1,4 +1,11 @@
 * xref:opentlc_lab_env.adoc[Opentlc Lab Env]
+
+.Core Ceph
+* xref:ceph_introduction.adoc[Ceph Introduction]
+* xref:ceph_architecture.adoc[Ceph Architecture]
+* xref:ceph_cluster_partitioning.adoc[Ceph Cluster Partitioning]
+* xref:ceph_deployment_intro.adoc[Ceph Deployment]
+* xref:ceph_cephadm_intro.adoc[Cephadm Orchestrator]
  
 .Ceph RadosGW
 * xref:radosgw_intro.adoc[RGW Introduction & Deployment]

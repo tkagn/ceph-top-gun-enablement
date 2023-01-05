@@ -1,0 +1,212 @@
+= The Cephadm Orchestrator
+
+== Introduction
+
+This is the new tool for deploying Ceph starting with Ceph Octopus. Starting with Ceph Pacific
+`ceph-ansible` is being deprecated and all new clusters will be deployed using it.
+
+To deploy a cluster using `cephadm`, the following steps will be performed:
+
+* Bootstrap a minimal cluster (1 Monitor and 1 Manager by default)
+* Configure the minimal cluster
+** Add Monitors
+** Add Managers
+** Add OSDs
+** Add MDSs
+** Add RGWs
+
+== `cephadm` service file
+
+The initial cluster can be deployed with all its component through the use of a `cephadm` service file.
+The service file uses the following syntax:
+
+.Service file syntax
+[source, yaml]
+----
+service_type: {type_value}
+service_name: {name_value}
+addr: {address_value}
+hostname: {hostname}
+{options}
+----
+
+The `service_type` accepts the following values:
+
+* `host` to declare cluster hosts
+* `crash` to place the Ceph crash collection module
+* `grafana` to place the Grafana dashboard components
+* `node-exporter` to place the node exporter components
+* `prometheus` to place the Prometheus components
+* `mgr` to place the Manager containers
+* `mon` to place the Monitor containers
+* `osd` to place the OSD containers
+* `rgw` to place the RADOS Gateway containers
+* `mds` to place the MDS containers
+* `ingress` to place the loadbalancer (haproxy)
+
+NOTE: Available services also include `nfs` and `iscsi`. They are not covered
+in this documentation.
+
+TIP: For troubleshooting or tuning you can pass additional parameters to the
+container upong startup. See example below.
+
+.Add container parameters
+[source,yaml]
+----
+extra_container_args:
+  -  "--cpus=2"
+----
+
+To assign labels to one or more hosts, use the following syntax:
+
+.Labelling nodes example
+[source, yaml]
+----
+service_type: host
+addr: {host_address}
+hostname: {host_name}
+labels:
+- xxx
+- yyy
+...
+----
+
+TIP: You can set the initial CRUSH location of the node using the `location`
+keyword.  See example below.
+
+.CRUSH location setting
+[source, yaml]
+----
+location:
+  rack: rack1
+----
+
+To assign a service to one or more nodes use the following syntax:
+
+.Assigning a service example
+[source, yaml]
+----
+service_type: {service_type}
+service_name: {service_name}
+placement:
+  host_pattern: ‘*’
+----
+
+The OSD service file accepts additional parameters due to the complexity of
+OSD deployments based on drive types. The additional parameters are:
+
+* `block_db_size` to specify the RocksDB size on separate devices
+* `block_wal_size` to specify the RocksDB size on separate devices
+* `data_devices` to specify which devices will receive the data
+* `db_devices` to specify which devices will receive RocksDB DB portion
+* `wal_devices` to specify which devices will receive the RocksDB WAL portion
+* `db_slots` to specify how many RocksDB DB partition to allocate per `db_device`
+* `wal_slots` to specify how many RocksDB WAL partition to allocate per `wal_device`
+* `data_directories` to specify a list of device paths to be used
+* `filter_logic` to specify `OR` or `AND` between filters. Default is `AND`.
+* `objectstore` to specify the OSD backend type (`bluestore` or `filestore`)
+* `crush_device_class` to specify the CRUSH device class
+* `data_allocate_fraction` to specify a portion of the drive for data devices (between `0` and `1.0`)
+* `osds_per_device` to specify how many OSDs should be deployed per device (default is 1)
+* `osd_id_claims` to specify the OSD ids should be repserved per node (`true` or `false`
+
+The `data_devices`, `db_devices` and `wal_devices` parameters accept the following parameters:
+
+* `all` to specifcy all devices are to be consumed (`true` or `false`)
+* `limit` to specify how many OSD are to be deployed per node
+* `rotational` to specify the type of devices to select (`0` or `1`)
+* `size` to specify the size of the devices to select
+** `xTB` to select a specific device size
+** `xTB:yTB` to select devices between the two capacities
+** `:xTB` to select any device up to this size
+** `xTB:` to select any device at least this size
+* `path` to specify the device path to use
+* `model` to specify the disk model name
+* `vendor` to specify the vendor model name
+* `encrypted` to specify if the data is to be encrypted at rest (`data_devices` only)
+
+NOTE: `cephadm` also support FileStore parameters for specific cases.
+
+The RADOS Gateway service service file accepts additional paraneters due
+to the nature of the RADOS Gateway service. The additional parameters are:
+
+* `networks` to specify which CIDR the gateway will bind to
+* `spec`
+** `rgw_frontend_port` to specify which the TCP port the gateway will bind
+** `rgw_realm` to specify the `realm` for this gateway
+** `rgw_zone` to specify the `zone` for this gateway
+** `ssl` to specify if this gateway uses SSL (`true` or `false`)
+** `rgw_frontend_ssl_certificate` to specify the certificate to use
+** `rgw_frontend_ssl_key` to specify the key to use
+** `rgw_frontend_type` to specify the frontend to use (default is `beast`)
+* `placement.count_per_host` to specify how many RADOS Gateways are to be deployed per node
+
+NOTE: You can upload the certificate and the key to be use by the gateway via the +
+`ceph config-key set rgw/cert/REALM_NAME/ZONE_NAME.crt -i {file}` and  +
+ `ceph config-key set rgw/cert/REALM_NAME/ZONE_NAME.key -i {file}`
+
+NOTE: For more placement options see the next chapter.
+
+== `cephadm` placement
+
+Placement can be a simple count to indicate the number of daemons to deploy. In such a
+configuration `cephadm` will choose where to deploy the daemons.
+
+Placement can use explicit naming: `--placement="host1 host2 ..."`. In such configuration
+the daemons will be deployed on the nodes listed.
+
+Placement can use labels: `--placement="label:mylabel"`. In such configuration the
+daemons will be deployed on the nodes that match the provided label.
+
+Placement can use expressions: `--placement="host[1-5]"`. In such configuration the
+daemons will be deployed on the nodes that match the provided expression.
+
+Using a service file, you would encode the following for count:
+
+.Using the count syntax
+[source, yaml]
+----
+service_type: rgw
+placement:
+  count: 3
+----
+
+Using a service file, you would encode the following for label:
+
+.Using the label syntax
+[source, yaml]
+----
+service_type: rgw
+placement:
+  label: "mylabel"
+----
+
+Using a service file, you would encode the following for host list:
+
+.Using the list syntax
+[source, yaml]
+----
+service_type: rgw
+placement:
+  hosts:
+    - host1
+    - host2
+    - host3
+----
+
+Using a service file, you would encode the following for pattern:
+
+.Using host pattern syntax
+[source, yaml]
+----
+service_type: rgw
+placement:
+  host_pattern: "host[1-5]"
+----
+
+NOTE: The count argument can be added to `hosts`, `label` and `host_pattern`
+
+TIP: You can add `unmanaged: true` to your service file to instruct `cephadm`
+to not automatically manage the service described in the service file.
+Deployment and removal of the specified service will have to be managed
+manually by the storage administrator.

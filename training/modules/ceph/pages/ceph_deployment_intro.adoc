@@ -1,0 +1,121 @@
+= Ceph Deployment
+//++++
+//<link rel="stylesheet"  href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.1.0/css/font-awesome.min.css">
+//++++
+:icons: font
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+:source-highlighter: pygments
+:sectnums:
+:sectnumlevels: 6
+:toc: left
+:toclevels: 4
+
+
+== Introduction
+
+Many Ceph deployment tools have existed throughout the Ceph timeline. 
+
+* `mkcephfs` historically the first tool
+* `ceph-deploy` starting with `Cuttlefish`
+* `ceph-ansible` starting with `Jewel`
+* `cephadm` starting with `Octopus`
+
+== Pre-requisites
+
+It is possible to run very small proof-of-concept architectures using a single node or virtual machine.
+However, for production environments deployed using Ansible, Ceph currently requires the following
+minimum architecture:
+
+* At least three distinct hosts running monitor (MON) daemons
+* At least three OSD hosts using directly attached storage (not external SAN hardware)
+
+In addition, you should configure:
+
+* At least two distinct manager (MGR) nodes
+* At least as many OSDs as the number of replicas configured
+* At least two distinct identically configured MDS nodes, if you are using CephFS
+* At least two distinct RADOSGW nodes, if you are using Ceph Object Gateway
+* A deployment node for `ceph-ansible`
+
+NOTE: For small proof of concept or development a single node can be used to deploy one (1) Monitor
+(MON), one (1) Manager (MGR), three (3) OSDs, one (1) Metadata Server (MDS) and one (1) RADOS
+Gateway (RGW). Such configuration has many Single Point Of Failures (SPOF). The single node
+will also be used to deploy the cluster (`ceph-ansible` or `cephadm`).
+
+== Hardware requirements
+
+There is no single recommended hardware choice to deploy Ceph and depending on the use cases,
+the configuration could be IOPS optimized, throughput optimized nor capacity optimized. Therefor,
+different hardware configuration might apply.
+
+NOTE: All CPU requirements below are based on a 2GHz processor frequency.
+
+.Minimum requirements
+[%autowidth.stretch,cols=5,cols=".^,4*.^",options=header]
+|===
+|HW|OSD|MON|RGW|MDS
+|CPU|0.5x64bit Intel/AMD|1x64bit Intel/AMD|1x64bit Intel/AMD|1x64bit Intel/AMD
+|RAM|1GB per OSD|1GB|1GB per daemon|1GB
+|Disk|One drive per OSD|10GB|5GB per daemon|5GB
+|Network|2x1GbE|2x1GbE|2x1GbE|2x1GbE
+|===
+
+.Minimum recommended
+[%autowidth.stretch,cols=5,cols=".^,4*.^",options=header]
+|===
+|HW|OSD|MON|RGW|MDS
+|CPU|1 core per HDD +
+2 cores per SSD|1 core|2 cores per daemon|2 cores
+|RAM|2GB per HDD +
+4GB per SSD|2GB|2GB per daemon|2GB
+|Disk|One drive per OSD|100GB|10GB per daemon|10GB
+|Network|2x10GbE|2x10GbE|2x10GbE|2x10GbE
+|===
+
+.Production minimum
+[%autowidth.stretch,cols=5,cols=".^,4*.^",options=header]
+|===
+|HW|OSD|MON|RGW|MDS
+|CPU|1 core per HDD +
+2 cores per SSD|1 core|2 cores per daemon|4 cores
+|RAM|4GB per HDD +
+8GB per SSD|4GB|4GB per daemon|8GB
+|Disk|One drive per OSD|100GB|20GB per daemon|20GB
+|Network|4xNICs|2xNICS|2xNICs|2xNICs
+|===
+
+WARNING: Network configuration in production environment will be dependent on
+the actual use case. See the recovery time discussion.
+
+IMPORTANT: Devices used for the OSDs should never be used with an underlying RAID protection.
+Ceph will provide the required data protection.
+
+TIP: Production environments will greatly benefit from separate `public` and `cluster` network
+configurations for fault isolation as well as performance stability while making cluster design
+more accurate when it comes to recovery time estimate.
+
+== Firewall requirements
+
+The following port must be configured with your firewall.
+
+.Network ports
+[%autowidth,cols=3,cols=".^,.^,.^",options=header]
+|===
+|Service|Ports|Description
+|MON|6789/TCP +
+3300TCP|The ports where Monitors listen
+|MGR|8443 if SSL enabled +
+8080/TCP if SSL disabled +
+8003/TCP +
+9283/TCP|Default dashboard ports +
+ +
+Default ports for RESTful +
+Default port for Prometheus
+|OSD|6800-7300/TCP|OSD ports (same range for MDS)
+|RGW|7480/TCP for `Civetweb` +
+80/TCP for `Beast`|Default RGW port
+|===
+
