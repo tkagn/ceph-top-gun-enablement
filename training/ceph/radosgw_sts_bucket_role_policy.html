@@ -66,6 +66,27 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -202,7 +223,7 @@ bucket or role policies.</p>
 places, at the bucket level and at the role level.</p>
 </div>
 <div class="paragraph">
-<p>One of the advantages I see of applying the rules at the role level, is
+<p>One of the advantages I see of applying the rules at the role level is
 that with one command using radosgw-admin role-policy list/get you can
 see all the rules/policies for that role. If you use bucket policies,
 you have to list the policies on all the buckets to get the
@@ -218,9 +239,9 @@ get this info with a single command:</p>
 
 role1:
 
-    - bucket1/folder1 ro
-    - bucket2/folder2 rw
-    - bucket3/folder3/db  rw</pre>
+    - bucket1/folder1 ro
+    - bucket2/folder2 rw
+    - bucket3/folder3/db  rw</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -247,13 +268,13 @@ role3: /folder3/db2 rw</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In any case we are going  to share a couple of examples of each, role
+<p>In any case we are going to share a couple of examples of each, role
 and bucket policy.</p>
 </div>
 <div class="sect2">
 <h3 id="_bucket_policy_1st_example"><a class="anchor" href="#_bucket_policy_1st_example"></a>2.1. Bucket Policy. 1st Example.</h3>
 <div class="paragraph">
-<p>The steps I have followed to setup this example with a rgw local user
+<p>The steps I have followed to setup this example with an rgw local user
 called admin, I created the following resources:</p>
 </div>
 <div class="ulist">
@@ -296,8 +317,8 @@ warning: line 8: 'log_file' in section 'client.rgw.cepha.rgw0' redefined
 </div>
 </div>
 <div class="paragraph">
-<p>With all that in place I&#8217;m going to set the following bucket policy,
-with this policy we are setting the testrole as principal of the policy.
+<p>With all that in place, I&#8217;m going to set the following bucket policy,
+with this policy we are setting the testrole as the principal of the policy.
 and we are giving access to the role to allow the following:</p>
 </div>
 <div class="ulist">
@@ -306,7 +327,7 @@ and we are giving access to the role to allow the following:</p>
 <p>can list objects(not read/GET) at the bucket-new level</p>
 </li>
 <li>
-<p>only write(PUT/DELETE) inside the write-folder/ folder and it&#8217;s
+<p>only write(PUT/DELETE) inside the write-folder/ folder and its
 subfolders,</p>
 </li>
 <li>
@@ -392,12 +413,25 @@ read(GET) them.</p>
 </div>
 <div class="paragraph">
 <p>We are going to test our policies with Hadoop hdfs cli command, we are
-using the assume role credential provider(local RGW users) that is
+using the assumerole credential provider(local RGW users) that is
 provided by Hadoop.</p>
 </div>
-<div class="paragraph">
-<p><strong>NOTE:</strong> We could check the applied policies with any S3 client or
-library that supports S3 STS features, like for example the aws cli.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="literalblock">
+<div class="content">
+<pre> We could check the applied policies with any S3 client or
+library that supports S3 STS features, like for example the AWS cli.</pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>These are the options I used in the hadoop core-site.xml:</p>
@@ -631,7 +665,7 @@ cat: s3a://bucket-new/folder2/host1: getFileStatus on s3a://bucket-new/folder2/h
 <h2 id="_bucket_policy_2nd_example_use_of_notresource"><a class="anchor" href="#_bucket_policy_2nd_example_use_of_notresource"></a>3. Bucket Policy. 2nd Example. Use of NotResource</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The steps I have followed with a rgw local user called admin, I create:</p>
+<p>The steps I have followed with an rgw local user called admin, I create:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1092,7 +1126,7 @@ Found 1 items
 <div class="paragraph">
 <p>Role policies are written in the same way as the bucket policies, the
 only difference is that the principal of the policy in a role policy is
-always the role, that is why  in role policies the principal statement
+always the role, which is why in role policies the principal statement
 is absent. A small example to understand this better:</p>
 </div>
 <div class="paragraph">
@@ -1150,7 +1184,7 @@ apply the role policy:</p>
 <div class="paragraph">
 <p>In this example we are going to try and achieve the same thing we did
 with example number 2 of bucket policies, where we have a read and a
-write role, the readuser assuming the readrole will only be able to
+writing role, the readuser assuming the readrole will only be able to
 access the readfolder, and the writeuser assuming the writerole will
 only be able to access the writefolder.</p>
 </div>
@@ -1321,7 +1355,7 @@ RGW user, and assume the readrole:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>With this in place let’s test the access with the hdfs command. We can
+<p>With this in place, let’s test the access with the hdfs command. We can
 access the bucket and we will be able to list all folders at the root
 level like expected:</p>
 </div>

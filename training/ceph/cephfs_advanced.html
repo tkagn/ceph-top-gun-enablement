@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>S3 presigned URL :: Ceph Top Gun Enablement</title>
-    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_presignedurl.html">
+    <title>Ceph CephFS Deep Dive and Advanced Topics :: Ceph Top Gun Enablement</title>
+    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/cephfs_advanced.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
     <script>var uiRootPath = '../../_'</script>
@@ -131,7 +131,7 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
   </li>
-  <li class="nav-item is-current-page" data-depth="1">
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
@@ -192,82 +192,106 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
-    <li>Ceph RadosGW</li>
-    <li><a href="radosgw_presignedurl.html">RGW presigned URL</a></li>
+    <li><a href="cephfs_advanced.html">Ceph CephFS Deep Dive and Advanced Topics</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/radosgw_presignedurl.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/cephfs_advanced.adoc">Edit this Page</a></div>
 </div>
   <div class="content">
 <aside class="toc sidebar" data-title="Contents" data-levels="2">
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">S3 presigned URL</h1>
+<h1 class="page">Ceph CephFS Deep Dive and Advanced Topics</h1>
 <div class="sect1">
-<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
+<h2 id="_ceph_file_system_io_path"><a class="anchor" href="#_ceph_file_system_io_path"></a>Ceph File System IO-PATH</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>All objects and buckets are private by default. However, you can use a presigned URL to optionally share objects or allow your customers/users to upload objects to buckets without AWS security credentials or permissions.</p>
+<p>All file data in CephFS is stored as RADOS objects. CephFS clients can directly access RADOS to operate on file data. MDS only handles metadata operations.</p>
 </div>
 <div class="paragraph">
-<p>You can use presigned URLs to generate a URL that can be used to access your Amazon S3 buckets. When you create a presigned URL, you associate it with a specific action. You can share the URL, and anyone with access to it can perform the action embedded in the URL as if they were the original signing user. The URL will expire and no longer work when it reaches its expiration time.</p>
+<p>To read/write a CephFS file, client needs to have ‘file read/write’ capabilities for corresponding inode. If client does not have required capabilities, it sends a ‘cap message’ to MDS, telling MDS what it wants. MDS will issue capabilities to client when it is possible. Once client has ‘file read/write’ capabilities, it can directly access RADOS to read/write file data. File data are stored as RADOS objects in the form of &lt;inode number&gt;.&lt;object index&gt;. See ‘Data Striping’ section of Architecture for more information. If the file is only opened by one client, MDS also issues ‘file cache/buffer’ capabilities to the only client. The ‘file cache’ capability means that file read can be satisfied by client cache. The ‘file buffer’ capability means that file write can be buffered in client cache.</p>
 </div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/cephfs_io_path.png" alt="cephfs layout">
 </div>
-</div>
-<div class="sect1">
-<h2 id="_when_does_amazon_s3_check_the_expiration_date_and_time_of_a_presigned_url"><a class="anchor" href="#_when_does_amazon_s3_check_the_expiration_date_and_time_of_a_presigned_url"></a>2. When does Amazon S3 check the expiration date and time of a presigned URL?</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>RGW S3 checks the expiration date and time of a signed URL at the time of the HTTP request. For example, if a client begins to download a large file immediately before the expiration time, the download should complete even if the expiration time passes during the download. If the connection drops and the client tries to restart the download after the expiration time passes, the download will fail.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_hands_on"><a class="anchor" href="#_hands_on"></a>3. Hands-on</h2>
+<h2 id="_cephfs_file_layouts"><a class="anchor" href="#_cephfs_file_layouts"></a>Cephfs File Layouts</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>We have a bucket with some files available, we want to give GET access to file1
-to an external user creating a pre-signed URL</p>
+<p>The layout of a file controls how its contents are mapped to Ceph RADOS objects. You can read and write a file’s layout using virtual extended attributes or xattrs.</p>
 </div>
-<div class="listingblock">
+<div class="paragraph">
+<p>The name of the layout xattrs depends on whether a file is a regular file or a directory. Regular files’ layout xattrs are called ceph.file.layout, whereas directories’ layout xattrs are called ceph.dir.layout. Where subsequent examples refer to ceph.file.layout, substitute dir as appropriate when dealing with directories.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_layout_fields"><a class="anchor" href="#_layout_fields"></a>Layout fields</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>pool</strong></p>
+</div>
+<div class="literalblock">
 <div class="content">
-<pre># aws --endpoint  http://proxy01:8000 s3 ls s3://bucket1/
-2022-12-29 04:18:01       1330 file1
-2022-12-29 04:38:20       1330 file11
-2022-12-29 04:42:34       1330 file111
-2022-12-29 04:18:54       1330 file2</pre>
+<pre>String, giving ID or name. String can only have characters in the set [a-zA-Z0-9\_-.]. Which RADOS pool a file's data objects will be stored in.</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The following presign command generates a pre-signed URL for a specified bucket and key that is valid for one hour.</p>
+<p><strong>pool_id</strong></p>
 </div>
-<div class="listingblock">
+<div class="literalblock">
 <div class="content">
-<pre># aws --endpoint  http://proxy01:8000  s3 presign s3://bucket1/file1
-http://proxy01:8000/bucket1/file1?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=multiuser%2F20221229%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20221229T153107Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=0edddb0082c5433e29349eaecf92e2d928a38e85d8897cbf5f9893fb64885cdc</pre>
+<pre>String of digits. This is the system assigned pool id for the RADOS pool whenever it is created.</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>We can then access the object using for example <code>wget</code></p>
+<p><strong>pool_name</strong></p>
 </div>
-<div class="listingblock">
+<div class="literalblock">
 <div class="content">
-<pre># wget 'http://proxy01:8000/bucket1/file1?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=multiuser%2F20221229%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20221229T153107Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=0edddb0082c5433e29349eaecf92e2d928a38e85d8897cbf5f9893fb64885cdc' -O file.txt
-
-# cat file.txt
-127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
-::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
-192.168.56.50	ctrl01.example.com</pre>
+<pre>String, given name. This is the user defined name for the RADOS pool whenever user creates it.</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The following presign command generates a pre-signed URL for a specified bucket and key that is valid for one week.</p>
+<p><strong>pool_namespace</strong></p>
 </div>
-<div class="listingblock">
+<div class="literalblock">
 <div class="content">
-<pre># aws --endpoint  http://proxy01:8000  s3 presign s3://bucket1/file2 --expires-in 604800</pre>
+<pre>String with only characters in the set [a-zA-Z0-9\_-.].  Within the data pool, which RADOS namespace the objects will
+be written to.  Empty by default (i.e. default namespace).</pre>
 </div>
+</div>
+<div class="paragraph">
+<p><strong>stripe_unit</strong></p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Integer in bytes.  The size (in bytes) of a block of data used in the RAID 0 distribution of a file. All stripe units for a file have equal size. The last stripe unit is typically incomplete–i.e. it represents the data at the end of the file as well as unused “space” beyond it up to the end of the fixed stripe unit size.</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>stripe_count</strong></p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Integer.  The number of consecutive stripe units that constitute a RAID 0 “stripe” of file data.</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>object_size</strong></p>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre>Integer in bytes.  File data is chunked into RADOS objects of this size.</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>==</p>
 </div>
 </div>
 </div>

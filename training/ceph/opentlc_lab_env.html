@@ -66,6 +66,27 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -549,7 +570,7 @@ needed several scripts have been created in the <code>/root</code> filesystem of
 <pre># ssh ceph-node01.example.com ls *.sh
 cephadm-ansible-run.sh   &lt;--- runs Cephadm-ansible preflight playbook
 cluster-install.sh       &lt;--- Deploys the cephcluster with cephadm
-cluster-postinstall.sh   &lt;--- Configures Ceph post deploy
+cluster-postinstall.sh   &lt;--- Configures Ceph post deploy, ceph rbd pool and cephfs deployment
 cluster-wait-until-installed.sh  &lt;--- waits until ceph is healthy
 zap-disks.sh &lt;--- Zaps Disks</pre>
 </div>
@@ -565,7 +586,7 @@ this file to your needs:</p>
 </div>
 </div>
 <div class="paragraph">
-<p>For a fully automated deployment, we can run:</p>
+<p>For a fully automated deployment of Ceph in the lab, we can run:</p>
 </div>
 <div class="listingblock">
 <div class="content">

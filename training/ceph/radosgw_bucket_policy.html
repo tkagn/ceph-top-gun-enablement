@@ -66,6 +66,27 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -215,19 +236,19 @@
 <p>Actions: there are specific, permitted operations for each resource. You can use action keywords to allow or deny operations.</p>
 </li>
 <li>
-<p>Effects: each request by a principal must generate an allow or deny effect. In the absence of an explicit access permission to a resource, the policy will automatically deny the request.</p>
+<p>Effects: each request by a principal must generate an allow or deny effect. In the absence of explicit access permission to a resource, the policy will automatically deny the request.</p>
 </li>
 <li>
 <p>Conditions: these determine when the policy applies. You can specify conditions for access policies using AWS-wide or S3-specific keys.</p>
 </li>
 <li>
-<p>Version: this determines the policy’s language version. This element is optional, allowing you to specify a new language version instead of the old default version.</p>
+<p>Version: this determines the policy’s language version. This optional element allows you to specify a new language version instead of the old default version.</p>
 </li>
 <li>
-<p>ID: this optional element specifies a policy identifier. Policy IDs should be unique, with GUID values.</p>
+<p>ID: This optional element specifies a policy identifier. Policy IDs should be unique, with GUID values.</p>
 </li>
 <li>
-<p>Statement ID: this is an identifier that you can assign to policy statements. You may assign Sid values to every statement in a policy. In AWS services like SNS and SQS, which allow you to specify ID elements, the Sid values are sub-IDs of the policy’s ID. IAM requires the Sid values in a JSON policy to be unique.</p>
+<p>Statement ID: this is an identifier you can assign to policy statements. You may assign Sid values to every statement in a policy. In AWS services like SNS and SQS, which allow you to specify ID elements, the Sid values are sub-IDs of the policy’s ID. IAM requires the Sid values in a JSON policy to be unique.</p>
 </li>
 </ul>
 </div>
@@ -245,7 +266,7 @@
 </div>
 </div>
 <div class="paragraph">
-<p>In this lab, we are going to create two new users:</p>
+<p>In this lab, we will create two new users:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -258,7 +279,7 @@
 </ul>
 </div>
 <div class="paragraph">
-<p>We are going to check how S3 policies work and how we can allow access to our personal buckets to other users.</p>
+<p>We are going to check how S3 policies work and how we can allow access to our buckets to other users.</p>
 </div>
 <div class="paragraph">
 <p>Let&#8217;s create both users, <strong>we are going to specify a very short access key and secret for the users to keep it simple</strong>.</p>
@@ -435,8 +456,7 @@ ERROR: S3 error: 403 (AccessDenied)</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>To allow other users to access one of our buckets, we need to write a
-new policy in JSON format.</p>
+<p>We need to write a new policy in JSON format to allow other users to access one of our buckets.</p>
 </div>
 <div class="paragraph">
 <p>We can specify fine-grain actions. All possible actions are documented
@@ -654,8 +674,8 @@ delete: 's3://test-s3-policies/test-file-policies'</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In this Module we have covered a basic example of S3 bucket policies, we have
-more advanced examples on the module <code>STS Bucket and Role Policies</code> Check it
+<p>In this Module, we have covered a basic example of S3 bucket policies. We have
+more advanced examples of bucket policies in the module <code>STS Bucket and Role Policies</code> Check it
 out.</p>
 </div>
 </div>
