@@ -1,0 +1,137 @@
+= Hardware recommendations
+
+//++++
+//<link rel="stylesheet"  href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.1.0/css/font-awesome.min.css">
+//++++
+:icons: font
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+:source-highlighter: pygments
+:sectnums:
+:sectnumlevels: 6
+:toc: left
+:toclevels: 4
+
+
+Building a Ceph cluster allows you to select various hardware such as the type of CPU, the amount of
+RAM, the type and nunber of disk devices as weel as the type and number of network interfaces.
+
+What matters when your are designing a cluster is to identify the use case for a given cluster.
+Generally speaking the use cases are defined along the following lines:
+
+* Capacity optimized
+* Throughput optimized
+* IOPS/Latency optimized
+
+Whatever the use case you are aiming for one thing to always consider is the recovery time
+that will be necessary top recover the data in th event of a failure within the cluster.
+The common rule to evaluate a good design is that your cluster should be able to recover
+from a node failure in a reasonable amount of type, usually 8 hours.
+
+This rule will dictate how much capacity will be hosted in each server based ob the network
+configuration you have chosen but also the number of nodes present in your cluster.
+
+Recovery will leverage 20% of the following 2 metrics
+
+* Surviving cluster media bandwidth
+* Surviving cluster network bandwidth
+
+To evaluate both metrics, use the following two formulas:
+
+* `{bandwidth_per_disk} * {devices_per_node} * {surviving_nodes} * 20%`
+* `{cluster_bandwidth_per_node} * {surviving_nodes} * 20%`
+
+The lesser of the two calculation will be your recovery speed limit and guide
+you to determine how much storage each node can actually carry.
+
+TIP: If this limitation does not allow you to recover an entire node in 8 hours,
+you will have to make a choice and evaluate if the extended recovery time
+does not present too much of a risk for the business.
+
+== Capacity optimized
+
+Capacity optimized clusters are usually designed for pure object storage use cases such as
+document archive, video or audio storage, backup data while not designed for video
+streaming. Such cluster is essentially relying on the sequential read and write capabilities
+of spindles.
+
+The nature of the data and the need to preserve it over a long period of time
+is a perfect fit for erasure coding that, through the choice of the correct EC profile,
+can increase durability although at the expense of performance.
+
+The following elements to consider for such cluster are:
+
+* All servers have OS on flash devices
+* 0.5 core per HDD (assuming a 2 GHz CPU)
+* 16GB OS + 5GB per OSD
+* 3GB and at least 10GB (recommended 100GB) disk space per Monitor
+* 3GB per Manager
+* 8GB per RADOS Gateway
+* 10GbE for 12 OSDs on both public and cluster networks
+* Deploy 1 OSD per disk device
+* Host bus adapter for device connectivity
+
+IMPORTANT: SMR HDDs devices are not supported by Ceph
+
+== Throughput optimized
+
+Throughput optimized clusters are usually designed for application that leverage significantly
+large IO requests size  but require a decent amount of eprformance through the use of spindles.
+Such application all require the write performance to be at a correct level for data ingestion
+while providing data restitution. Those applications can be video streaming, media an
+entertainment applications or big data applications such as the creation of data lakes.
+In general, such applications leverage block devices or object storage.
+
+To guarantee the correct level of performance data protection is implemented
+through replicated pools while the presence of flash devices guarantees an optimum
+level of performance for BlueStore in combination with spindles to provide the correct
+storage density needed.
+
+The following elements to consider for such cluster are:
+
+* All servers have OS on flash devices
+* CPU (assuming a 2 GHz CPU)
+** 1 core per HDD
+** 2 cores per non NVMe SSD
+* 16GB OS + 5GB per OSD
+* 3GB and at least 10GB (recommended 50GB) disk space per Monitor
+* 3GB per Manager
+* 8GB and at least 20GB disk space (logging) per RADOS Gateway
+* 8GB and at least 20GB disk space (logging) per MDS
+* 10GbE for 12 OSDs on both public and cluster networks
+* Deploy 1 OSD per disk device
+* Use flash devices for RocksDB (1% ratio for block only, 4% otherwise)
+* Use space available on flash devices for metadata pools
+* Host bus adapter for device connectivity
+
+IMPORTANT: SMR HDDs devices are not supported by Ceph
+
+== IOPS optimized
+
+IOPS or latency optimized clusters are designed around the PCI bus and the use of 
+NVMe devices in each node. This type of clusters is appropriate for databae applciations,
+SQL or NOSQL, as well as private cloud deployment when virtual machine performance
+is a requirement.
+
+The NVMe devices, combined with the usage of Ceph, will place a very hight level of
+stress on the CPU of each servers.
+
+The following elements to consider for such cluster are:
+
+* All servers have OS on flash devices
+* 10 cores per NVMe SSD (assuming a 2 GHz CPU)
+* 16GB OS + 8GB per OSD
+* 3GB and at least 10GB disk space per Monitor
+* 3GB per Manager
+* 8GB and at least 20GB disk space (logging) per MDS
+* 10GbE for 2 OSDs
+* Only use enterprise grade NVMe flash devices
+* Deploy 2 OSDs per NVMe flash device
+* PCI bus only for device connectivity
+
+TIP: To estimate the number of IOPS that the cluster will be able to deliver, use the following
+formula: `{num_sockets} * {num_cores} * {GHz} * 1500 = RBD_4K_random_iops`
+
+
