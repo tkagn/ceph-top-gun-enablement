@@ -20,7 +20,7 @@ multiple access methods to enable the different types of
 clients present within the IT infrastructure to get access to the data.
 
 .Ceph Architecture
-image::./images/ceph101-overview.png[Ceph From Above, align="center"]
+image::ceph101-overview.png[Ceph From Above, align="center"]
 
 The entire Ceph architecture is resilient, does not present any single point
 of failure (SPOF) and introduces a specific data placement algorithm known as CRUSH (Controlled
@@ -68,7 +68,7 @@ of the data in case of an OSD or a node failure, the coherence of the data
 (scrubbing and deep-scrubbing of the existing data).
 
 .OSD Layout
-image::./images/ceph101-osdlayout.png[alt=Layout,scaledwidth="66%",align="center"]
+image::ceph101-osdlayout.png[alt=Layout,scaledwidth="66%",align="center"]
 
 NOTE: Originally the OSD backend was using a filesystem and a transaction journal to
 guarantee the atomicity of the write transactions. This implementation, known
@@ -119,7 +119,7 @@ If we look at the Ceph cluster foundation layer, the full picture with the
 different types of daemons or containers looks like this.
 
 .RADOS as it stands
-image::./images/ceph101-rados.png[RADOS Overview, align="center"]
+image::ceph101-rados.png[RADOS Overview, align="center"]
 
 The circle represent the MONs, the 'M' represent the MGRs and the squares
 with the bars represent the OSDs. In the diagram above, the cluster operates
@@ -132,7 +132,7 @@ access methods so that any application can use what is the best solution for
 its use-case.
 
 .Different Storage Types Supported
-image::./images/ceph101-differentstoragetypes.png[Ceph Access Modes, align="center"]
+image::ceph101-differentstoragetypes.png[Ceph Access Modes, align="center"]
 
 Ceph supports block storage through the RADOS Block Device (aka RBD) access
 method, file storage through the Ceph Filesystem (aka CephFS) access method
@@ -146,7 +146,7 @@ Librados allows developers to code natively against the native Ceph cluster
 API for maximum efficiency combined with a small footprint.
 
 .Application Native Object API
-image::./images/ceph101-librados.png[librados, align="center"]
+image::ceph101-librados.png[librados, align="center"]
 
 The Ceph native API offers different wrappers such as C, C++, Python, Java,
 Ruby, Erlang, Go and Rust.
@@ -165,14 +165,14 @@ The kernel RBD driver offers superior performance while not providing the
 same level of functionality. e.g., no RBD Mirroring until `Pacific`.
 
 .kRBD Diagram
-image::./images/ceph101-krbd.png[Kernel based RADOS Block Device, align="center"]
+image::ceph101-krbd.png[Kernel based RADOS Block Device, align="center"]
 
 *_Userspace RBD (librbd)_*
 
 This access method leverages all existing RBD features such as RBD Mirroring.
 
 .librbd Diagram
-image::./images/ceph101-librbd.png[Userspace RADOS Block Device, align="center"]
+image::ceph101-librbd.png[Userspace RADOS Block Device, align="center"]
 
 *_Shared filesystem (CephFS)_*
 
@@ -182,7 +182,7 @@ location of the object(s) for a given inode and then communicates directly
 with an OSD to perform the final IO request.
 
 .File Access (Ceph Filesystem or CephFS)
-image::./images/ceph101-cephfs.png[Kernel Based CephFS Client, align="center"]
+image::ceph101-cephfs.png[Kernel Based CephFS Client, align="center"]
 
 In Kubernetes environments, CephFS is typically used for RWX claims and can
 also be used to support RWO claims.
@@ -193,7 +193,7 @@ This access method offers support for the Amazon S3 and OpenStack Swift
 support on top of a Ceph cluster.
 
 .Amazon S3 or OpenStack Swift (Ceph RADOS Gateway)
-image::./images/ceph101-rgw.png[S3 and Swift Support, align="center"]
+image::ceph101-rgw.png[S3 and Swift Support, align="center"]
 
 === Controlled replication under scalable hashing
 
@@ -203,7 +203,7 @@ multiple OSDs in the cluster. The technique used is called CRUSH or
 Controlled Replication Under Scalable Hashing. With CRUSH, every object is
 assigned to one and only one hash bucket known as a Placement Group (PG).
 
-image::./images/ceph101-crushfromobjecttoosd-new.png[From Object to OSD, align="center"]
+image::ceph101-crushfromobjecttoosd-new.png[From Object to OSD, align="center"]
 
 CRUSH is the central point of configuration for the topology of the cluster.
 It offers a pseudo-random placement algorithm to distribute the objects

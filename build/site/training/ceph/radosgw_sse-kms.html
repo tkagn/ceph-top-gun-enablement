@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>S3 presigned URL :: Ceph Top Gun Enablement</title>
-    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_presignedurl.html">
+    <title>Ceph Storage Rados Gateway Server Side Encryption Configuration :: Ceph Top Gun Enablement</title>
+    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_sse-kms.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
     <script>var uiRootPath = '../../_'</script>
@@ -131,7 +131,7 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
   </li>
-  <li class="nav-item is-current-page" data-depth="1">
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
 </ul>
@@ -192,82 +192,195 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
-    <li>Ceph RadosGW</li>
-    <li><a href="radosgw_presignedurl.html">RGW presigned URL</a></li>
+    <li><a href="radosgw_sse-kms.html">Ceph Storage Rados Gateway Server Side Encryption Configuration</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/radosgw_presignedurl.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/radosgw_sse-kms.adoc">Edit this Page</a></div>
 </div>
   <div class="content">
 <aside class="toc sidebar" data-title="Contents" data-levels="2">
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">S3 presigned URL</h1>
+<h1 class="page">Ceph Storage Rados Gateway Server Side Encryption Configuration</h1>
 <div class="sect1">
-<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>All objects and buckets are private by default. However, you can use a presigned URL to optionally share objects or allow your customers/users to upload objects to buckets without AWS security credentials or permissions.</p>
+<p>The Ceph Object Gateway supports server-side encryption of uploaded objects, with 3 options for the management of encryption keys. Server-side encryption means that the data is sent over HTTP in its unencrypted form, and the Ceph Object Gateway stores that data in the Ceph Storage Cluster in encrypted form.</p>
 </div>
 <div class="paragraph">
-<p>You can use presigned URLs to generate a URL that can be used to access your Amazon S3 buckets. When you create a presigned URL, you associate it with a specific action. You can share the URL, and anyone with access to it can perform the action embedded in the URL as if they were the original signing user. The URL will expire and no longer work when it reaches its expiration time.</p>
+<p>Three types of Server side Encryption are available:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>CUSTOMER-PROVIDED KEYS(SSE-C)</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In this mode, the client passes an encryption key along with each request to read or write encrypted data. It is the client’s responsibility to manage those keys and remember which key was used to encrypt each object.
+This is implemented in S3 according to the Amazon SSE-C specification.</p>
+</div>
+<div class="paragraph">
+<p>As all key management is handled by the client, no special Ceph configuration is needed to support this encryption mode.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>KEY MANAGEMENT SERVICE(SSE-KMS)</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>In this mode, an administrator stores keys in a secure key management service. These keys are then retrieved on demand by the Ceph Object Gateway to serve requests to encrypt or decrypt data.
+This is implemented in S3 according to the Amazon SSE-KMS specification.</p>
+</div>
+<div class="paragraph">
+<p>In principle, any key management service could be used here. Currently integration with Barbican, Vault, and KMIP are implemented.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>SSE-S3</strong> This option is not supported downstream</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>This makes key management invisible to the user. They are still stored in vault, but they are automatically created and deleted by Ceph. and retrieved as required to serve requests to encrypt or decrypt data.
+This is implemented in S3 according to the Amazon SSE-S3 specification.</p>
+</div>
+<div class="paragraph">
+<p>In principle, any key management service could be used here. Currently only integration with Vault, is implemented.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_when_does_amazon_s3_check_the_expiration_date_and_time_of_a_presigned_url"><a class="anchor" href="#_when_does_amazon_s3_check_the_expiration_date_and_time_of_a_presigned_url"></a>2. When does Amazon S3 check the expiration date and time of a presigned URL?</h2>
+<h2 id="_sse_kms_rgw_introduction"><a class="anchor" href="#_sse_kms_rgw_introduction"></a>SSE-KMS RGW introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>RGW S3 checks the expiration date and time of a signed URL at the time of the HTTP request. For example, if a client begins to download a large file immediately before the expiration time, the download should complete even if the expiration time passes during the download. If the connection drops and the client tries to restart the download after the expiration time passes, the download will fail.</p>
+<p>Assuming, one cannot encrypt the devices use by Ceph Storage and exposed by Rados Gateway (RGW) through S3 protocol, one can ensure that data is encrypted in transit and at rest by using SSL for accessing the RGW S3 endpoint as well as requesting Server Side Encryption with Key management (sse-kms) on the bucket level.</p>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_hands_on"><a class="anchor" href="#_hands_on"></a>3. Hands-on</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>We have a bucket with some files available, we want to give GET access to file1
-to an external user creating a pre-signed URL</p>
+<p>Encrypting data in a bucket will not have an impact on the Client accessing the data through the RGW S3 endpoint (so no need to change your code) but will prevent someone else to retrieve the payload from the disk back end.</p>
+</div>
+<div class="paragraph">
+<p>Additional Software used for this lab:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>HashiCorp Vault</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The lab to will guide you through the simplest way to get aws:kms configured
+for one or many buckets but the utilized configuration shall not be used for
+Production environments as the token based authentication has obvious
+disadvantages over an Agent based deployment and is not suported downstream. Furthermore, this example uses the Vault root token to simplify setup and necessary steps which is not best practices.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Even though this lab is not focused on Production Environments, ensure to have all keys/tokens generated stored somewhere safe as loosing only one of them will end in data loss due to not being able to decrypt the data anymore</p>
+</div>
+<div class="paragraph">
+<p>== Setting up HashiCorp Vault</p>
+</div>
+<div class="paragraph">
+<p>The requirements for Ceph of podman and containers shall be used for HashiCorp
+Vault as well. We will run thei Vault instance from server
+<code>workstation.example.com</code>. Persistent Storage will be served from the Host ephemeral storage.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># aws --endpoint  http://proxy01:8000 s3 ls s3://bucket1/
-2022-12-29 04:18:01       1330 file1
-2022-12-29 04:38:20       1330 file11
-2022-12-29 04:42:34       1330 file111
-2022-12-29 04:18:54       1330 file2</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The following presign command generates a pre-signed URL for a specified bucket and key that is valid for one hour.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre># aws --endpoint  http://proxy01:8000  s3 presign s3://bucket1/file1
-http://proxy01:8000/bucket1/file1?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=multiuser%2F20221229%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20221229T153107Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=0edddb0082c5433e29349eaecf92e2d928a38e85d8897cbf5f9893fb64885cdc</pre>
-</div>
-</div>
-<div class="paragraph">
-<p>We can then access the object using for example <code>wget</code></p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre># wget 'http://proxy01:8000/bucket1/file1?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=multiuser%2F20221229%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20221229T153107Z&amp;X-Amz-Expires=3600&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=0edddb0082c5433e29349eaecf92e2d928a38e85d8897cbf5f9893fb64885cdc' -O file.txt
+<pre># podman login registry.connect.redhat.com
+# podman run -d -ti -p 8200:8200  --rm --name vault -e SKIP_SETCAP=true -e VAULT_DISABLE_MLOCK=true -v vault:/vault/file registry.connect.redhat.com/hashicorp/vault:1.9.10-ubi
+# podman logs 44cad1840217 | grep -E '(Unseal|Root)'
+Unseal Key: ffFk1kdOK5Gq9C3IKUWI+M=
+Root Token: s.FIeY8vKFdAzxn
+# podman exec -ti vault /bin/sh
+$ export VAULT_ADDR=http://127.0.0.1:8200
+$ export VAULT_TOKEN=s.FIeYz7vkiNfgNSt8vKFdAzxn
+$ vault operator unseal  ffFk1kaHZbFa4dfqc0MvZx/yV+JdOK5Gq9C3IKUWI+M=
+Key             Value
+---             -----
+Seal Type       shamir
+Initialized     true
+Sealed          false
+Total Shares    1
+Threshold       1
+Version         1.9.10
+Storage Type    inmem
+Cluster Name    vault-cluster-b6302d4c
+Cluster ID      2f9ab7a7-3fbd-c661-691a-308cfd508f71
+HA Enabled      false
+sh-4.4$ vault secrets enable -version=2 kv
+Success! Enabled the kv secrets engine at: kv/
+sh-4.4$ vault kv put secret/encrypted-bucket-key key=$(openssl rand -base64 32)
+Key                Value
+---                -----
+created_time       2023-01-03T17:55:40.306272723Z
+custom_metadata    &lt;nil&gt;
+deletion_time      n/a
+destroyed          false
+version            1
+sh-4.4$ vault kv get secret/encrypted-bucket-key
+======= Metadata =======
+Key                Value
+---                -----
+created_time       2023-01-03T17:55:40.306272723Z
+custom_metadata    &lt;nil&gt;
+deletion_time      n/a
+destroyed          false
+version            1
 
-# cat file.txt
-127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
-::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
-192.168.56.50	ctrl01.example.com</pre>
+=== Data ===
+Key    Value
+---    -----
+key    J4wGGNEen6gOxHRvGhOFhyEnqwCoLBhiUb4lK6GThCE=
+
+[root@ceph-node01 ~]# export FSID=$(cephadm shell ceph config get mon fsid)
+Inferring fsid c7878d3c-8ab3-11ed-b9f6-2cc26078e4ef
+Using recent ceph image registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:31fbe18b6f81c53d21053a4a0897bc3875e8ee8ec424393e4d5c3c3afd388274
+[root@ceph-node01 ~]# echo 's.FIeYz7vkiNfgNSt8vKFdAzxn' &gt; /var/run/ceph/${FSID}/.rgw-vault-token
+[root@ceph-node01 ~]# chmod 0400  /var/run/ceph/${FSID}/.rgw-vault-token &amp;&amp; chown ceph:ceph  /var/run/ceph/${FSID}/.rgw-vault-token
+[root@ceph-node01 ~]#
+[root@ceph-node01 ~]# ceph config-key set config/client.rgw/rgw_crypt_vault_addr http://workstation.example.com:8200
+set config/client.rgw/rgw_crypt_vault_addr
+[root@ceph-node01 ~]# ceph config-key set config/client.rgw/rgw_crypt_vault_auth token
+set config/client.rgw/rgw_crypt_vault_auth
+[root@ceph-node01 ~]# ceph config-key set config/client.rgw/rgw_crypt_vault_secret_engine kv
+set config/client.rgw/rgw_crypt_vault_secret_engine
+[root@ceph-node01 ~]# ceph config-key set config/client.rgw/rgw_crypt_vault_token_file /var/run/ceph/.rgw-vault-token
+set config/client.rgw/rgw_crypt_vault_token_file
+[root@ceph-node01 ~]# ceph config-key set config/client.rgw/rgw_crypt_vault_prefix /v1/secret/data
+set config/client.rgw/rgw_crypt_vault_prefix
+[root@ceph-node01 ~]# ceph orch restart rgw.objectgw
+Scheduled to restart rgw.objectgw.ceph-node02.lezmwh on host 'ceph-node02'</pre>
 </div>
 </div>
-<div class="paragraph">
-<p>The following presign command generates a pre-signed URL for a specified bucket and key that is valid for one week.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre># aws --endpoint  http://proxy01:8000  s3 presign s3://bucket1/file2 --expires-in 604800</pre>
-</div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>

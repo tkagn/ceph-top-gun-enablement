@@ -66,6 +66,27 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -202,10 +223,10 @@
 <h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Object expiration is in substance implemented in the following way: ceph lifecycle mechanism (lc) scans the objects' metadata, where the expiration date is being hold, comparing the expiration date with the current date. Once the condition becomes true lc marks the object as deleted, and it is transferred to Ceph’s garbage collector (gc) which in its turn deletes the expired object. lc process runs periodically with a pre-defined and configurable schedule. This mechanism makes it possible to use a declarative policy to expire the objects we have in our cluster, in the same way it can be done in Amazon S3.</p>
+<p>Object expiration is in substance implemented in the following way: ceph lifecycle mechanism (lc) scans the objects' metadata, where the expiration date is being held, comparing the expiration date with the current date. Once the condition becomes true lc marks the object as deleted, and it is transferred to Ceph’s garbage collector (GC) which in its turn deletes the expired object. lc process runs periodically with a pre-defined and configurable schedule. This mechanism makes it possible to use a declarative policy to expire the objects we have in our cluster, in the same way, it can be done in Amazon S3.</p>
 </div>
 <div class="paragraph">
-<p>Tier transition in its turn provides us with the ability of creating Storage
+<p>Tier transition in its turn provides us with the ability to create Storage
 Classes for hot (fast media, such as SSD/NVMe used for I/O sensitive workloads) and slow (slow, magnetic media such as SAS/SATA used for archiving) areas relying on bucket lifecycle process for moving out data. Thus it&#8217;s now possible to create a scheduled data movement between storage classes where data is written to the hot class, then it&#8217;s moved to the slow (after a configured amount of time) and then expires and deleted for good. This feature is the de-facto standard in AWS nowadays, and now it’s available in Ceph as well.</p>
 </div>
 </div>
@@ -354,7 +375,7 @@ upload: '50mb' -&gt; 's3://transitionbucket/50mb'  [part 4 of 4, 5MB] [1 of 1]
 </div>
 </div>
 <div class="paragraph">
-<p>We have 4 chunks 15 MB each of the test 50 MB file stored now in zone1.rgw.buckets.data pool (replicated 3 times, so total 150 MB):</p>
+<p>We have 4 chunks 15 MB each of the test 50 MB file stored now in zone1.rgw.buckets.data pool (replicated three times, so total 150 MB):</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -390,7 +411,7 @@ $</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>According to the policy, the objects in transitionbucket will transition from pool zone1.rgw.buckets.data to default.rgw.slow.data after 1 days.</p>
+<p>According to the policy, the objects in the transition bucket will transition from pool zone1.rgw.buckets.data to default.rgw.slow.data after one day.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -399,9 +420,9 @@ $</pre>
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-For testing purposes you might want to modify rgw lc debug interval to 60
+For testing purposes, you might want to modify rgw lc debug interval to 60
 in the Ceph RGW config database, followed by ceph-radosgw unit restart.
-This will enable debug interval for the lifecycle process (each day in the bucket lifecycle configuration equals 60 sec, so 1 days expiration is actually 1 minute).
+This will enable debug interval for the lifecycle process (each day in the bucket lifecycle configuration equals 60 sec, so one day&#8217;s expiration is 1 minute).
 </td>
 </tr>
 </table>
@@ -412,7 +433,7 @@ This will enable debug interval for the lifecycle process (each day in the bucke
 </div>
 </div>
 <div class="paragraph">
-<p>Now we wait for 1 minutes (rgw lc debug interval = 60), and verify if an object has been moved to SLOW storage class after this period:</p>
+<p>Now we wait for 1 minute (rgw lc debug interval = 60), and verify if an object has been moved to SLOW storage class after this period:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -462,7 +483,7 @@ zone1.rgw.slow.data 150 MiB      13      0     39                  0       0    
 <p>It is now populated with 150 MB of our test file.</p>
 </div>
 <div class="paragraph">
-<p>The chunks are no more in zone1.rgw.buckets.data pool and we see 0B USED field in the rados df output:</p>
+<p>The chunks are no more in zone1.rgw.buckets.data pool, and we see 0B USED field in the rados df output:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -481,7 +502,7 @@ zone1.rgw.buckets.data  0 B       1      0      3                  0       0    
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-If the objects weren’t deleted, it is probably because the garbage collector isn’t synchronized with the lifecycle process. We can execute radosgw-admin gc process --include-all to run the garbage collection manually so we don&#8217;t have to wait for its scheduled run.
+If the objects weren’t deleted, it is probably because the garbage collector isn’t synchronized with the lifecycle process. We can execute radosgw-admin GC process --include-all to run the garbage collection manually so we don&#8217;t have to wait for its scheduled run.
 </td>
 </tr>
 </table>

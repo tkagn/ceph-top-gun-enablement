@@ -66,6 +66,27 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -202,7 +223,7 @@
 <h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In order to access Object Storage using the s3 protocol you need to provide a s3 access key and secret key. The actual content of the access key can be varied by implementation of the s3 api but it serves as your identity. When you send a request to the S3 api, the api will check it knows about your s3 access key and lookup the associated secret key. The secret key is a shared secret between you and the S3 api and should not be sent over the wire to S3. Instead the secret key is used to create a Hash-based Message Authentication Code (HMAC) to sign each request that is sent to s3 where it will be validated and upon successful validation will be executed. S3 treats a successful validation as proof that you hold the secret key and therefore are the identity you have sent.</p>
+<p>In order to access Object Storage using the s3 protocol you need to provide an s3 access key and secret key. The actual content of the access key can be varied by the implementation of the s3 API but it serves as your identity. When you send a request to the S3 API, the API will check it knows about your s3 access key and look up the associated secret key. The secret key is a shared secret between you and the S3 API and should not be sent over the wire to S3. Instead, the secret key is used to create a Hash-based Message Authentication Code (HMAC) to sign each request that is sent to s3 where it will be validated and upon successful validation will be executed. S3 treats a successful validation as proof that you hold the secret key and therefore are the identity you have sent.</p>
 </div>
 <div class="paragraph">
 <p>The following options are available to authenticate against RGW.</p>
@@ -240,7 +261,7 @@
 <div class="sect2">
 <h3 id="_rgw_local_user_database_using_sts"><a class="anchor" href="#_rgw_local_user_database_using_sts"></a>2.1. RGW local user database using STS.</h3>
 <div class="paragraph">
-<p>RadosGW by default has a local user database to manage authentication and authorization, the user information and credentials are stored in a rados pool, so there is no extra work needed to setup this authentication setup, it works with STS, an admin user can create roles and policies for the roles and then indicate the RGW local users that will be authorized to assume the new role.</p>
+<p>RadosGW by default has a local user database to manage authentication and authorization, the user information and credentials are stored in a rados pool, so there is no extra work needed to set up this authentication setup, it works with STS, an admin user can create roles and policies for the roles and then indicate the RGW local users that will be authorized to assume the new role.</p>
 </div>
 <div class="paragraph">
 <p>The STS assume role workflow is shown in the following diagram:</p>
@@ -254,25 +275,25 @@
 <div class="sect2">
 <h3 id="_ldap_authentication"><a class="anchor" href="#_ldap_authentication"></a>2.2. LDAP authentication</h3>
 <div class="paragraph">
-<p>We can configure LDAP as an authentication backend for RadosGW, the configuration is straightforward; we only have to set some parameters in the RGW config, like LDAP search filters, bind users,etc.</p>
+<p>We can configure LDAP as an authentication backend for RadosGW, the configuration is straightforward; we only have to set some parameters in the RGW config, like LDAP search filters, bind users, etc.</p>
 </div>
 <div class="paragraph">
-<p>When using LDAP authentication the s3 access key is a base64 encoded JSON snippet which contains the LDAP user and password. No secret key is used. This is sent over the wire to the radosgw server who then performs a LDAP login, on a successful login the radosgw will grant access and the user is created in the radosgw database with the type “ldap”, So RGW knows that is has to validate this user with LDAP when it needs to be authenticated.</p>
+<p>When using LDAP authentication the s3 access key is a base64 encoded JSON snippet which contains the LDAP user and password. No secret key is used. This is sent over the wire to the radosgw server then performs an LDAP login, on successful login the radosgw will grant access and the user is created in the radosgw database with the type “LDAP”, So RGW knows that is has to validate this user with LDAP when it needs to be authenticated.</p>
 </div>
 <div class="paragraph">
-<p>Using LDAP authentication has been tested and works ok with current hadoop S3A drivers using the SimpleAWSCredentialsProvider. With this use case no temporary credentials(STS) would be used.
-One important drawback using LDAP is the security concerns of the current implementation, as the user login and password are sent to RGW in the http headers, also these headers can potentially be stored in RGW if we set the debug level to 20 in the RGW service(need to be root). User credentials are also exposed if users generates a signed S3 url <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html" class="bare">https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html</a>.</p>
+<p>Using LDAP authentication has been tested and works ok with current Hadoop S3A drivers using the SimpleAWSCredentialsProvider. With this use case, no temporary credentials(STS) would be used.
+One important drawback of using LDAP is the security concerns of the current implementation, as the user login and password are sent to RGW in the HTTP headers, also these headers can potentially be stored in RGW if we set the debug level to 20 in the RGW service(need to be root). User credentials are also exposed if users generate a signed S3 URL <a href="https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html" class="bare">https://docs.aws.amazon.com/AmazonS3/latest/userguide/ShareObjectPreSignedURL.html</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_ldap_authentication_with_sts_lite"><a class="anchor" href="#_ldap_authentication_with_sts_lite"></a>2.3. LDAP authentication with STS-Lite</h3>
 <div class="paragraph">
-<p>LDAP is able to implement the GetSessionToken STS API call, so all the same points would be valid from the previous LDAP chapters, with the difference that with this implementation we would be able to use temporary credentials(STS), so the user will only use his ldap user/password base64 encoded key once to get the temporary credentials and token, and from that point use the new provided credentials on the application.
-The advantage of this approach is that the user&#8217;s ldap credentials are only used once to get access to the temporary STS credentials, so we are reducing the risk of exposing the user AD credentials.
-Because the full STS implementation is not available we are missing the AssumeRole call, we are not able to assume roles and policies, so the bucket policies have to be managed at the bucket level.
-We haven’t tested this configuration but looking at the S3A available credential providers we would need to use the TemporaryAWSCredentialsProvider available, using this provider the client sets the temporary credentials that have been provided by the STS API in ENV vars or the config files, with this provider there is no refresh of tokens available, so once the token expires the client won’t have access to s3 with the provided credentials.
-The lifetime of a token can be set by the user when calling the GetSessionToken API call, with the parameter ‘DurationSeconds’, you can set this option to the maximum configured in RGW by the ceph configuration parameter ‘rgw sts max session duration’. So if needed the duration/expiration of a token can be configured to the longest running job. There is also a minimum value for the DurationSeconds which is dictated by the AWS STS api, this value is 900 seconds and cannot be lowered. <a href="https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html" class="bare">https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html</a>
-To partially reduce the security concerns we have with LDAP, we can deploy dedicated STS RGW services that would only provide the STS API endpoint, so we would reduce the exposure of  the AD user credentials in the RGW log files when in debug mode 20 only to a couple of RGW nodes, as the users would only send their AD credentials to the dedicated STS RGW endpoints to get their temporary credentials, then they would access the S3 RGW endpoints using the STS temporary keys.</p>
+<p>LDAP is able to implement the GetSessionToken STS API call, so all the same points would be valid from the previous LDAP chapters, with the difference that with this implementation, we would be able to use temporary credentials(STS), so the user will only use his LDAP user/password base64 encoded key once to get the temporary credentials and token, and from that point use the new provided credentials on the application.
+The advantage of this approach is that the user&#8217;s LDAP credentials are only used once to get access to the temporary STS credentials, so we are reducing the risk of exposing the user&#8217;s AD credentials.
+Because the full STS implementation is not available, we are missing the AssumeRole call, we are not able to assume roles and policies, so the bucket policies have to be managed at the bucket level.
+We haven’t tested this configuration but looking at the S3A available credential providers, we would need to use the TemporaryAWSCredentialsProvider available. Using this provider, the client sets the temporary credentials that have been provided by the STS API in ENV vars or the config files. With this provider, there is no refresh of tokens available, so once the token expires, the client won’t have access to s3 with the provided credentials.
+The lifetime of a token can be set by the user when calling the GetSessionToken API call with the parameter ‘DurationSeconds’, you can set this option to the maximum configured in RGW by the ceph configuration parameter ‘rgw sts max session duration’. So if needed, the duration/expiration of a token can be configured to the longest-running job. There is also a minimum value for the DurationSeconds, which is dictated by the AWS STS API. This value is 900 seconds and cannot be lowered. <a href="https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html" class="bare">https://docs.aws.amazon.com/STS/latest/APIReference/API_AssumeRole.html</a>
+To partially reduce the security concerns we have with LDAP, we can deploy dedicated STS RGW services that would only provide the STS API endpoint, so we would reduce the exposure of the AD user credentials in the RGW log files when in debug mode 20 only to a couple of RGW nodes, as the users would only send their AD credentials to the dedicated STS RGW endpoints to get their temporary credentials, then they would access the S3 RGW endpoints using the STS temporary keys.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -284,9 +305,9 @@ To partially reduce the security concerns we have with LDAP, we can deploy dedic
 <h3 id="_keystone_authentication"><a class="anchor" href="#_keystone_authentication"></a>2.4. Keystone Authentication.</h3>
 <div class="paragraph">
 <p>Keystone is the Openstack authentication &amp; authorization service available in the Red Hat Openstack product.
-The radosgw can be integrated with Openstack keystone. Keystone can have multiple identity services configured like LDAP or Active Directory. Users and Groups from the backend are synchronized with keystone and made available to openstack.
-The LDAP/AD users or groups can be mapped to Openstack projects/tenants roles, once a group is mapped to a tenant, all users from that LDAP/AD group will have access to OSP resources like for example creating EC2 credentials(access/secret key) to access S3 resources.
-The simplified workflow is users first authenticate against keystone and then use the keystone API ec2 credentials creates, This API call only needs to be run once as it creates a long lived s3 access and secret key for that user . The provided credentials can then be used to access s3 resources.
+The radosgw can be integrated with Openstack keystone. Keystone can have multiple identity services configured like LDAP or Active Directory. Users and Groups from the backend are synchronised with keystone and made available to openstack.
+The LDAP/AD users or groups can be mapped to Openstack projects/tenants roles. Once a group is mapped to a tenant, all users from that LDAP/AD group will have access to OSP resources, for example, creating EC2 credentials(access/secret key) to access S3 resources.
+The simplified workflow is users first authenticate against keystone and then use the keystone API ec2 credentials created, This API call only needs to be run once as it creates a long-lived s3 access and secret key for that user. The provided credentials can then be used to access s3 resources.
 Using LDAP authentication has been tested and works ok with current hadoop S3A drivers using the SimpleAWSCredentialsProvider. With this use case no temporary credentials(STS) would be used.
 If needed, credential rotation can be done at the Openstack tenant level, user generated credentials can be re-created by the user at any time using the keystone API.
 Keystone integration with RGW can only manage bucket policies at the project/tenant level, there is no user granularity, so all users from a project/tenant will have the same access to S3 resources. A user can belong to more than one tenant/project, if needed we can share buckets between different tenants using bucket policies at the tenant level.

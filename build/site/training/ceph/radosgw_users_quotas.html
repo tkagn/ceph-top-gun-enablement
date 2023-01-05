@@ -66,6 +66,27 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -187,7 +208,7 @@
 <h2 id="_radosgw_users"><a class="anchor" href="#_radosgw_users"></a>1. RadosGW Users</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>User management is performed different as traditional user management in Ceph clusters (cephx)</p>
+<p>User management is performed differently from traditional user management in Ceph clusters (cephx)</p>
 </div>
 <div class="paragraph">
 <p>Two user types:</p>
@@ -198,7 +219,7 @@
 <p>User: reflects a user of the S3 interface</p>
 </li>
 <li>
-<p>Subuser: reflects a user of the Swift interface. A subuser is associated to a user</p>
+<p>Subuser: reflects a user of the Swift interface. A sub-user is associated with a user</p>
 </li>
 </ul>
 </div>
@@ -215,7 +236,7 @@ Swift users are out of the scope of this workshop
 </table>
 </div>
 <div class="paragraph">
-<p>When creating RADOS Gateway users, both the --uid and --display-name options are required, and specify a unique account name and a human friendly display name. Use the&#8201;&#8212;&#8201;access-key and --secret options to specify a custom AWS account and secret key for the RADOS user.</p>
+<p>When creating RADOS Gateway users, both the --uid and --display-name options are required and specify a unique account name and a human-friendly display name. Use the&#8201;&#8212;&#8201;access-key and --secret options to specify a custom AWS account and secret key for the RADOS user.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -288,7 +309,7 @@ Swift users are out of the scope of this workshop
 </table>
 </div>
 <div class="paragraph">
-<p>You can check user info, usage stats with the following commands:</p>
+<p>You can check user info, and usage stats with the following commands:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -665,7 +686,7 @@ uploading to those buckets.</p>
 <p>Quota Usage example, setting enabling the <code>user_quota</code>, note that the same can be done at the bucket level with <code>bucket_quota</code></p>
 </div>
 <div class="paragraph">
-<p>1.create a user.</p>
+<p>1.Create a user.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -712,7 +733,7 @@ upload failed: ../etc/hosts to s3://quota/5 An error occurred (QuotaExceeded) wh
 </td>
 <td class="content">
 <div class="paragraph">
-<p>The Quota may take some time to get enforced until the user usage stats get updated, allowing to slighty go over the specified limits</p>
+<p>The Quota may take some time to get enforced until the user usage stats get updated, allowing to slightly go over the specified limits</p>
 </div>
 </td>
 </tr>

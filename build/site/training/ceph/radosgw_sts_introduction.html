@@ -66,6 +66,27 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -193,13 +214,13 @@ service that provides temporary tokens for an application or user to access an S
 the user authenticates against an identity provider.</p>
 </div>
 <div class="paragraph">
-<p>Ceph provides support for a subset of Amazon Secure Token Service (STS) APIs. Users first authenticate against STS and upon success receive a short lived s3 access and secret key that can be used in subsequent requests.</p>
+<p>Ceph supports a subset of Amazon Secure Token Service (STS) APIs. Users first authenticate against STS and, upon success, receive a short-lived s3 access and secret key that can be used in subsequent requests.</p>
 </div>
 <div class="paragraph">
-<p>In Ceph RGW STS can be configured to work with several authentication methods such as LDAP, keystone or OpenID connect.</p>
+<p>In Ceph RGW STS can be configured to work with several authentication methods such as LDAP, keystone, or OpenID connect.</p>
 </div>
 <div class="paragraph">
-<p>Workflow of STS shown in the next diagram.</p>
+<p>Workflow of STS is shown in the next diagram.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -207,10 +228,10 @@ the user authenticates against an identity provider.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>We also need to introduce the concept of an Amazon Resource Name (ARN), Permission Policies, Bucket Policy and Roles.</p>
+<p>We also need to introduce the concept of an Amazon Resource Name (ARN), Permission Policies, Bucket Policies and Roles.</p>
 </div>
 <div class="paragraph">
-<p>A ARN is used to identify a user, group or a role amongst others. The ARN of a username has the general format of arn:aws:iam:::user1. ARNS are important as they are the required in the permission policy language that S3 uses.</p>
+<p>An ARN is used to identify a user, group or role amongst others. The ARN of a username has the general format of arn:aws:iam:::user1. ARNS are important as they are required in the permission policy language that S3 uses.</p>
 </div>
 <div class="paragraph">
 <p>A permission policy instructs what actions are allowed or denied on a set of resources by a set of principals. Principals are identified via an ARN.</p>
@@ -219,13 +240,13 @@ the user authenticates against an identity provider.</p>
 <p>Permission policies are used in two instances: bucket policy and role policy.</p>
 </div>
 <div class="paragraph">
-<p>A bucket policy determines what actions can be performed inside a s3 bucket and is generally used to restrict who can read/write objects. The bucket policy is administered via the S3 API and can be self-managed by end users if they have appropriate permissions defined.</p>
+<p>A bucket policy determines what actions can be performed inside an s3 bucket and is generally used to restrict who can read/write objects. The bucket policy is administered via the S3 API and can be self-managed by end users if they have appropriate permissions defined.</p>
 </div>
 <div class="paragraph">
-<p>A role is similar to a user and has its own ARN in the general format of arn:aws:iam:::role/rolename. In a bucket policy instead of giving access to users based on their user ARN, a role ARN can be used instead. Users are then able to assume the role based on another permission policy which we refer to as the assume-role-policy-doc. The assume-role-policy-doc grants access to the roles if the user is able to meet its conditions.</p>
+<p>A role is similar to a user and has its own ARN in the general format of arn:aws:iam:::role/rolename. In a bucket policy, instead of giving access to users based on their user ARN, a role ARN can be used instead. Users can then assume the role based on another permission policy which we refer to as the assume-role-policy-doc. The assume-role-policy-doc grants access to the roles if the user can meet its conditions.</p>
 </div>
 <div class="paragraph">
-<p>If you choose to use the STS protocol be aware that several commercial off the shelf products will not be able to use the STS protocol due to lack of engineering. For example Quay has no option to use STS. Therefore if you will likely need to position local users as a fall back option for such applications.</p>
+<p>If you choose to use the STS protocol, be aware that several commercials off-the-shelf products will not be able to use the STS protocol due to a lack of engineering. For example, Quay currently has no option to use STS. Therefore, you will likely need to configure local users as a fallback option for such applications.</p>
 </div>
 </div>
 </div>
@@ -233,7 +254,7 @@ the user authenticates against an identity provider.</p>
 <h2 id="_rgw_local_user_database_using_sts"><a class="anchor" href="#_rgw_local_user_database_using_sts"></a>2. RGW local user database using STS.</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>RadosGW by default has a local user database to manage authentication and authorization, the user information and credentials are stored in a rados pool, so there is no extra work needed to setup this authentication setup, it works with STS, an admin user can create roles and policies for the roles and then indicate the RGW local users that will be authorized to assume the new role.</p>
+<p>RadosGW, by default, has a local user database to manage authentication and authorization. The user information and credentials are stored in a rados pool, so no extra work is needed to set up this authentication setup. It works with STS. An admin user can create roles and policies for the roles and then indicate the RGW local users authorised to assume the new role.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -246,7 +267,7 @@ the user authenticates against an identity provider.</p>
 <h2 id="_oauthoidc_sts_authentication"><a class="anchor" href="#_oauthoidc_sts_authentication"></a>3. OAUTH(OIDC) + STS authentication.</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>With OAUTH authentication we use an OIDC service to authenticate against, we need to have an OpenID Connect/ OAuth2 compatible service. Red Hat has tested the integration with RGW of the following OIDC products: Red Hat SSO and keycloak IDPs.</p>
+<p>With OAUTH authentication, we use an OIDC service to authenticate against. We need to have an OpenID Connect/ OAuth2 compatible service. Red Hat has tested the integration with RGW of the following OIDC products: Red Hat SSO and keycloak IDPs.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -256,14 +277,14 @@ the user authenticates against an identity provider.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_sts_woth_local_rgw_user_lab"><a class="anchor" href="#_sts_woth_local_rgw_user_lab"></a>4. STS woth Local RGW User Lab</h2>
+<h2 id="_sts_with_local_rgw_user_lab"><a class="anchor" href="#_sts_with_local_rgw_user_lab"></a>4. STS with Local RGW User Lab</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>In this module we are going to complete a lab using RGW local users with STS.</p>
+<p>In this module, we will complete a lab using RGW local users with STS.</p>
 </div>
 <div class="paragraph">
-<p>By default the STS API is disable in RGW, we need to enable the STS endpoint
-and restart the RGW daemons, the S3 and STS endpoints can be shared on the same
+<p>By default, the STS API is disabled in RGW, we need to enable the STS endpoint
+and restart the RGW daemons. The S3 and STS endpoints can be shared on the same
 RGW endpoint.</p>
 </div>
 <div class="listingblock">
@@ -274,7 +295,7 @@ RGW endpoint.</p>
 </div>
 </div>
 <div class="paragraph">
-<p>Create 3 users, Admin who will own the bucket, and users: user1 and user2, that
+<p>Create three users, Admin who will own the bucket, and users: user1 and user2, that
 will assume a role to gain access to the admin bucket.</p>
 </div>
 <div class="listingblock">
@@ -329,8 +350,8 @@ upload: '/etc/hosts' -&gt; 's3://bucket-data/hosts'  [1 of 1]
 </div>
 </div>
 <div class="paragraph">
-<p>You can also manage roles from the aws client, the user will need the required
-caps to work with roles, in this example when we created the admin user we used
+<p>You can also manage roles from the AWS client. The user will need the required
+caps to work with roles. In this example, when we created the admin user, we used
 the <code>--admin</code> flag, but you could be more granular and use the specific <code>roles</code> cap</p>
 </div>
 <div class="listingblock">
@@ -368,7 +389,7 @@ the <code>--admin</code> flag, but you could be more granular and use the specif
 </div>
 </div>
 <div class="paragraph">
-<p>We are now going to add a policy to the S3A-user13 role, the policy will allow to only list created buckets</p>
+<p>We are now going to add a policy to the S3A-user13 role. The policy will allow to only list created buckets</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -386,8 +407,8 @@ Permission policy attached successfully
 </div>
 </div>
 <div class="paragraph">
-<p>Using user1  credentials we use the aws cli to assue the S3A-user13 user role,
-this will give a temporary authentication token to use</p>
+<p>Using user1  credentials, we use the AWS cli to assume the S3A-user13 user role,
+this will create a temporary authentication token to be used</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -414,7 +435,7 @@ this will give a temporary authentication token to use</p>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Session token is Opaque to end useri, it&#8217;s Encrypted using AES 128, it
+<p>The session token is Opaque to the end user, it&#8217;s Encrypted using AES 128, it
 contains Authentication, Authorization information, Information about roles
 (permission policy) and Users.</p>
 </div>
@@ -423,8 +444,8 @@ contains Authentication, Authorization information, Information about roles
 </table>
 </div>
 <div class="paragraph">
-<p>We will create a new aws cli profile with the credentials provided by the sts
-assume role command, this credentials will give user1 access to list
+<p>We will create a new AWS cli profile with the credentials provided by the sts
+assume role command, these credentials will give user1 access to list
 bucket bucket-data per the policy we added to the S3A-user13 role</p>
 </div>
 <div class="listingblock">
@@ -440,7 +461,7 @@ aws_session_token = LONGOSETSIONTOKENpamGS6dXn3d3yiMKJUS6p2GhatKPzgXcGXB9nJi3rQ6
 </div>
 </div>
 <div class="paragraph">
-<p>But with the same credentials we can&#8217;t delete or upload objects to the bucket
+<p>But with the same credentials, we can&#8217;t delete or upload objects to the bucket
 as the role policy only allowed "s3:ListBucket"</p>
 </div>
 <div class="listingblock">
@@ -452,7 +473,7 @@ upload failed: ../etc/hosts to s3://bucket-data/file1 An error occurred (AccessD
 </div>
 </div>
 <div class="paragraph">
-<p>We can add a second policy to the role, that will Allow uploading and downloading objects to bucket-data</p>
+<p>We can add a second policy to the role that will Allow uploading and downloading objects to bucket-data</p>
 </div>
 <div class="listingblock">
 <div class="content">

@@ -66,6 +66,27 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -248,13 +269,33 @@ comprise the requested file or directory by communicating directly with the OSDs
 <div class="paragraph">
 <p>One or more MDS daemons are required to use the CephFS file system. These are created automatically if the newer <code>ceph fs volume</code> interface is used to create a new file system.</p>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>For more control over the deploying process, you can do a 3 step proccess:
+- Manually create the pools that are associated to the CephFS
+- Start the MDS service on the hosts
+- Create the CephFS file system.
+In our example we are going to do the 1 command process to get everything ready
+with help of the <code>ceph fs volume</code> interface</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
 <p>Create a CephFS volume, specifying <code>fs_name</code> as the name, and a comma-separated list of host names as the placement:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">$root@ceph-mon01 ~]# ceph fs volume create fs_name --placement=ceph-mon01.example.com,proxy02.example.com</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph fs volume create fs_name --placement=ceph-node01.example.com,proxy01.example.com
+Volume created successfully (no MDS daemons created)</code></pre>
 </div>
 </div>
 </li>
@@ -262,42 +303,38 @@ comprise the requested file or directory by communicating directly with the OSDs
 <p>Confirm that the CephFS volume was created:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[root@ceph-mon01 ~]# ceph fs volume ls</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Sample Output</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-json hljs" data-lang="json">[
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph fs volume ls
+[
     {
         "name": "fs_name"
     }
-]</code></pre>
+]
+
+# ceph osd lspools | grep cephfs
+6 cephfs.fs_name.meta
+7 cephfs.fs_name.data</code></pre>
 </div>
 </div>
 </li>
 <li>
-<p>Create a YAML file called <code>mds.yaml</code>:</p>
+<p>Create a YAML file called <code>mds.spec.yaml</code>:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">service_type: mds
+<pre class="highlightjs highlight"><code class="language-yaml hljs" data-lang="yaml">cat &lt;&lt;EOF &gt; mds.spec.yaml
+service_type: mds
 service_id: fs_name
 placement:
-  count: 2</code></pre>
+  count: 2
+EOF</code></pre>
 </div>
 </div>
 </li>
 <li>
-<p>As the root user on the <code>ceph-mon01</code> server, apply the specification to manually deploy the MDS daemons, using the YAML file that you created:</p>
+<p>As the root user on the <code>ceph-node01</code> server, apply the specification to manually deploy the MDS daemons, using the YAML file that you created:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[root@ceph-mon01 ~]# ceph orch apply -i mds.yaml</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Sample Output</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-texinfo hljs" data-lang="texinfo">Scheduled mds.fs_name update...</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph orch apply -i mds.spec.yaml
+Scheduled mds.fs_name update...</code></pre>
 </div>
 </div>
 </li>
@@ -305,13 +342,8 @@ placement:
 <p>List the services that are running on the new installation and verify that the <code>mds.fs_name</code> service is created:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-mon01 /]# ceph orch ls | grep mds</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Sample Output</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-texinfo hljs" data-lang="texinfo">NAME                       PORTS  RUNNING  REFRESHED  AGE  PLACEMENT
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph orch ls | grep mds
+NAME                       PORTS  RUNNING  REFRESHED  AGE  PLACEMENT
 mds.fs_name                           2/2  3m ago     3m   count:2</code></pre>
 </div>
 </div>
@@ -320,15 +352,10 @@ mds.fs_name                           2/2  3m ago     3m   count:2</code></pre>
 <p>View the <code>mds</code> daemon processes that are running:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-mon01 /]# ceph orch ps | grep mds</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Sample Output</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-texinfo hljs" data-lang="texinfo">NAME                               HOST                    PORTS        STATUS         REFRESHED  AGE  VERSION  IMAGE ID      CONTAINER ID
-mds.fs_name.ceph-mon01.vnuima      ceph-mon01.example.com               running (19s)  13s ago    19s  16.2.4   8d91d370c2b8  c91ca8508916
-mds.fs_name.proxy02.txydml         proxy02.example.com                  running (17s)  15s ago    17s  16.2.4   8d91d370c2b8  d4c2cd362001</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph orch ps | grep mds
+NAME                               HOST                    PORTS        STATUS         REFRESHED  AGE  VERSION  IMAGE ID      CONTAINER ID
+mds.fs_name.ceph-node01.vnuima      ceph-node01.example.com               running (19s)  13s ago    19s  16.2.4   8d91d370c2b8  c91ca8508916
+mds.fs_name.proxy01.txydml         proxy01.example.com                  running (17s)  15s ago    17s  16.2.4   8d91d370c2b8  d4c2cd362001</code></pre>
 </div>
 </div>
 </li>
@@ -336,15 +363,15 @@ mds.fs_name.proxy02.txydml         proxy02.example.com                  running 
 <p>Verify that <code>mds</code> is available and up:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[root@ceph-mon01 ~]# ceph -s
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph -s
 cluster:
 	id:     7d4ee168-d9b9-11eb-bc7e-2cc260754989
 	health: HEALTH_WARN
 					nodeep-scrub flag(s) set
 
 services:
-	mon: 3 daemons, quorum ceph-mon01.example.com,ceph-mon02,ceph-mon03 (age 22m)
-	mgr: ceph-mon01.example.com.cntwzr(active, since 22m), standbys: ceph-mon02.pxyuuu
+	mon: 3 daemons, quorum ceph-node01.example.com,ceph-node02,ceph-node03 (age 22m)
+	mgr: ceph-node01.example.com.cntwzr(active, since 22m), standbys: ceph-node02.pxyuuu
 	mds: 1/1 daemons up, 1 standby
 	osd: 3 osds: 3 up (since 22m), 3 in (since 13h)
 			 flags nodeep-scrub
@@ -356,7 +383,7 @@ data:
 	usage:   25 MiB used, 30 GiB / 30 GiB avail
 	pgs:     129 active+clean
 
-[root@ceph-mon01 ~]# ceph fs status
+# ceph fs status
 cephfs - 0 clients
 ======
 RANK  STATE              MDS                ACTIVITY     DNS    INOS   DIRS   CAPS
@@ -368,12 +395,431 @@ cephfs.cephfs.data    data       0   9609M
 cephfs.proxy01.udpgpo
 MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)
 
-[root@ceph-mon01 ~]# ceph fs ls
-name: cephfs, metadata pool: cephfs.cephfs.meta, data pools: [cephfs.cephfs.data ]</code></pre>
+# ceph fs ls
+name: cephfs, metadata pool: cephfs.cephfs.meta, data pools: [cephfs.cephfs.data ]
+
+# ceph mds stat
+fs_name:1 {0=fs_name.ceph-node01.gojgii=up:active} 1 up:standby</code></pre>
 </div>
 </div>
 </li>
 </ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cephfs_clients_how_to_mount_cephfs"><a class="anchor" href="#_cephfs_clients_how_to_mount_cephfs"></a>Cephfs Clients, how to mount Cephfs?</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can mount CephFS file systems with:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The kernel client</p>
+</li>
+<li>
+<p>The FUSE client</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The kernel driver is developed separately from the core ceph code, and as such
+it sometimes differs from the FUSE driver in feature implementation. The
+following details the implementation status of various CephFS features in the
+kernel driver. For more information on the current kernel client supporte
+features check this upstream <a href="https://docs.ceph.com/en/quincy/cephfs/kernel-features/">link</a></p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>The kernel client requires a Linux which is available starting with RHEL 8.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_pre_reqs_for_mounting_a_cephfs_filesytem"><a class="anchor" href="#_pre_reqs_for_mounting_a_cephfs_filesytem"></a>Pre-Reqs for Mounting a Cephfs Filesytem</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this Lab we are going to mount the Cephfs Filesystems from the
+<code>workstation.example.com</code> node, so we need to run the following pre-req
+commands for this server.</p>
+</div>
+<div class="paragraph">
+<p>Install the ceph-common package. For the FUSE client, also install the ceph-fuse package.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>workstation# dnf install ceph-common ceph-fuse -y</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>A minimal Ceph configuration file is needed stored in <code>/etc/ceph/ceph.conf</code> by
+default. We are going to copy the conf file from our admin ceph node, in this
+case <code>ceph-node01</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>workstation# scp -p ceph-node01:/etc/ceph/ceph.conf /etc/ceph/ceph.conf</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Authorize the client to access the CephFS file system. In this example we give
+the user <code>0</code> Read/</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>ceph-node01# ceph fs authorize fs_name client.0 / rw
+[client.0]
+	key = AQBAaLVjpZu3NhAAlu30WoNaBn08obWB6T5IEQ==</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Get the new authorization key with the ceph auth get command and copy it to the
+<code>/etc/ceph</code> folder</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>ceph-node01# ceph auth get client.0 -o /etc/ceph/ceph.client.0.keyring
+ceph-node01# cat /etc/ceph/ceph.client.0.keyring
+[client.0]
+	key = AQBAaLVjpZu3NhAAlu30WoNaBn08obWB6T5IEQ==
+	caps mds = "allow rw fsname=fs_name"
+	caps mon = "allow r fsname=fs_name"
+	caps osd = "allow rw tag cephfs data=fs_name"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>From <code>workstation</code> run scp to copy the keyring in <code>ceph-node01</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># scp -p ceph-node01:/etc/ceph/ceph.client.0.keyring /etc/ceph/ceph.client.0.keyring
+Warning: Permanently added 'ceph-node01,172.16.7.61' (ECDSA) to the list of known hosts.
+ceph.client.0.keyring                                                                                        100%  181   303.2KB/s   00:00</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Check that we can now query our ceph cluster from node <code>workstation</code>, we
+specify the id of the user we created called <code>0</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph --id 0 -s
+  cluster:
+    id:     a8292be8-8c21-11ed-b76b-2cc26078e4ef
+...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now we have the fullfiled the pre-reqs we are ready to mount the CephFS Filesystem</p>
+</div>
+<div class="sect2">
+<h3 id="_fuse_client"><a class="anchor" href="#_fuse_client"></a>FUSE client</h3>
+<div class="paragraph">
+<p>With the Fuse Client installed we can simply run the command <code>ceph-fuse</code> and
+the id of our user</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph-fuse --id 0 /mnt
+ceph-fuse[31811]: starting ceph client
+2023-01-04T07:08:45.962-0500 7fb89f204380 -1 init, newargv = 0x55ae882073d0 newargc=15
+ceph-fuse[31811]: starting fuse
+# df -h | grep mnt
+ceph-fuse       9.5G     0  9.5G   0% /mnt</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>ceph-fuse mounts by default the / root of the filesystem, if we want to mount
+at a specific tree level we can use the -r paramter, for example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># mkdir /mnt/dir0
+# umount /mnt
+# ceph-fuse --id 0 -r /dir0 /mnt
+fuse[31883]: starting ceph client
+2023-01-04T07:11:29.032-0500 7fca021b4380 -1 init, newargv = 0x55f5dd7908d0 newargc=15
+ceph-fuse[31883]: starting fuse
+# ls -l /mnt
+total 0</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Lets add a file and check the pool df status, to verify that files are being
+stored in the fs_name filesystem, still from our workstation:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>dd if=/dev/zero of=/mnt/100MB bs=4k iflag=fullblock,count_bytes count=100M
+# ceph --id 0 fs status
+Error EACCES: access denied: does your client key have mgr caps? See http://docs.ceph.com/en/latest/mgr/administrator/#client-authentication</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Ah ok, so we are getting an error when triying to get information about the
+filesystem status with the persmisions we have assigned to user with id 0, we
+don&#8217;t have the needed permisions on our user, let&#8217;s copy the admin keyring and
+use it:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># scp -p ceph-node01:/etc/ceph/ceph.client.admin.keyring /etc/ceph/ceph.client.admin.keyring
+Warning: Permanently added 'ceph-node01,172.16.7.61' (ECDSA) to the list of known hosts.
+ceph.client.admin.keyring                                                                                                 100%  151   232.2KB/s   00:00
+ceph fs status
+fs_name - 1 clients
+=======
+RANK  STATE              MDS                 ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  fs_name.ceph-node01.gojgii  Reqs:    0 /s    13     16     13      4
+        POOL           TYPE     USED  AVAIL
+cephfs.fs_name.meta  metadata   200k  9606M
+cephfs.fs_name.data    data     256M  9606M
+       STANDBY MDS
+fs_name.ceph-node02.mvtdpg
+MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we want to auto mount the FS on boot, we need to add it to /etc/fstab with the following format:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># umount /mnt
+# echo 'ceph-node01:6789,ceph-node02:6789,ceph-node03:6789 /mnt fuse.ceph ceph.id=0,ceph.client_mountpoint=/dir0,_netdev 0 0' &gt;&gt; /etc/fstab
+# mount /mnt</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s leave the FS umounted to try out the kernel client on the next section</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># umount /mnt</pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>When using the FUSE client as a non-root user, add user_allow_other in the /etc/
+fuse.conf configuration file.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_kernel_client"><a class="anchor" href="#_kernel_client"></a>Kernel Client</h3>
+<div class="paragraph">
+<p>Using the same user with id 0, we can go straigth ahead and mount our Cephfs FS
+with the kernel client:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># cat /etc/ceph/ceph.client.0.keyring  | grep key
+	key = AQBAaLVjpZu3NhAAlu30WoNaBn08obWB6T5IEQ==
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/dir0 /mnt -o name=0,secret="AQBAaLVjpZu3NhAAlu30WoNaBn08obWB6T5IEQ=="
+# ls -l /mnt
+total 204800
+-rw-r--r--. 1 root root 104857600 Jan  4 07:26 100MB</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we want to auto mount the FS on boot, we need to add it to /etc/fstab with the following format:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># cat /etc/ceph/ceph.client.0.keyring | grep key | awk '{print $NF}' &gt; /etc/ceph/ceph.client.0.kernel.keyring
+# echo 'ceph-node01.example.com,ceph-node02.example.com:/dir0 /mnt ceph name=0,secretfile=/etc/ceph/ceph.client.0.kernel.keyring,_netdev 0 0' &gt; /etc/fstab
+# mount /mnt</pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>With the kernel client to be able to use the mount <code>secretfile</code> option we need to
+have the ceph-common packages installed</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_some_basic_client_capabilities"><a class="anchor" href="#_some_basic_client_capabilities"></a>Some Basic Client Capabilities</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use Ceph authentication capabilities to restrict your file system clients to the lowest possible level of authority needed.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Path Restriction</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To restrict clients to only mount and work within a certain directory, use path-based MDS authentication capabilities.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>ceph fs authorize &lt;fs_name&gt; client.&lt;client_id&gt; &lt;path-in-cephfs&gt; rw</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Free Space Reporting</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>By default, when a client is mounting a sub-directory, the used space (df) will be calculated from the quota on that sub-directory, rather than reporting the overall amount of space used on the cluster.</p>
+</div>
+<div class="paragraph">
+<p>If you would like the client to report the overall usage of the file system, and not just the quota usage on the sub-directory mounted, then set the following config option on the client:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>client quota df = false</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Layout &amp; Quota Restriction</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To set layouts or quotas, clients require the ‘p’ flag in addition to ‘rw’. This restricts all the attributes that are set by special extended attributes with a “ceph.” prefix, as well as restricting other means of setting these fields (such as openc operations with layouts).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>client.0
+    key: AQAz7EVWygILFRAAdIcuJ12opU/JKyfFmxhuaw==
+    caps: [mds] allow rwp
+    caps: [mon] allow r
+    caps: [osd] allow rw tag cephfs data=cephfs_a</pre>
+</div>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Snapshot Restrictions</strong></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>To create or delete snapshots, clients require the ‘s’ flag in addition to ‘rw’. Note that when capability string also contains the ‘p’ flag, the ‘s’ flag must appear after it (all flags except ‘rw’ must be specified in alphabetical order).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>client.0
+    key: AQAz7EVWygILFRAAdIcuJ12opU/JKyfFmxhuaw==
+    caps: [mds] allow rw, allow rws path=/bar
+    caps: [mon] allow r
+    caps: [osd] allow rw tag cephfs data=cephfs_a</pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_read_on_root_fs_readwrite_only_on_dir1"><a class="anchor" href="#_read_on_root_fs_readwrite_only_on_dir1"></a>Read on / root FS, Read/Write only on /dir1</h3>
+<div class="paragraph">
+<p>We are going to create a new user with id 1</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs authorize fs_name client.1 / r /dir1 rw
+[client.1]
+	key = AQBNerVj77J2IBAAnmvdDyaMv20nxT0NyFd2cA==
+# ceph auth get client.1 -o /etc/ceph/ceph.client.1.keyring
+exported keyring for client.1
+# cat /etc/ceph/ceph.client.1.keyring
+[client.1]
+	key = AQBNerVj77J2IBAAnmvdDyaMv20nxT0NyFd2cA==
+	caps mds = "allow r fsname=fs_name, allow rw fsname=fs_name path=/dir1"
+	caps mon = "allow r fsname=fs_name"
+	caps osd = "allow rw tag cephfs data=fs_name"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We can now check by mounting the filesystem with user id <code>1</code>, that we can only
+read on <code>/</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># umount /mnt
+[root@workstation-lbedc2 ~]# ceph-fuse --id 1 /mnt
+ceph-fuse[32460]: starting ceph client
+2023-01-04T08:12:26.261-0500 7f311702f380 -1 init, newargv = 0x55a884998430 newargc=15
+ceph-fuse[32460]: starting fuse
+# ls /mnt
+dir0  dir1
+# touch /mnt/dir2
+touch: cannot touch '/mnt/dir2': Permission denied
+# touch /mnt/dir1/file1
+# ls /mnt/dir1/file1
+/mnt/dir1/file1</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_more_examples"><a class="anchor" href="#_more_examples"></a>More examples</h3>
+<div class="paragraph">
+<p>By yourself checkout what these other examples allow the user to do:</p>
+</div>
+<div class="paragraph">
+<p>1.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs authorize cephfs client.2 /client2 rw</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>2.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs authorize cephfs client.4 /client4 rwp</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mds_autoscaler"><a class="anchor" href="#_mds_autoscaler"></a>MDS Autoscaler</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>CephFS shared file systems require at least one active MDS service for correct operation, and
+at least one standby MDS to ensure high availability. The MDS autoscaler module ensures the
+availability of enough MDS daemons.
+This module monitors the number of ranks and the number of standby daemons, and adjusts the
+number of MDS daemons that the orchestrator spawns.</p>
+</div>
+<div class="paragraph">
+<p>To enable the MDS autoscaler module.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph mgr module enable mds_autoscaler</pre>
+</div>
 </div>
 </div>
 </div>

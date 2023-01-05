@@ -66,6 +66,27 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -187,7 +208,7 @@
 <h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The first ingredient we need to configure SSL endpoint is the "SSL Certificate" itself, which must be obtained through an official certification authority, or CA. It’s the CA’s responsibility to confirm the certificate’s identity, as well as assert for its authenticity. For demonstration purposes, we’ll use a self-sign certificate. For production environment acquiring an SSL certificate through an authorized CA is recommended.</p>
+<p>The first ingredient we need to configure SSL endpoint is the "SSL Certificate" itself, which must be obtained through an official certification authority, or CA. It’s the CA’s responsibility to confirm the certificate’s identity, as well as assert its authenticity. For demonstration purposes, we’ll use a self-sign certificate. Acquiring an SSL certificate through an authorised CA is recommended for a production environment.</p>
 </div>
 </div>
 </div>
@@ -195,7 +216,7 @@
 <h2 id="_configuring_ssl_for_the_rgw_daemon"><a class="anchor" href="#_configuring_ssl_for_the_rgw_daemon"></a>2. Configuring SSL for the RGW daemon</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>To configure SSL in our RGW daemon we are going to use a RGW spec definition.</p>
+<p>To configure SSL in our RGW daemon, we will use an RGW spec definition.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -205,16 +226,16 @@
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Some parameters such as the network to be used by RGW instances or the ssl certificate content can only be defined by using the service speficiation file.</p>
+<p>Some parameters, such as the network to be used by RGW instances or the SSL certificate content, can only be defined by using the service specification file.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>We have pre-created a self signed certificate that you can use as your RGW
-instance certificate, it&#8217;s available in the admin node of the cluster for
-example <code>ceph-node01.example.com</code> in the <code>/root/certificates</code> folder</p>
+<p>We have pre-created a self-signed certificate that you can use as your RGW
+instance certificate. It&#8217;s available in the admin node of the cluster, for
+example, <code>ceph-node01.example.com</code> in the <code>/root/certificates</code> folder</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -232,9 +253,9 @@ total 8
 </td>
 <td class="content">
 <div class="paragraph">
-<p>If any modifications are need to the certificates, like a different SAN or just
-creating a new certificate the CA cert/key is available on the <code>workstation</code>
-machines on the same path <code>/root/certificates/</code></p>
+<p>If any modifications are needed to the certificates, like a different SAN or just
+creating a new certificate, the CA cert/key is available on the <code>workstation.example.com</code>
+machine on the same path <code>/root/certificates/</code></p>
 </div>
 </td>
 </tr>
@@ -253,7 +274,7 @@ service to run on <code>node ceph-node02.example.com</code></p>
 </div>
 <div class="paragraph">
 <p>We are going to add a label called <code>rgws</code> to host <code>ceph-node02.example.com</code> so
-we later can use the label in the rgw spec placement section.</p>
+we later can use the label in the RGW spec placement section.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -270,8 +291,8 @@ proxy01     192.168.56.25  mgmt
 </div>
 </div>
 <div class="paragraph">
-<p>Here is a cephadm sample spec file, were we create a new RGW service with SSL
-using port 8443, for placement we are using lables, it will select a host with
+<p>Here is a cephadm sample spec file, where we create a new RGW service with SSL
+using port 8443, for placement we are using labels, it will select a host with
 the label rgws set, we also need to copy and paste the certificate and key into the
 spec file.</p>
 </div>
@@ -327,19 +348,16 @@ HTTPS/SSL.</p>
 <h2 id="_configuring_ssl_for_the_ingress_service"><a class="anchor" href="#_configuring_ssl_for_the_ingress_service"></a>3. Configuring SSL for the Ingress Service</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When using the cephadm Ingress service que can configure the SSL termination at
+<p>When using the cephadm Ingress service can configure the SSL termination at
 the HAproxy level.</p>
 </div>
 <div class="paragraph">
-<p>If the RGW service is configured with SSL enabled, then the ingress service will use the ssl and verify none options in the backend configuration. Trust verification is disabled because the backends are accessed by IP address instead of FQDN.</p>
-</div>
-<div class="paragraph">
-<p>When doing the SSL termination at the HAproxy/Load Balancer level we need to
-disable SSL in the RGW daemons, in the previous exercise we enabled SSL on our
+<p>When doing the SSL termination at the HAproxy/Load Balancer level, we need to
+disable SSL in the RGW daemons. In the previous exercise, we enabled SSL on our
 RGW service, so the first step will be to disable SSL from our RGW service.</p>
 </div>
 <div class="paragraph">
-<p>We are going to continue using RGW specification files. we are modifiying the
+<p>We are going to continue using RGW specification files. we are modifying the
 following things in our spec file:</p>
 </div>
 <div class="ulist">
@@ -379,7 +397,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>We add the rgw label to node proxy01 so the second instance of our RGW service
+<p>We add the rgw label to node proxy01, so the second instance of our RGW service
 gets deployed in node proxy01</p>
 </div>
 <div class="listingblock">
@@ -389,7 +407,7 @@ Added label rgw to host proxy01</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>We now apply the spec file so the configuration changes take place.</p>
+<p>We now apply the spec file, so the configuration changes take place.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -447,8 +465,8 @@ Scheduled ingress.rgw.default update...</code></pre>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>It could be the case that you get one haproxy instance in failed state, this is
-becasue resource contention in out lab nodes, the problem get&#8217;s fixed with a
+<p>It could be that you get one haproxy instance in a failed state. This is
+because of resource contention in our lab nodes. The problem gets fixed with a
 restart of the haproxy daemon</p>
 </div>
 <div class="listingblock">
@@ -509,7 +527,7 @@ backend backend
 </div>
 </div>
 <div class="paragraph">
-<p>Let&#8217;s test with curl command against the VIP that has a FQDN of
+<p>Let&#8217;s test with curl command against the VIP that has an FQDN of
 <code><a href="https://s3zone1.example.com" class="bare">https://s3zone1.example.com</a></code></p>
 </div>
 <div class="listingblock">

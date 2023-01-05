@@ -66,6 +66,27 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph RadosGW</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -189,7 +210,7 @@
 <div class="title">Goals</div>
 <ul>
 <li>
-<p>Introduction to RGW placmenet targers</p>
+<p>Introduction to RGW placement targets</p>
 </li>
 <li>
 <p>Hands-on Lab. Configure and Experiment with RGW placement targets</p>
@@ -311,7 +332,7 @@ documentation</a>.</p>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Before creating the pools we have to add the new hosts/OSDs and
+<p>Before creating the pools, we have to add the new hosts/OSDs and
 create a different CRUSH rule.</p>
 </div>
 </td>
@@ -319,8 +340,7 @@ create a different CRUSH rule.</p>
 </table>
 </div>
 <div class="paragraph">
-<p>First thing we need to do is to create new pools where the objects are
-going to be stored. We can use the following commands:</p>
+<p>First thing we need to do is create new pools where the objects will be stored. We can use the following commands:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -346,9 +366,9 @@ $  ceph osd pool application enable zone1.rgw.ssd.buckets.index rgw</pre>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Because this is just for testing we don&#8217;t have a crush rule that would
-point to different disks, we are using the per-default replicated crush rule
-that uses our standard hdd class osds
+Because this is just for testing, we don&#8217;t have a crush rule that would
+point to different disks. We are using the per-default replicated crush rule
+that uses our standard HDD class osds
 </td>
 </tr>
 </table>
@@ -466,7 +486,7 @@ Ceph RadosGW:</p>
 the objects are stored in the <code>ssd</code> placement target.</p>
 </div>
 <div class="paragraph">
-<p>First thing we have to do is to create a new user:</p>
+<p>The first thing we have to do is to create a new user:</p>
 </div>
 <div class="literalblock">
 <div class="content">
@@ -594,7 +614,7 @@ upload: '/etc/hosts' -&gt; 's3://test-bucket-ssd-placement-target/test-file'  [1
 </div>
 </div>
 <div class="paragraph">
-<p>Also, we can verify how the object have been created in the pools for
+<p>Also, we can verify how the object has been created in the pools for
 the <code>ssd</code> placement target:</p>
 </div>
 <div class="ulist">
@@ -637,9 +657,9 @@ e2409d45-9e3d-4545-ac63-f6038f0bf8b1.2826690.1_test-file</pre>
 <div class="sect2">
 <h3 id="_using_tags_to_specify_the_desired_placement_target_upon_bucket_creation"><a class="anchor" href="#_using_tags_to_specify_the_desired_placement_target_upon_bucket_creation"></a>3.4. Using tags to specify the desired placement target upon bucket creation</h3>
 <div class="paragraph">
-<p>With the example we have documented above we will store all the user
+<p>With the example we have documented above, we will store all the user
 data in the <code>ssd</code> placement target for all the buckets of the
-<code>test-ssd-placement-target</code> user. In some ocasions, we can allow the
+<code>test-ssd-placement-target</code> user. On some occasions, we can allow the
 user to use the placement target they prefer per bucket.</p>
 </div>
 <div class="admonitionblock warning">
@@ -649,7 +669,7 @@ user to use the placement target they prefer per bucket.</p>
 <i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
-A bucket’s placement target is selected on creation, and
+A bucket’s placement target is selected on creation and
 cannot be modified.
 </td>
 </tr>
@@ -657,7 +677,7 @@ cannot be modified.
 </div>
 <div class="paragraph">
 <p>In our case, we are going to use the tag <code>allowed-ssd</code> to allow users to
-use other placement targets beside the default placement target.</p>
+use other placement targets besides the default placement target.</p>
 </div>
 <div class="paragraph">
 <p>In the first place, we need to modify the zonegroup. We need to export
@@ -809,7 +829,7 @@ Bucket 's3://test-bucket-test-placement-target-no-tag/' created</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>Also, we can specify the region or placement target when using Python
+<p>Also, we can specify the region or placement target using Python
 <code>boto3</code> AWS SDK as we can see in the following example:</p>
 </div>
 <div class="literalblock">
@@ -890,7 +910,7 @@ storage classes.</p>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>More info about this topic in the
+<p>More info about this topic on the
 <a href="https://docs.ceph.com/en/latest/radosgw/placement/">Ceph upstream
 documentation</a>.</p>
 </div>
@@ -913,7 +933,7 @@ documentation</a>.</p>
 </td>
 <td class="content">
 <div class="paragraph">
-<p>Before creating the pools we have to add the new hosts/OSDs and
+<p>Before creating the pools, we have to add the new hosts/OSDs and
 create a different CRUSH rule.</p>
 </div>
 </td>
@@ -921,7 +941,7 @@ create a different CRUSH rule.</p>
 </table>
 </div>
 <div class="paragraph">
-<p>First thing we need to do is to create new pools where the objects are
+<p>First thing we need to do is create new pools where the objects are
 going to be stored. We can use the following commands:</p>
 </div>
 <div class="ulist">

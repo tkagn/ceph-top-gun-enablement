@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>S3 Object Versioning :: Ceph Top Gun Enablement</title>
+    <title>S3 Object Versioning. :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/radosgw_object_versioning.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -61,6 +61,27 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="opentlc_lab_env.html">Opentlc Lab Env</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
   </li>
 </ul>
   </li>
@@ -182,7 +203,7 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">S3 Object Versioning</h1>
+<h1 class="page">S3 Object Versioning.</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="ulist">
@@ -199,21 +220,21 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_some_object_versioning_facts_to_take_into_account"><a class="anchor" href="#_some_object_versioning_facts_to_take_into_account"></a>1. Some object versioning facts to take into account:</h2>
+<h2 id="_some_object_versioning_facts_to_consider"><a class="anchor" href="#_some_object_versioning_facts_to_consider"></a>1. Some object versioning facts to consider:</h2>
 <div class="sectionbody">
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p>Older object versions can be removed by specifying the name and the versionID of the object to be removed</p>
+<p>Older object versions can be removed by specifying the name and the version ID of the object to be removed</p>
 </li>
 <li>
-<p>By default There is no expiration on buckets meaning older versions will be kept until manually removed.</p>
+<p>By default, There is no expiration on buckets meaning older versions will be kept until manually removed.</p>
 </li>
 <li>
-<p>Once object versioning is enabled in a bucket  it can only be paused not disabled.</p>
+<p>Once object versioning is enabled in a bucket, it can only be paused, not disabled.</p>
 </li>
 <li>
-<p>Bucket versioning can be combined with object lifecycle to set an expiration. See policy example here.</p>
+<p>Bucket versioning can be combined with object lifecycle to set an expiration.</p>
 </li>
 <li>
 <p>Ordinary expiration only removes current version</p>
@@ -222,16 +243,16 @@
 <p>Non-current version expiration removes older versions</p>
 </li>
 <li>
-<p>Expiration is specified as a number of days</p>
+<p>Expiration is specified as the number of days</p>
 </li>
 <li>
-<p>Versioning can only be  enabled at the bucket level</p>
+<p>Versioning can only be enabled at the bucket level</p>
 </li>
 <li>
 <p>Lifecycle policy can only be applied at the bucket level</p>
 </li>
 <li>
-<p>Each version of an object by all means counts like another object in the bucket</p>
+<p>Each version of an object counts like another object in the bucket</p>
 </li>
 <li>
 <p>Object versioning examples with the AWS CLI.</p>
@@ -252,9 +273,9 @@
 </div>
 </div>
 <div class="paragraph">
-<p>For every new version of the object a new version ID of the object is created
+<p>For every new version of the object, a new version ID of the object is created
 with the current state of the object, every version of the object can be
-retrived even if the object is deleted.</p>
+retrieved even if the object is deleted.</p>
 </div>
 <div class="paragraph">
 <p>When the object is delete a Delete Marker is set on the Object:</p>
@@ -585,7 +606,7 @@ VersionId: QAzliCOeiVykU1V4xD5.NCIiE4J0lO-
 </div>
 </div>
 <div class="paragraph">
-<p>If we want to recover the latest version of the object, in this case the latest version is the only one we have available, we would just delete the marker:</p>
+<p>If we want to recover the latest version of the object, in this case, the latest version is the only one we have available, we would just delete the marker:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -652,7 +673,7 @@ DeleteMarkers:
 <p>From our previous output we can see that folders are just objects with a prefix set, that the clients are able to interpret and give us a folder view.</p>
 </div>
 <div class="paragraph">
-<p>We can also use the --query parameter to refine our output, so for example we use the --prefix of our folder and with query we will only list objects with the deleted marker inside the folder.</p>
+<p>We can also use the --query parameter to refine our output, so for example, we use the --prefix of our folder, and with query, we will only list objects with the deleted marker inside the folder.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -662,7 +683,7 @@ folder/sshd</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>If we wanted to recover all deleted files from the folder we could use loop with the output from:</p>
+<p>If we wanted to recover all deleted files from the folder we could use a loop with the output from</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -672,7 +693,7 @@ folder/sshd     HgRgUA6YFYZ1dZC7U5fxR34jkRqtB5Z</pre>
 </div>
 </div>
 <div class="paragraph">
-<p>We can apply a Life Cycle Policy on the bucket where we have versioning enabled to take care of the cleaning up for us, with the following policy all non current objects will get deleted including the object markers for deleted objects in 1 day:</p>
+<p>We can apply a Life Cycle Policy on the bucket where we have versioning enabled to take care of the cleaning up for us, with the following policy all non-current objects will get deleted including the object markers for deleted objects in 1 day:</p>
 </div>
 <div class="listingblock">
 <div class="content">

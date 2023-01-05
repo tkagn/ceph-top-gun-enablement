@@ -91,7 +91,7 @@ This will provide the following benefits:
 The Ceph project has a long history as you can see in the timeline below.
 
 .Ceph Project History
-image::./images/ceph101-timeline.png[Ceph Project Timeline, align="center"]
+image::ceph101-timeline.png[Ceph Project Timeline, align="center"]
 
 It is a battle-tested software defined storage (SDS) solution that has been
 available as a storage backend for OpenStack and Kubernetes for quite some

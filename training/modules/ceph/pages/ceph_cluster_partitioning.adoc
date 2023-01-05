@@ -45,7 +45,7 @@ Once the hash bucket ID is calculated, it is passed top the `CRUSH` function
 that will return the list of OSDs protecting this particular `PG`.
 
 .CRUSH hashing details
-image::./images/ceph101-crushhashdetail.png[CRUSH Hashing mechanism, align="center"]
+image::ceph101-crushhashdetail.png[CRUSH Hashing mechanism, align="center"]
 
 NOTE: The first OSD returned by the `CRUSH` function is the Primary OSD that
 the client will contact directly through the Ceph libraries.
@@ -82,7 +82,7 @@ IMPORTANT: Ideally you want all final value assigned to a pool to be a power of 
 Ceph supports two types of data protection presented in the diagram below.
 
 .Ceph Data Protection
-image::./images/ceph101-dataprotection.png[Replicated Pools vs Erasure Coded Pools, scaledwidth="70%", align="center"]
+image::ceph101-dataprotection.png[Replicated Pools vs Erasure Coded Pools, scaledwidth="70%", align="center"]
 
 Replicated pools provide better performance in almost all cases at the cost
 of a lower usable to raw storage ratio (1 usable byte is stored using 3 bytes
@@ -105,7 +105,7 @@ will exhibit poor performance compared to replicated pools during write IOs.
 *Pools and `PGs`*
 
 .Pools and `PGs`
-image::./images/ceph101-thefullpicture-new.png[From Object to OSD, scaledwidth="75%", align="center"]
+image::ceph101-thefullpicture-new.png[From Object to OSD, scaledwidth="75%", align="center"]
 
 The diagram above shows the relationship end to end between the object at the
 access method level down to the OSDs at the physical layer.
@@ -179,7 +179,7 @@ CephFS directory will be split into multiple objects. Also a 5GB S3 object
 stored through the RADOS Gateway will be divided in multiple objects.
 
 .Data Distribution
-image::./images/ceph101-rbdlayout.png[RADOS Block Device Layout, align="center"]
+image::ceph101-rbdlayout.png[RADOS Block Device Layout, align="center"]
 
 NOTE: By default, each access method uses an object size of 4MB. The above
 diagram, using a 32MB RBD (Block Device) as an example, illustrates
