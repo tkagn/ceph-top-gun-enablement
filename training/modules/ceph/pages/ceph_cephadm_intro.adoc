@@ -225,3 +225,547 @@ TIP: You can add `unmanaged: true` to your service file to instruct `cephadm`
 to not automatically manage the service described in the service file.
 Deployment and removal of the specified service will have to be managed
 manually by the storage administrator.
+
+
+== Deploying a minimal cluster
+
+The inital `cephadm` deployment always start with what is known as a cluster bootstrapping.
+To do so, install the `cephadm` binary on a node and run the following command:
+
+.Smaple bootstrap command
+[source, shell, subs="quotes"]
+----
+$ *cephadm bootstrap --mon-ip {monitor_ip_address}*
+----
+
+This command performs the following actions:
+
+* Create an initial Monitor daemon
+* Create an initial Managerdaemon
+* Generate a `cephadm` SSH key
+* Adds the `cephadm` SSH key to `~/.ssh/authorized_keys`
+* Writes a copy of the public key to `/etc/ceph`
+* Generate a minimal `/etc/ceph/ceph.conf` file
+* Writes the `client.admin` keyring to `/etc/ceph`
+
+Need be you can pass an initial Ceph configuration file to the `bootstrap` command through
+the `--config {path_to_config_file}` command line option.
+
+You can override the SSH user that will be used by `cephadm` through the `--ssh-user {user_name}`
+command line option.
+
+You can pass a specific set of registry parameters through a valid registry JSON file via
+the `--registry-json {path_to_registry_json}` command line option.
+
+You can choose the Ceph contaienr image you want to deploy via the `--image {registry}[:{port}]/ceph/ceph`
+command line option.
+
+TIP: To bootstrap a test cluster that will always be a single node cluster use the following syntax:
+`cephadm bootstrap --mon-ip {monitor_ip_address} --single-host-defaults`.
+
+=== CLI to your new cluster
+
+Once the cluster has been bootstrapped, use trhe `cephadm shell` command to issue
+Ceph commands. The `shell` command can be used with or without an actual command.
+Without a command you will be provided with an interactive shell. Providing a command
+will actually issue the command against the cluster and return.
+
+.Sample shell with a specific command
+[source, shell, subs="quotes"]
+----
+$ *cephadm shell -- ceph status*
+----
+
+If you want to be able to use the `ceph` command directly from the base host simply install
+the `ceph-common` package via `cephadm`.
+
+.Sample `ceph-common` installation
+[source, shell, subs="quotes"]
+----
+$ *cephadm add-repo --release pacific*
+$ *cephadm install ceph-common*
+$ *ceph -v*
+$ *ceph status*
+----
+
+== Node management
+
+=== Labelling and adding a node
+
+To label a node to your cluster, use the following command from your `cephadm shell` session.
+
+.Labelling a node
+[source, shell, subs="quotes"]
+----
+$ *ceph orch host label add {hostname} {label}*
+----
+
+To add a node to your cluster you must first distribuite the SSH keys that were generated
+by `cephadm` during the bootstrapping. Once the keys have been copied, execute the following
+command to add a the node the cluster.
+
+`cephadm` offers a few special labels to help manage the cluster and the usage of each node:
+
+* `_no_schedule` prevents scheduling or deployment of daemons on this node
+* `_no_autotune_memory` disables memory tuning paraneters for the daemons deployed on this node
+* `_admin` deploys the admin keyring and the minimal config on the node
+
+.Adding a node
+[source, shell, subs="quotes"]
+----
+$ *ceph orch host add {hostname} [{hostip}] [{label1}]*
+----
+
+NOTE: It is recommended to provide both the hostname and the IP address for each node.
+
+=== Removing a node
+
+Before you remove a node from your cluster yopu will have to stop the components running
+on the node.
+
+.Draining a node
+[source, shell, subs="quotes"]
+----
+$ *ceph orch host drain {hostname}*
+----
+
+NOTE: Draining a node will add the `_no_schedule` label to this node to prevent
+any daemon to be deployed on this node.
+
+If the node was running OSD daemons, verify the OSDs have been stopped and removed
+
+.Check OSD removal status
+[source, shell, subs="quotes"]
+----
+$ *ceph orch osd rm status*
+----
+
+When the OSD removal on the node is complete, verify no daemons remain running on this node.
+
+.Checking daemons on a node
+[source, shell, subs="quotes"]
+----
+$ *ceph orch ps {hostname}*
+----
+
+When all daemons have been stopped and removed from the node, it is ready for removal.
+
+.Remove node
+[source, shell, subs="quotes"]
+----
+$ *ceph orch host rm {hostname}*
+----
+
+If a host has crashed and can no longer be booted up, you can force its removal.
+
+.Forcing host removal
+[source, shell, subs="quotes"]
+----
+$ *ceph orch host rm {hostname} --offline --force*
+----
+
+=== Host maintenance
+
+`cephadm` allows you to easily stop all daemons on a node.
+
+.Node maintenance mode
+[source, shell, subs="quotes"]
+----
+$ *ceph orch host maintenance enter {hostname}*
+$ *ceph orch host maintenance exit {hostname}*
+----
+
+NOTE: You can use the `--force` flag to bypass warning messages that could prevent a node
+to be placed in maintenance mode. This flag does not allow you to bypass alerts.
+
+== Monitor management
+
+=== Adding Monitors
+
+Once your inital cluster has been depployed and the nodes added to it, you can then deploy
+the addotional Monitors that will create your "real" cluster. Before you do so you will have
+to configure the network parameters that will be used by your cluster.
+
+.Setting your public and cluster networks
+[source, shell, subs="quotes"]
+----
+$ *ceph config set mon public_network {public_network_cidr}*
+$ *ceph config set mon cluster_network {cluster_network_cidr}*
+----
+
+TIP: If you need to specify multiple public subnets, separate them with commas.
+
+To deploy the Monitors use the following commad:
+
+.Adding a Monitor daemon
+[source, shell, subs="quotes"]
+----
+$ *ceph orch daemon add mon --placement="{host1},{host2}"*
+----
+
+NOTE: As an alternative you can use a service file and apply it to your cluster definition. `ceph orch apply -i {path_to_mon_service_file}`
+
+In some cases you may want to add the Monitors using a specific network. To do so you will deploy
+the Monitors after requesting `cephadm` to not manage the Monitor deployment automatically
+and add each Monitor specifying the IP address or the subnet it needs to bind to.
+
+.Specify a specific Monitor network
+[source, shell, subs="quotes"]
+----
+$ *ceph orch apply mon --unmanaged*
+$ *ceph orch daemon add mon {hostname1}:{ip_address}*
+$ *ceph orch daemon add mon {hostname2}:{cidr}*
+$ *ceph orch apply mon --placement="{hostname1},{hostname2},{hostname3}"*
+----
+
+=== Removing Monitors
+
+To remove a Monitor, simply use the following commad: `ceph orch daemon rm mon.{hostname}`
+
+== Manager management
+
+=== Adding Managers
+
+Once your Monitors are up and running it is time to deploy a highly available Manager configuration.
+The initial boostrap operation only deployed a single Manager which is not sufficient for a production
+environment.
+
+The Manager service only supports one option to indicate the network the Manager daemon will bind to.
+
+.Sample Manager service file
+[source, yaml]
+----
+service_type: mgr
+service_name: mgr
+networks:
+- {CIDR}
+placement:
+- {placement}
+----
+
+To deploy the manager, use the following command: +
+`ceph orch apply mgr "{hostname1},{hostname2}, ..."
+
+Optionally you can deploy the Managers using a valid service file using the following command: +
+`ceph orch apply -i {path_to_service_file}`
+
+=== Removing Managers
+
+To remove a Manager, simply use the following commad: `ceph orch daemon rm mgr.{hostname}`
+
+== OSD management
+
+Once your Monitors and Managers are up and running it is time to deploy the OSDs in your cluster.
+The initial boostrap operation does not deploy any OSD which clearly makes your cluster
+unusable in a production environment.
+
+IMPORTANT: All `ceph orch apply` command is a persistent command. Therefor its effect will persist
+after its completes the first run. e.g. If you add a new device to a node and you have used the
+`ceph orch apply osd --all-available-devices` command, the new device will automatically be
+consumed and a new OSD will be deployed.
+
+TIP: To prevent the persistent nature of the command and instruct `cephadm` to not automatically
+deploy additional OSDs, add the `--unmanaged=true` option to your command.
+
+=== OSD batch addition
+
+One easy way to add OSD, hence capacity, to your Ceph cluster is to tell `cephadm` to deploy
+OSDs so that they consume all the disk drives present on all the node. This is achieved with
+a single command.
+
+.Deploy OSDs consuming all devices presents on all nodes
+[source, shell, subs="quotes"]
+----
+$ *ceph orch apply osd --all-available-devices*
+----
+
+=== OSD addition through service file
+
+Another option is to use a valid service file, following the guidelines detailed in the previous
+chapters of this document. Once you have craeted your service file for your OSDs, simply
+instruct `cephadm` to apply it.
+
+.Deploy OSDs using a service file
+[source, shell, subs="quotes"]
+----
+$ *ceph orch apply -i {path_to_osd_service_file}*
+----
+
+TIP: A single service file can contain multiple specificatiobs. See example below.
+
+.Multiple specifications in a single file
+[source, yaml]
+----
+service_type: osd
+service_id: osd_spec_hdd
+placement:
+  host_pattern: '*'
+spec:
+  data_devices:
+    rotational: 1
+  db_devices:
+    model: MC-55-44-XZ # This model is identified as a flash device
+    limit: 2
+---
+service_type: osd
+service_id: osd_spec_ssd
+placement:
+  host_pattern: '*'
+spec:
+  data_devices:
+    model: MC-55-44-XZ # This model is identified as a flash device
+----
+
+=== OSD selective addition
+
+Anotehr option to add OSDs is to indicate `cephadm` which devices from what specific node
+must be added to the cluster.
+
+.Selective OSd addition
+[source, shell, subs="quotes"]
+----
+$ *ceph orch daemon add osd {hostname}:{device_path}*
+----
+
+.Multi-device selective addition
+[source, shell, subs="quotes"]
+----
+$ *ceph orch daemon add osd {hostname}:data_devices={dev1},{dev2},db_devices={db1}*
+----
+
+=== OSD memory tuning
+
+Optionally you can opt for the following strategies:
+
+* Use OSD tuning defaults
+** `osd_memory_target_autotune = true`
+** `mgr/cephadm/autotune_memory_target_ratio = .7`
+* Modify the OSD tuning defaults
+* Disable OSD tuning
+
+To modify the tuning default use the following command:
+
+.Modify OSD autotuning default
+[source, shell, subs="quotes"]
+----
+$ *ceph config set mgr mgr/cephadm/autotune_memory_target_ratio {new_value}*
+----
+
+== Removing OSDs
+
+OSD can be removed from teh cluster. The removal of the OSD will lead to the following events:
+
+1. All `PGs` will be evacuated from the OSD
+2. Once the OSD manages no `PG` it is removed
+
+.Removing an OSD
+[source, shell, subs="quotes"]
+----
+$ *ceph orch osd rm {osd_id}*
+----
+
+You can monitor the status of the removal using `ceph orch osd rm status`.
+
+As long as an OSD has not been removed from teh cluster you can stop the OSD removal process.
+
+.Stopping OSD removal
+[source, shell, subs="quotes"]
+----
+$ *ceph orch osd rm stop {osd_id}*
+----
+
+=== Replacing OSDs
+
+An OSD can be replaced when a disk is bad an the OSD has crashed.
+
+.Removing an OSD
+[source, shell, subs="quotes"]
+----
+$ *ceph orch osd rm {osd_id} --replace*
+----
+
+=== Initializing devices
+
+You can remotely initialize a device via `cephadm`.
+
+.Zapping a device
+[source, shell, subs="quotes"]
+----
+$ *ceph orch device zap {hostname} {device_path}*
+----
+
+== RADOS Gateway management
+
+`cephadm` being a generic tool teh syntax to add a RADOS Gateway will be using the similar
+format as the commands we have already seen in this document. However it will use specific
+parameters that are applciable only to RADOS Gateways.
+
+=== Adding RADOS Gateway
+
+The very minimal way to deploy a gateway, using the default `realm`, `zonegroup` and `zone`
+is to use the following command.
+
+.Easy RADOS Gateway deployment
+[source, shell, subs="quotes"]
+----
+$ *ceph orch apply rgw {service_name}*
+----
+
+NOTE: By default and to fullfill high availability requriements the command above
+will deploy two (2) RADOS Gateways.
+
+For a more complex deployment with non default `realm` values, use the following syntax.
+
+.Production RADOS Gateway deployment
+[source, shell, subs="quotes"]
+----
+$ *ceph orch apply rgw {service_name} --realm={realm} --zone={zone} \
+                                             --placement={placement_spec}*
+----
+
+Here is an example sequence to deploy on specific nodes, two (2) gateways per node and
+using a specific set of ports.
+
+.RADOS Gateway deployment sequence example
+[source, shell, subs="quotes"]
+----
+$ *ceph orch host label add {host1} rgw*
+$ *ceph orch host label add {host2} rgw*
+$ *ceph orch apply rgw defaultrgw '--placement=label:rgw count-per-host:2' \
+                                                      --rgw_frontend_port=8000*
+----
+
+TIP: When deploying multiple gateways on a single node the port numbers will be allocated in sequence.
+
+===== Removing RADOS Gateway
+
+RADOS Gateways can be removed from teh cluster.
+
+.Removing a RADOS Gateway
+[source, shell, subs="quotes"]
+----
+$ *ceph orch rgw rm {rgw_service_name}*
+----
+
+== Gateway ingress management
+
+When deploying a production cluster you will likely need a load balancer in front
+of the RADOS Gateways you deploy. This is accomplished by deploying an `ingress` service
+through `cephadm`.
+
+The service file for an `ingress` service will recognize the following parameters:
+
+* `backend_service` specifies the RGW service name to frontend
+* `virtual_ip` specifies the CIDR the ingress service will bind to
+* `frontend_port` specifies the TCP port the ingress service will bind to
+* `monitor_port` specifies the port where the load balancer status is maintained
+* `virtual_interface_networks` specificies a list of CIDRs
+* `ssl_cert` specifies the SSL certtificate and key
+
+To deploy the `ingress` service simply use the following command.
+
+.Deploying an `ingress` service
+[source, shell, subs="quotes"]
+----
+$ *ceph orch apply -f {path_to_ingress_service_file}*
+----
+
+.Example of a complete ingress service file
+[source, yaml]
+----
+service_type: ingress
+service_id: rgw.default
+placement:
+  hosts:
+    - host1
+    - host2
+    - host3
+spec:
+  backend_service: rgw.default
+  virtual_ip: 10.0.1.0/24
+  frontend_port: 8080
+  monitor_port: 1900
+  ssl_cert: |
+    -----BEGIN CERTIFICATE-----
+    ...
+    -----END CERTIFICATE-----
+    -----BEGIN PRIVATE KEY-----
+    ...
+    -----END PRIVATE KEY-----
+----
+
+== MDS management
+
+=== Adding MDS
+
+Deploying an MDS is done in conunction with the creation of a Ceph FileSystem. The name of the filesystem
+will be the ID of the MDs service you deploy.
+
+You can deploy an MDS using two different methods:
+
+.By creating a volume
+[source, shell, subs="quotes"]
+----
+$ *ceph fs volume create {fsname} --placement="{placement}"*
+----
+
+.Via a service file
+[source, shell, subs="quotes"]
+----
+$ *cat /var/lib/ceph/mds/mds.yaml*
+_service_type: mds
+service_id: {fs_name}
+placement:
+  count: 2_
+$ *ceph orch apply -i /var/lib/ceph/mds/mds.yaml*
+$ *ceph fs new {fs_name} {meta_pool} {data_pool}*
+----
+
+NOTE: The second method will require you to manually create the pools used by the Ceph FileSystem.
+
+=== Removing MDS
+
+Just like for the creation of the Ceph FileSystem there are two (2) ways to remove a FileSystem
+
+.By deleteing a volume
+[source, shell, subs="quotes"]
+----
+$ *ceph fs volume rm {fs_name} --yes-i-really-mean-it*
+----
+
+.By deleting the MDS service
+[source, shell, subs="quotes"]
+----
+$ *ceph orch rm mds.{fs_name}*
+----
+
+NOTE: The second method will require that you manually delete the Ceph FileSystem and the associated pools.
+
+== Generic `cephadm` commands
+
+=== Service status and lists
+
+To list the services managed by `cephadm` use: +
+`ceph orch ls`
+
+To list the processes for each service managed by `cephadm` use: +
+`ceph orch ps [--daemon_type={daemon_type}]`
+
+=== Service removal
+
+Most service removal will likely invoke the following command: +
+`ceph orch rm {service_name}`
+
+=== Exporting cluster configuration
+
+Once you have deployed your entire cluster you can generate a single file that can be reuse
+for other deployments.
+
+.Exporting cluster configuration
+[source, shell, subs="quotes"]
+----
+$ *ceph orch ls --export*
+----
+
+NOTE: The default format of the export is `yaml`. To use json specify `--format json`.
+

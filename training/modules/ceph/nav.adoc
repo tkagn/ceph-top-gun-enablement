@@ -1,3 +1,4 @@
+.Ceph Lab Setup
 * xref:opentlc_lab_env.adoc[Opentlc Lab Env]
 
 .Core Ceph
