@@ -1,9 +1,10 @@
 = Ceph Deployment with Cephadm
 
 [WARN]
-
+====
 Before performing this hands-on lab you need to go through the LAB env
 preparation steps described in then xref:opentlc_lab_env.adoc[OpenTLC LAB] section 
+====
 
 
 == Run Pre-Flight Playbook
@@ -17,7 +18,7 @@ As part of the OpenTLC LAB env preparations you have the cephadm-ansible rpm
 installed an inventory available in `/usr/share/cephadm-ansible/inventory` on the admin node for cluster1 `ceph-node01`
 ====
 
-.Prerequisites
+Prerequisites
 * Initial admin host is up and running
 * Ansible Automation Platform is installed on the host
 * Root-level access to all nodes in the storage cluster
@@ -25,9 +26,9 @@ installed an inventory available in `/usr/share/cephadm-ansible/inventory` on th
 [IMPORTANT]
 Run the `cephadm-preflight` playbook before you bootstrap the initial host.
 
-. If needed edit the inventory file at `/usr/share/cephadm-ansible/inventory`
+If needed edit the inventory file at `/usr/share/cephadm-ansible/inventory`
 leaving: 
-+
+
 [source,texinfo]
 -----
 # cat /usr/share/cephadm-ansible/inventory
@@ -92,7 +93,7 @@ The `cephadm` utility performs the following tasks during the bootstrap process:
 
 * Running the bootstrapping process establishes the default user name and password for the initial login to the dashboard. Be sure to change the password after you log in.
 
-.Prerequisites
+Prerequisites
 * An IP address for the first Ceph Monitor container, usually the IP address for the first node in the storage
 cluster
 * Root access to all nodes
@@ -104,10 +105,10 @@ cluster
 In this lab environment, you do not have 10 GB of free space, but you can safely ignore warnings related to this.
 ====
 
-=== Bootstrap New Storage Cluster
+== Bootstrap New Storage Cluster
 
-. Bootstrap a storage cluster:
-+
+Bootstrap a storage cluster:
+
 [source,sh]
 -----
 [root@ceph-node01]# cephadm \
@@ -147,26 +148,26 @@ reference the spec file you can use the `--apply-spec /root/cluster-spec.yaml`
 If the storage cluster includes multiple networks and interfaces, be sure to choose a network that is
 accessible by any node that uses the storage cluster.
 ====
-+
+
 [NOTE]
 =====
 The Ceph dashboard must be accessed by using the Public IP of the `ceph-node01` host by running `curl ifconfig.co` or by checking the email message you received for the URL to the lab console.
 =====
 
-. Get the Public IP address of `ceph-node01` to access the dashboard from your browser:
-+
+Get the Public IP address of `ceph-node01` to access the dashboard from your browser:
+
 [source,sh]
 -----
 [root@ceph-node01 cephadm-ansible]# curl ifconfig.co
 52.117.178.51
 -----
 
-. Go to a browser and enter a URL matching the pattern `https://$IP_ADDRESS:8443`, using the IP address returned in the previous step and accepting the certificate and key in warnings:
-+
+Go to a browser and enter a URL matching the pattern `https://$IP_ADDRESS:8443`, using the IP address returned in the previous step and accepting the certificate and key in warnings:
+
 * Use the admin username and password provided earlier.
 * The web interface asks you to change the password for upon first login as the
 * admin user to the dashboard[you can avoid this by using the option].
-+
+
 [NOTE]
 ====
 If you see `ceph-node02.example.com` as the browser link while trying to access the dashboard, change the IP address to the one provided by the `ceph-node02` server on your browser.
@@ -174,14 +175,14 @@ If you see `ceph-node02.example.com` as the browser link while trying to access 
 If the admin user does not work, create a new user called `admin1` with a password stored in a file called `password.txt` using the `ceph dashboard ac-user-create admin1 -i password.txt administrator` command.
 ====
 
-=== Invoke `cephadm shell` Command
+== Invoke `cephadm shell` Command
 
 The `cephadm shell` command launches a `bash` shell in a container with all of the Ceph packages installed. This enables you to perform “Day One” cluster setup tasks, such as adding hosts, and to invoke `ceph` commands.
 
 There are two ways to invoke the `cephadm` shell:
 
 * To launch the shell, enter `cephadm shell` at the system prompt, which enables you to run Ceph commands in interactive shell mode:
-+
+
 [source,sh]
 -----
 [root@ceph-node01 cephadm-ansible]# cephadm shell
@@ -206,7 +207,7 @@ Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef8
     pgs:
 -----
 * To execute a single command, at the system prompt type `cephadm shell` and the command you want to execute:
-+
+
 [source,sh]
 -----
 [root@ceph-node01 cephadm-ansible]# cephadm shell ceph -s
@@ -229,7 +230,7 @@ Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef8
     usage:   0 B used, 0 B / 0 B avail
     pgs:
 -----
-+
+
 [NOTE]
 ====
 Make sure that the host from which you are invoking the `cephadm shell` command has copies of the keyring and `ceph.conf` files. If you are using the bootstrap node to invoke the shell, the files are already installed in `/etc/ceph`. If you are using a different node to invoke the shell, the Ceph CLI is not accessible from within the `cephadm` shell. In that case, exit the shell and copy the keyring and `ceph.conf` files to `/etc/ceph`.
@@ -239,13 +240,13 @@ Make sure that the host from which you are invoking the `cephadm shell` command 
 
 After the `cephadm` bootstrap process is complete, you can verify that your new installation is running properly. `cephadm` installs and configures `mon`, `mgr` , `crash`, `prometheus`, `grafana`, `alertmanager`, and `node-exporter`.
 
-. Launch the `cephadm` shell:
-+
+Launch the `cephadm` shell:
+
 [source,sh]
 -----
 [root@ceph-node01 cephadm-ansible]# cephadm shell
 -----
-+
+
 .Sample Output
 [source,texinfo]
 -----
@@ -254,8 +255,8 @@ Inferring config /var/lib/ceph/99e4add2-d971-11eb-ad7e-2cc260754989/mon.ceph-nod
 Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef866ebbb214b195a009e87aae4eba9d282949
 -----
 
-. Verify that the installation is up and running:
-+
+Verify that the installation is up and running:
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph -s
@@ -276,8 +277,8 @@ Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef8
     pgs:
 -----
 
-. List the services that are running on the new installation:
-+
+List the services that are running on the new installation:
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph orch ls
@@ -291,9 +292,8 @@ node-exporter             1/1  21s ago    67m  *
 prometheus                1/1  21s ago    67m  count:1
 -----
 
-. View the daemon processes that are running on the new installation:
-+
-+
+View the daemon processes that are running on the new installation:
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph orch ps
@@ -307,12 +307,12 @@ node-exporter.ceph-node01           ceph-node01.example.com  *:9100       runnin
 prometheus.ceph-node01              ceph-node01.example.com  *:9095       running (66m)  26s ago    66m  2.18.1   de242295e225  2f2e63ecb350
 -----
 
-=== Add Hosts
+== Add New Hosts to the Ceph Clustger
 
 Bootstrapping the installation of Red Hat Ceph Storage creates a basic single-node storage cluster, consisting of one Monitor daemon and one Manager daemon. You can use `cephadm` to add more hosts to the newly created storage cluster.
 
-. Install the storage cluster’s public SSH key in the root user’s `authorized_keys` file on the new host:
-+
+Install the storage cluster’s public SSH key in the root user’s `authorized_keys` file on the new host:
+
 [source,sh]
 -----
 ssh-copy-id -f -i /etc/ceph/ceph.pub root@ceph-node01.example.com
@@ -320,9 +320,9 @@ ssh-copy-id -f -i /etc/ceph/ceph.pub root@ceph-node02.example.com
 ssh-copy-id -f -i /etc/ceph/ceph.pub root@ceph-node03.example.com
 ssh-copy-id -f -i /etc/ceph/ceph.pub root@proxy01.example.com
 -----
-+
-. On the bootstrap node, launch the `cephadm` shell to access the `cephadm` orchestrator:
-+
+
+On the bootstrap node, launch the `cephadm` shell to access the `cephadm` orchestrator:
+
 [source,sh]
 -----
 [root@ceph-node01 cephadm-ansible]# cephadm shell
@@ -331,8 +331,8 @@ Inferring config /var/lib/ceph/99e4add2-d971-11eb-ad7e-2cc260754989/mon.ceph-nod
 Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef866ebbb214b195a009e87aae4eba9d282949
 -----
 
-. Add the new host to the storage cluster using the `addr` option to identify hosts with IP address in addition to the host name:
-+
+Add the new host to the storage cluster using the `addr` option to identify hosts with IP address in addition to the host name:
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph orch host add ceph-node02 192.168.56.62
@@ -343,9 +343,9 @@ Added host 'ceph-node03'
 Added host 'proxy01'
 -----
 
-. View the status of the storage cluster and verify that the new
+View the status of the storage cluster and verify that the new
 host was added:
-+
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph orch host ls
@@ -357,8 +357,8 @@ proxy01      192.168.56.24
 4 hosts in cluster
 -----
 
-. List the services that are running on the new installation:
-+
+List the services that are running on the new installation:
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph orch ls
@@ -372,8 +372,8 @@ node-exporter  ?:9100           4/4  1s ago     5m   *
 prometheus     ?:9095           1/1  0s ago     5m   count:1
 -----
 
-. View the daemon processes that are running on the new installation:
-+
+View the daemon processes that are running on the new installation:
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph orch ps
@@ -424,7 +424,7 @@ If you get the warning `` run the command `# podman rmi --all` on the
 * Must be larger than 5 GB
 
 The `ceph-mon` servers are also used as OSD servers. Each server has at least `/dev/vdb` disk that is used as an OSD disk.
-+
+
 [source,sh]
 ----
 [root@ceph-node01 ~]# ceph orch device ls
@@ -443,8 +443,8 @@ ceph-node03  /dev/vdd  hdd   4e55c310-fa55-42a8-8  10.7G  Yes        6m ago
 ceph-node03  /dev/vde  hdd   d74446e5-3b7a-4bec-a  10.7G  Yes        6m ago
 ----
 
-. Make sure that the disk is clean from any partitions on all three hosts:
-+
+Make sure that the disk is clean from any partitions on all three hosts:
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph orch device zap ceph-node01 /dev/vdb --force
@@ -452,9 +452,9 @@ ceph-node03  /dev/vde  hdd   d74446e5-3b7a-4bec-a  10.7G  Yes        6m ago
 [ceph: root@ceph-node01 /]# ceph orch device zap ceph-node03 /dev/vdb --force
 -----
 
-. Invoke the `cephadm shell` command to give yourself the ability to add the disks as OSDs to the cluster.
+Invoke the `cephadm shell` command to give yourself the ability to add the disks as OSDs to the cluster.
 
-. Create the OSD daemons with the Ceph orchestrator, we can use different
+Create the OSD daemons with the Ceph orchestrator, we can use different
 parameter depending on the OSDs per node that we want to configure we could
 use `--all-available-devices`
 
@@ -463,9 +463,6 @@ use `--all-available-devices`
 You can use the --dry-run option to preview what disks will actually be used
 ====
 
-
-
-+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph orch apply osd --all-available-devices --dry-run
@@ -478,9 +475,9 @@ timeframe between planning and applying the specs.
 ################
 OSDSPEC PREVIEWS
 ################
-+---------+-----------------------+-------------+----------+----+-----+
+----------------------------------------------------------------
 |SERVICE  |NAME                   |HOST         |DATA      |DB  |WAL  |
-+---------+-----------------------+-------------+----------+----+-----+
+----------------------------------------------------------------
 |osd      |all-available-devices  |ceph-node01  |/dev/vdb  |-   |-    |
 |osd      |all-available-devices  |ceph-node01  |/dev/vdc  |-   |-    |
 |osd      |all-available-devices  |ceph-node01  |/dev/vdd  |-   |-    |
@@ -493,7 +490,7 @@ OSDSPEC PREVIEWS
 |osd      |all-available-devices  |ceph-node03  |/dev/vdc  |-   |-    |
 |osd      |all-available-devices  |ceph-node03  |/dev/vdd  |-   |-    |
 |osd      |all-available-devices  |ceph-node03  |/dev/vde  |-   |-    |
-+---------+-----------------------+-------------+----------+----+-----+
+----------------------------------------------------------------
 -----
 
 Or select specific drives from certain hosts, for example we are going to add 3
@@ -515,8 +512,8 @@ You have examples on configuration options you can use this https://docs.ceph.co
 Created osd(s) 2 on host 'ceph-node01', Created osd(s) 1 on host 'ceph-node02', Created osd(s) 0 on host 'ceph-node03'
 ----
 
-. List the services that are running on the new installation to verify that the OSDs are created:
-+
+List the services that are running on the new installation to verify that the OSDs are created:
+
 ----
 [root@ceph-node01 ~]# ceph orch ps | grep osd
 osd.0                      ceph-node03               running (95s)    90s ago  95s    24.7M    4096M  16.2.8-85.el8cp  b2c997ff1898  f2b304ea66f4
@@ -524,24 +521,19 @@ osd.1                      ceph-node02               running (94s)    88s ago  9
 osd.2                      ceph-node01               running (94s)    85s ago  93s    30.7M    4096M  16.2.8-85.el8cp  b2c997ff1898  428c6c0289cf
 ----
 
-. Because this is a lab environment and there are insufficient resources to handle the scrubbing process, stop the deep scrub in the cluster:
-+
+Because this is a lab environment and there are insufficient resources to handle the scrubbing process, stop the deep scrub in the cluster:
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph osd set nodeep-scrub
 nodeep-scrub is set
 -----
 
-. Determine the Ceph storage cluster status:
-+
+Determine the Ceph storage cluster status:
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph -s
------
-+
-.Sample Output
-[source,texinfo]
------
 cluster:
     id:     bdef9acc-d99c-11eb-9652-2cc260754989
     health: HEALTH_OK
@@ -549,16 +541,11 @@ cluster:
  ...
 -----
 
-. List the OSDs:
-+
+List the OSDs:
+
 [source,sh]
 -----
 [ceph: root@ceph-node01 /]# ceph osd tree
------
-+
-.Sample Output
-[source,texinfo]
------
 ID  CLASS  WEIGHT   TYPE NAME            STATUS  REWEIGHT  PRI-AFF
 -1         0.02939  root default
 -5         0.00980      host ceph-node01
