@@ -8,7 +8,7 @@
 * xref:ceph_hardware.adoc[Ceph Hardware Recommendations]
 * xref:ceph_deployment_intro.adoc[Ceph Install Methods ]
 * xref:ceph_cephadm_intro.adoc[Cephadm Orchestrator]
-* xref:ceph_hardware.adoc[Lab. Deploy Ceph with Cephadm]
+* xref:ceph_deploy_basic.adoc[Lab. Deploy Ceph with Cephadm]
 
 .CephFS Shared FileSystem
 * xref:cephfs_intro.adoc[CephFS introduction & Deployment]

@@ -42,7 +42,7 @@ ceph-node01.example.com
 
 NOTE: In this inventory file we are using additional groups that are not needed
 by the preflight cephadm playbook like `[mgmt]` and `[client]` so you can
-remove them
+remove them.
 
 
 
@@ -133,6 +133,14 @@ Please consider enabling telemetry to help improve Ceph:
 :
 Bootstrap complete.
 -----
+
+[TIP]
+====
+You can also deploy the full ceph cluster deployment with the help of a
+specification yaml file, if you would like to use this option you have an
+example in file: `cat /root/cluster-spec.yaml` on node: `ceph-node01`, to
+reference the spec file you can use the `--apply-spec /root/cluster-spec.yaml`
+====
 
 [NOTE]
 ====
