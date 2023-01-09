@@ -1,0 +1,563 @@
+= Ceph Deployment with Cephadm
+
+[WARN]
+
+Before performing this hands-on lab you need to go through the LAB env
+preparation steps described in then xref:opentlc_lab_env.adoc[OpenTLC LAB] section 
+
+
+== Run Pre-Flight Playbook
+ 
+* This Ansible Playbook configures the Ceph repository and prepares the storage cluster for bootstrapping. It also installs some prerequisites, such as `podman`, `lvm2`, `chronyd`, and `cephadm`.
+* The `cephadm-preflight` playbook uses the Ansible inventory file to identify the nodes in the storage cluster. Your Ansible inventory file must contain all of the nodes that are going to be part of the cluster. 
+
+[TIP]
+====
+As part of the OpenTLC LAB env preparations you have the cephadm-ansible rpm
+installed an inventory available in `/usr/share/cephadm-ansible/inventory` on the admin node for cluster1 `ceph-node01`
+====
+
+.Prerequisites
+* Initial admin host is up and running
+* Ansible Automation Platform is installed on the host
+* Root-level access to all nodes in the storage cluster
+
+[IMPORTANT]
+Run the `cephadm-preflight` playbook before you bootstrap the initial host.
+
+. If needed edit the inventory file at `/usr/share/cephadm-ansible/inventory`
+leaving: 
++
+[source,texinfo]
+-----
+# cat /usr/share/cephadm-ansible/inventory
+ceph-node01.example.com
+ceph-node02.example.com
+ceph-node03.example.com
+proxy01.example.com
+
+[admin]
+ceph-node01.example.com
+-----
+
+NOTE: In this inventory file we are using additional groups that are not needed
+by the preflight cephadm playbook like `[mgmt]` and `[client]` so you can
+remove them
+
+
+
+[source,sh]
+-----
+[root@ceph-node01]# ansible-playbook -i /usr/share/cephadm-ansible/inventory /usr/share/cephadm-ansible/cephadm-preflight.yml  --extra-vars "ceph_origin=rhcs" 
+PLAY RECAP ***********************************************************************************************************************************************************************************
+ceph-node01.example.com    : ok=5    changed=0    unreachable=0    failed=0    skipped=9    rescued=0    ignored=0
+ceph-node02.example.com    : ok=5    changed=0    unreachable=0    failed=0    skipped=9    rescued=0    ignored=0
+ceph-node03.example.com    : ok=5    changed=0    unreachable=0    failed=0    skipped=9    rescued=0    ignored=0
+proxy01.example.com        : ok=5    changed=0    unreachable=0    failed=0    skipped=9    rescued=0    ignored=0
+-----
+
+[TIP]
+====
+We are using the `"ceph_origin=rhcs"` ansible variable to specify that we want
+to use the RHCS downstream repos.
+====
+
+== Prepare the registry credentials file
+
+Because we are using the RHCS downstream container images, we need to
+authenticate against registry.redhat.io to get access to the ceph container
+images.
+
+Then OpenTLC LAB env preparations created a file called `registry.json` on the admin node for cluster1 `ceph-node01` with
+the needed auth details, if any modifications are needed edit the file.
+
+----
+# cat /root/registry.json
+{
+ "url": "registry.redhat.io",
+ "username": "user@redhat.com",
+ "password": "PAssWord"
+}
+----
+
+== Create Storage Cluster
+
+The `cephadm` utility performs the following tasks during the bootstrap process:
+
+* Installs and starts Ceph Monitor and Ceph Manager daemons for a new Red Hat Ceph Storage cluster on the local node as containers.
+* Generates a new SSH key, in the `/etc/ceph/ceph.pub` file by default, for the Ceph storage cluster and adds the SSH key to the root user’s `/root/.ssh/authorized_keys` file.
+* Writes a minimal configuration file needed to communicate with the new cluster to `/etc/ceph/ceph.conf`.
+* Writes a copy of the `client.admin` administrative secret key to `/etc/ceph/ceph.client.admin.keyring`.
+* Deploys a basic monitoring stack with Prometheus, Grafana, and other tools such as `node-exporter` and `alertmanager`.
+
+* Running the bootstrapping process establishes the default user name and password for the initial login to the dashboard. Be sure to change the password after you log in.
+
+.Prerequisites
+* An IP address for the first Ceph Monitor container, usually the IP address for the first node in the storage
+cluster
+* Root access to all nodes
+* Login access to `registry.redhat.io`
+* A minimum of 10 GB of free space for `/var/lib/containers/`
+
+[NOTE]
+====
+In this lab environment, you do not have 10 GB of free space, but you can safely ignore warnings related to this.
+====
+
+=== Bootstrap New Storage Cluster
+
+. Bootstrap a storage cluster:
++
+[source,sh]
+-----
+[root@ceph-node01]# cephadm \
+	bootstrap \
+	--registry-json /root/registry.json \
+	--mon-ip 192.168.56.61
+
+Verifying podman|docker is present...
+Verifying lvm2 is present...
+Verifying time synchronization is in place...
+Unit chronyd.service is enabled and running
+firewalld ready
+Ceph Dashboard is now available at:
+         URL: https://ceph-node01.example.com:8443/
+        User: admin
+    Password: PASSWORD
+
+You can access the Ceph CLI with:
+    sudo /usr/sbin/cephadm shell --fsid 99e4add2-d971-11eb-ad7e-2cc260754989 -c /etc/ceph/ceph.conf -k /etc/ceph/ceph.client.admin.keyring
+
+Please consider enabling telemetry to help improve Ceph:
+    ceph telemetry on
+:
+Bootstrap complete.
+-----
+
+[NOTE]
+====
+If the storage cluster includes multiple networks and interfaces, be sure to choose a network that is
+accessible by any node that uses the storage cluster.
+====
++
+[NOTE]
+=====
+The Ceph dashboard must be accessed by using the Public IP of the `ceph-node01` host by running `curl ifconfig.co` or by checking the email message you received for the URL to the lab console.
+=====
+
+. Get the Public IP address of `ceph-node01` to access the dashboard from your browser:
++
+[source,sh]
+-----
+[root@ceph-node01 cephadm-ansible]# curl ifconfig.co
+52.117.178.51
+-----
+
+. Go to a browser and enter a URL matching the pattern `https://$IP_ADDRESS:8443`, using the IP address returned in the previous step and accepting the certificate and key in warnings:
++
+* Use the admin username and password provided earlier.
+* The web interface asks you to change the password for upon first login as the
+* admin user to the dashboard[you can avoid this by using the option].
++
+[NOTE]
+====
+If you see `ceph-node02.example.com` as the browser link while trying to access the dashboard, change the IP address to the one provided by the `ceph-node02` server on your browser.
+
+If the admin user does not work, create a new user called `admin1` with a password stored in a file called `password.txt` using the `ceph dashboard ac-user-create admin1 -i password.txt administrator` command.
+====
+
+=== Invoke `cephadm shell` Command
+
+The `cephadm shell` command launches a `bash` shell in a container with all of the Ceph packages installed. This enables you to perform “Day One” cluster setup tasks, such as adding hosts, and to invoke `ceph` commands.
+
+There are two ways to invoke the `cephadm` shell:
+
+* To launch the shell, enter `cephadm shell` at the system prompt, which enables you to run Ceph commands in interactive shell mode:
++
+[source,sh]
+-----
+[root@ceph-node01 cephadm-ansible]# cephadm shell
+Inferring fsid 99e4add2-d971-11eb-ad7e-2cc260754989
+Inferring config /var/lib/ceph/99e4add2-d971-11eb-ad7e-2cc260754989/mon.ceph-node01.example.com/config
+Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef866ebbb214b195a009e87aae4eba9d282949
+[ceph: root@ceph-node01 /]# ceph -s
+  cluster:
+    id:     99e4add2-d971-11eb-ad7e-2cc260754989
+    health: HEALTH_WARN
+            OSD count 0 < osd_pool_default_size 3
+
+  services:
+    mon: 1 daemons, quorum ceph-node01.example.com (age 57m)
+    mgr: ceph-node01.example.com.lwycwe(active, since 56m)
+    osd: 0 osds: 0 up, 0 in
+
+  data:
+    pools:   0 pools, 0 pgs
+    objects: 0 objects, 0 B
+    usage:   0 B used, 0 B / 0 B avail
+    pgs:
+-----
+* To execute a single command, at the system prompt type `cephadm shell` and the command you want to execute:
++
+[source,sh]
+-----
+[root@ceph-node01 cephadm-ansible]# cephadm shell ceph -s
+Inferring fsid 99e4add2-d971-11eb-ad7e-2cc260754989
+Inferring config /var/lib/ceph/99e4add2-d971-11eb-ad7e-2cc260754989/mon.ceph-node01.example.com/config
+Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef866ebbb214b195a009e87aae4eba9d282949
+  cluster:
+    id:     99e4add2-d971-11eb-ad7e-2cc260754989
+    health: HEALTH_WARN
+            OSD count 0 < osd_pool_default_size 3
+
+  services:
+    mon: 1 daemons, quorum ceph-node01.example.com (age 57m)
+    mgr: ceph-node01.example.com.lwycwe(active, since 56m)
+    osd: 0 osds: 0 up, 0 in
+
+  data:
+    pools:   0 pools, 0 pgs
+    objects: 0 objects, 0 B
+    usage:   0 B used, 0 B / 0 B avail
+    pgs:
+-----
++
+[NOTE]
+====
+Make sure that the host from which you are invoking the `cephadm shell` command has copies of the keyring and `ceph.conf` files. If you are using the bootstrap node to invoke the shell, the files are already installed in `/etc/ceph`. If you are using a different node to invoke the shell, the Ceph CLI is not accessible from within the `cephadm` shell. In that case, exit the shell and copy the keyring and `ceph.conf` files to `/etc/ceph`.
+====
+
+== Verify `cephadm` Bootstrap Process
+
+After the `cephadm` bootstrap process is complete, you can verify that your new installation is running properly. `cephadm` installs and configures `mon`, `mgr` , `crash`, `prometheus`, `grafana`, `alertmanager`, and `node-exporter`.
+
+. Launch the `cephadm` shell:
++
+[source,sh]
+-----
+[root@ceph-node01 cephadm-ansible]# cephadm shell
+-----
++
+.Sample Output
+[source,texinfo]
+-----
+Inferring fsid 99e4add2-d971-11eb-ad7e-2cc260754989
+Inferring config /var/lib/ceph/99e4add2-d971-11eb-ad7e-2cc260754989/mon.ceph-node01.example.com/config
+Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef866ebbb214b195a009e87aae4eba9d282949
+-----
+
+. Verify that the installation is up and running:
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph -s
+  cluster:
+    id:     99e4add2-d971-11eb-ad7e-2cc260754989
+    health: HEALTH_WARN
+            OSD count 0 < osd_pool_default_size 3
+
+  services:
+    mon: 1 daemons, quorum ceph-node01.example.com (age 67m)
+    mgr: ceph-node01.example.com.lwycwe(active, since 66m)
+    osd: 0 osds: 0 up, 0 in
+
+  data:
+    pools:   0 pools, 0 pgs
+    objects: 0 objects, 0 B
+    usage:   0 B used, 0 B / 0 B avail
+    pgs:
+-----
+
+. List the services that are running on the new installation:
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph orch ls
+NAME           PORTS  RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager              1/1  21s ago    67m  count:1
+crash                     1/1  21s ago    67m  *
+grafana                   1/1  21s ago    67m  count:1
+mgr                       1/2  21s ago    67m  count:2
+mon                       1/5  21s ago    67m  count:5
+node-exporter             1/1  21s ago    67m  *
+prometheus                1/1  21s ago    67m  count:1
+-----
+
+. View the daemon processes that are running on the new installation:
++
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph orch ps
+NAME                               HOST                    PORTS        STATUS         REFRESHED  AGE  VERSION  IMAGE ID      CONTAINER ID
+alertmanager.ceph-node01            ceph-node01.example.com  *:9093,9094  running (66m)  26s ago    67m  0.20.0   0881eb8f169f  4a707803a4d7
+crash.ceph-node01                   ceph-node01.example.com               running (67m)  26s ago    67m  16.2.4   8d91d370c2b8  c4d5af688177
+grafana.ceph-node01                 ceph-node01.example.com  *:3000       running (66m)  26s ago    66m  6.7.4    ae5c36c3d3cd  5dbcb83564d0
+mgr.ceph-node01.example.com.lwycwe  ceph-node01.example.com  *:9283       running (68m)  26s ago    68m  16.2.4   8d91d370c2b8  da76c87f27de
+mon.ceph-node01.example.com         ceph-node01.example.com               running (68m)  26s ago    68m  16.2.4   8d91d370c2b8  2d0b697a1e41
+node-exporter.ceph-node01           ceph-node01.example.com  *:9100       running (66m)  26s ago    66m  0.18.1   e5a616e4b9cf  f76fc8ba8c6c
+prometheus.ceph-node01              ceph-node01.example.com  *:9095       running (66m)  26s ago    66m  2.18.1   de242295e225  2f2e63ecb350
+-----
+
+=== Add Hosts
+
+Bootstrapping the installation of Red Hat Ceph Storage creates a basic single-node storage cluster, consisting of one Monitor daemon and one Manager daemon. You can use `cephadm` to add more hosts to the newly created storage cluster.
+
+. Install the storage cluster’s public SSH key in the root user’s `authorized_keys` file on the new host:
++
+[source,sh]
+-----
+ssh-copy-id -f -i /etc/ceph/ceph.pub root@ceph-node01.example.com
+ssh-copy-id -f -i /etc/ceph/ceph.pub root@ceph-node02.example.com
+ssh-copy-id -f -i /etc/ceph/ceph.pub root@ceph-node03.example.com
+ssh-copy-id -f -i /etc/ceph/ceph.pub root@proxy01.example.com
+-----
++
+. On the bootstrap node, launch the `cephadm` shell to access the `cephadm` orchestrator:
++
+[source,sh]
+-----
+[root@ceph-node01 cephadm-ansible]# cephadm shell
+Inferring fsid 99e4add2-d971-11eb-ad7e-2cc260754989
+Inferring config /var/lib/ceph/99e4add2-d971-11eb-ad7e-2cc260754989/mon.ceph-node01.example.com/config
+Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef866ebbb214b195a009e87aae4eba9d282949
+-----
+
+. Add the new host to the storage cluster using the `addr` option to identify hosts with IP address in addition to the host name:
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph orch host add ceph-node02 192.168.56.62
+[ceph: root@ceph-node01 /]# ceph orch host add ceph-node03 192.168.56.63
+[ceph: root@ceph-node01 /]# ceph orch host add proxy01 192.168.56.24
+Added host 'ceph-node02'
+Added host 'ceph-node03'
+Added host 'proxy01'
+-----
+
+. View the status of the storage cluster and verify that the new
+host was added:
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph orch host ls
+HOST         ADDR           LABELS  STATUS
+ceph-node01  192.168.56.61  _admin
+ceph-node02  192.168.56.62
+ceph-node03  192.168.56.63
+proxy01      192.168.56.24
+4 hosts in cluster
+-----
+
+. List the services that are running on the new installation:
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph orch ls
+NAME           PORTS        RUNNING  REFRESHED  AGE  PLACEMENT
+alertmanager   ?:9093,9094      1/1  0s ago     5m   count:1
+crash                           4/4  1s ago     5m   *
+grafana        ?:3000           1/1  0s ago     5m   count:1
+mgr                             2/2  1s ago     5m   count:2
+mon                             4/5  1s ago     5m   count:5
+node-exporter  ?:9100           4/4  1s ago     5m   *
+prometheus     ?:9095           1/1  0s ago     5m   count:1
+-----
+
+. View the daemon processes that are running on the new installation:
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph orch ps
+NAME                       HOST         PORTS        STATUS        REFRESHED  AGE  MEM USE  MEM LIM  VERSION          IMAGE ID      CONTAINER ID
+alertmanager.ceph-node01   ceph-node01  *:9093,9094  running (3m)     2m ago   7m    16.9M        -                   2de2e7d63e1b  448ef753db57
+crash.ceph-node01          ceph-node01               running (7m)     2m ago   7m    7998k        -  16.2.8-85.el8cp  b2c997ff1898  f2c0eac730b8
+crash.ceph-node02          ceph-node02               running (5m)     2m ago   5m    11.8M        -  16.2.8-85.el8cp  b2c997ff1898  52a389476b8f
+crash.ceph-node03          ceph-node03               running (4m)     2m ago   4m    13.7M        -  16.2.8-85.el8cp  b2c997ff1898  1e75632d09dd
+crash.proxy01              proxy01                   running (4m)     2m ago   4m    15.2M        -  16.2.8-85.el8cp  b2c997ff1898  611c2b6186c8
+grafana.ceph-node01        ceph-node01  *:3000       running (6m)     2m ago   7m    57.7M        -  8.3.5            a283f9df3197  9fac3b14d304
+mgr.ceph-node01.cjknxe     ceph-node01  *:9283       running (9m)     2m ago   9m     481M        -  16.2.8-85.el8cp  b2c997ff1898  2f240abefa18
+mgr.ceph-node02.himyza     ceph-node02  *:8443,9283  running (5m)     2m ago   5m     413M        -  16.2.8-85.el8cp  b2c997ff1898  92ec80963e86
+mon.ceph-node01            ceph-node01               running (9m)     2m ago   9m    76.0M    2048M  16.2.8-85.el8cp  b2c997ff1898  8d6b3d441a4d
+mon.ceph-node02            ceph-node02               running (5m)     2m ago   5m    69.5M    2048M  16.2.8-85.el8cp  b2c997ff1898  d1500bb807c7
+mon.ceph-node03            ceph-node03               running (4m)     2m ago   4m    63.4M    2048M  16.2.8-85.el8cp  b2c997ff1898  91e27c0564e0
+mon.proxy01                proxy01                   running (4m)     2m ago   4m    64.7M    2048M  16.2.8-85.el8cp  b2c997ff1898  9ae1e3ae75f8
+node-exporter.ceph-node01  ceph-node01  *:9100       running (7m)     2m ago   7m    20.3M        -                   6c8570b1928b  8f19aa43c639
+node-exporter.ceph-node02  ceph-node02  *:9100       running (5m)     2m ago   5m    17.9M        -                   6c8570b1928b  bf578a47f724
+node-exporter.ceph-node03  ceph-node03  *:9100       running (3m)     2m ago   3m    15.9M        -                   6c8570b1928b  71d901f560b0
+node-exporter.proxy01      proxy01      *:9100       running (3m)     2m ago   3m    17.2M        -                   6c8570b1928b  d0b22564d863
+prometheus.ceph-node01     ceph-node01  *:9095       running (3m)     2m ago   7m    39.9M        -                   39847ff1cddf  8e34b09df769
+-----
+
+As we only have 4 nodes, we need to reduce the number of mons to three:
+
+----
+[ceph: root@ceph-node01 /]# ceph orch apply mon --placement='ceph-node01,ceph-node02,ceph-node03'
+Scheduled mon update...
+[root@ceph-node01 ~]# ceph -s | grep mon
+    mon: 3 daemons, quorum ceph-node01,ceph-node02,ceph-node03 (age 15s)
+----
+
+[TIP]
+====
+If you get the warning `` run the command `# podman rmi --all` on the
+`ceph-node01` to remove unused podman container images
+====
+
+== Add OSDs
+
+`cephadm` does not provision an OSD on a device that is not available. A storage device is considered available if meets all of the following conditions:
+
+* Must not have any partitions
+* Must not have any LVM state
+* Must not be mounted
+* Must not contain a file system
+* Must not contain a Ceph BlueStore OSD
+* Must be larger than 5 GB
+
+The `ceph-mon` servers are also used as OSD servers. Each server has at least `/dev/vdb` disk that is used as an OSD disk.
++
+[source,sh]
+----
+[root@ceph-node01 ~]# ceph orch device ls
+HOST         PATH      TYPE  DEVICE ID              SIZE  AVAILABLE  REFRESHED  REJECT REASONS
+ceph-node01  /dev/vdb  hdd   2d61773d-7328-4f6f-9  10.7G  Yes        29s ago
+ceph-node01  /dev/vdc  hdd   774b2784-8220-4578-a  10.7G  Yes        29s ago
+ceph-node01  /dev/vdd  hdd   51d89573-192e-4145-8  10.7G  Yes        29s ago
+ceph-node01  /dev/vde  hdd   30f26450-0d1e-4fd2-b  10.7G  Yes        29s ago
+ceph-node02  /dev/vdb  hdd   eaf7a900-905f-46a9-9  10.7G  Yes        6s ago
+ceph-node02  /dev/vdc  hdd   61963761-a821-4206-9  10.7G  Yes        6s ago
+ceph-node02  /dev/vdd  hdd   ab4ae2e2-9c09-446f-b  10.7G  Yes        6s ago
+ceph-node02  /dev/vde  hdd   ce49a03d-c56c-49f5-9  10.7G  Yes        6s ago
+ceph-node03  /dev/vdb  hdd   a445ceda-53cb-4da0-a  10.7G  Yes        6m ago
+ceph-node03  /dev/vdc  hdd   41090fad-7ec1-4c7b-9  10.7G  Yes        6m ago
+ceph-node03  /dev/vdd  hdd   4e55c310-fa55-42a8-8  10.7G  Yes        6m ago
+ceph-node03  /dev/vde  hdd   d74446e5-3b7a-4bec-a  10.7G  Yes        6m ago
+----
+
+. Make sure that the disk is clean from any partitions on all three hosts:
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph orch device zap ceph-node01 /dev/vdb --force
+[ceph: root@ceph-node01 /]# ceph orch device zap ceph-node02 /dev/vdb --force
+[ceph: root@ceph-node01 /]# ceph orch device zap ceph-node03 /dev/vdb --force
+-----
+
+. Invoke the `cephadm shell` command to give yourself the ability to add the disks as OSDs to the cluster.
+
+. Create the OSD daemons with the Ceph orchestrator, we can use different
+parameter depending on the OSDs per node that we want to configure we could
+use `--all-available-devices`
+
+[TIP]
+====
+You can use the --dry-run option to preview what disks will actually be used
+====
+
+
+
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph orch apply osd --all-available-devices --dry-run
+Scheduled osd.all-available-devices update...
+[root@ceph-node01 ~]# ceph orch apply osd --all-available-devices --dry-run
+WARNING! Dry-Runs are snapshots of a certain point in time and are bound
+to the current inventory setup. If any of these conditions change, the
+preview will be invalid. Please make sure to have a minimal
+timeframe between planning and applying the specs.
+################
+OSDSPEC PREVIEWS
+################
++---------+-----------------------+-------------+----------+----+-----+
+|SERVICE  |NAME                   |HOST         |DATA      |DB  |WAL  |
++---------+-----------------------+-------------+----------+----+-----+
+|osd      |all-available-devices  |ceph-node01  |/dev/vdb  |-   |-    |
+|osd      |all-available-devices  |ceph-node01  |/dev/vdc  |-   |-    |
+|osd      |all-available-devices  |ceph-node01  |/dev/vdd  |-   |-    |
+|osd      |all-available-devices  |ceph-node01  |/dev/vde  |-   |-    |
+|osd      |all-available-devices  |ceph-node02  |/dev/vdb  |-   |-    |
+|osd      |all-available-devices  |ceph-node02  |/dev/vdc  |-   |-    |
+|osd      |all-available-devices  |ceph-node02  |/dev/vdd  |-   |-    |
+|osd      |all-available-devices  |ceph-node02  |/dev/vde  |-   |-    |
+|osd      |all-available-devices  |ceph-node03  |/dev/vdb  |-   |-    |
+|osd      |all-available-devices  |ceph-node03  |/dev/vdc  |-   |-    |
+|osd      |all-available-devices  |ceph-node03  |/dev/vdd  |-   |-    |
+|osd      |all-available-devices  |ceph-node03  |/dev/vde  |-   |-    |
++---------+-----------------------+-------------+----------+----+-----+
+-----
+
+Or select specific drives from certain hosts, for example we are going to add 3
+OSDs using drive `/dev/vdb` from nodes `ceph-node01,02,03`:
+
+[TIP]
+====
+The ceph orch daemon add osd does not have the --dry-run option available
+====
+
+[NOTE]
+====
+For Advanced OSD configuration we recomended to use a OSD specification file.
+You have examples on configuration options you can use this https://docs.ceph.com/en/quincy/cephadm/services/osd/#advanced-osd-service-specifications[link]
+====
+
+----
+[root@ceph-node01 ~]#  ceph orch daemon add osd ceph-node0[1-3]:/dev/vdb
+Created osd(s) 2 on host 'ceph-node01', Created osd(s) 1 on host 'ceph-node02', Created osd(s) 0 on host 'ceph-node03'
+----
+
+. List the services that are running on the new installation to verify that the OSDs are created:
++
+----
+[root@ceph-node01 ~]# ceph orch ps | grep osd
+osd.0                      ceph-node03               running (95s)    90s ago  95s    24.7M    4096M  16.2.8-85.el8cp  b2c997ff1898  f2b304ea66f4
+osd.1                      ceph-node02               running (94s)    88s ago  94s    35.4M    4096M  16.2.8-85.el8cp  b2c997ff1898  f4a910345f9f
+osd.2                      ceph-node01               running (94s)    85s ago  93s    30.7M    4096M  16.2.8-85.el8cp  b2c997ff1898  428c6c0289cf
+----
+
+. Because this is a lab environment and there are insufficient resources to handle the scrubbing process, stop the deep scrub in the cluster:
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph osd set nodeep-scrub
+nodeep-scrub is set
+-----
+
+. Determine the Ceph storage cluster status:
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph -s
+-----
++
+.Sample Output
+[source,texinfo]
+-----
+cluster:
+    id:     bdef9acc-d99c-11eb-9652-2cc260754989
+    health: HEALTH_OK
+                nodeep-scrub flag(s) set
+ ...
+-----
+
+. List the OSDs:
++
+[source,sh]
+-----
+[ceph: root@ceph-node01 /]# ceph osd tree
+-----
++
+.Sample Output
+[source,texinfo]
+-----
+ID  CLASS  WEIGHT   TYPE NAME            STATUS  REWEIGHT  PRI-AFF
+-1         0.02939  root default
+-5         0.00980      host ceph-node01
+ 2    hdd  0.00980          osd.2            up   1.00000  1.00000
+-7         0.00980      host ceph-node02
+ 1    hdd  0.00980          osd.1            up   1.00000  1.00000
+-3         0.00980      host ceph-node03
+ 0    hdd  0.00980          osd.0            up   1.00000  1.00000
+-----
+* You can safely ignore any `slow ops`-related warnings. These are likely due to lack of time synchronization on the cluster nodes.

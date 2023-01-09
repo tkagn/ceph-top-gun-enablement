@@ -1,24 +1,77 @@
-== RadosGW Object Storage Performance recomendations.
+= RadosGW Object Storage Performance recomendations.
+
+:icons: font
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+:source-highlighter: pygments
+:sectnums:
+:sectnumlevels: 6
+:toc:
 
 
-=== Co-Located RGW instances to improve throughput.
+== Co-Located RGW instances to improve throughput.
 
 Related Performance testing available in the following blogpost
 https://www.redhat.com/en/blog/red-hat-ceph-storage-rgw-deployment-strategies-and-sizing-guidance[RGW
 Sizing guidance]
 
-=== If Possible pre-shard buckets before hand.
+== If Possible pre-shard buckets before hand.
 
 Related Performance testing available in the following blogpost
 https://www.redhat.com/en/blog/ceph-rgw-dynamic-bucket-sharding-performance-investigation-and-guidance[RGW
 Dynamic Resharding]
 
 
-=== Multisite Deployments use dedicated RGW daemons for Replication
-RGW dedicated for I/O vs. sync
-5 for client IO (5 RGWs in HAproxy config)
-3 for sync (3 RGWs in zone config)
-HA proxy for I/O only, sync enabled RGW
+== Multisite Deployments use dedicated RGW daemons for Replication
+
+* RGW dedicated for I/O vs. sync
+- Dedicated RGW for client IO (RGWs in HAproxy config)
+- Dedicated RGW for sync (3 RGWs in zone config)
+- HA proxy for I/O only,
+- Identify replication endpoints individually rather than using a load balancer.
+
+
+== Block Stripe Size 
+deploys the RADOS Gateway (zone configuration) with the data pool
+using a default Erasure Coding strip width. This results in the stripe width to
+be set to 8 * 4KiB as a result of the 8+4 `EC` profile.
+
+
+If we are going to work with big objects , this will result in the management of an unnecessary number of stripes for a single object.
+
+Assuming the block size used by each of the application is 1MiB this will result in the creation of (1MiB / 8) / 4KiB = 32 stripes for each 1MB block.
+
+
+Align the following depending on the type of application:
+
+* Block size at the application level
+* RADOS Gateway chunk size (4MiB by default)
+* EC stripe unit 512KiB
+
+This will have the following results:
+
+* Each application block will be a single RADOS Gateway S3 object
+* Each RADOS Gateway object will be store in a single EC strip
+* Each RADOS object will only hold 8 stripes vs 32.
+
+NOTE: This could be paired with a change of the `bluestore_min_alloc_size_hdd` parameter
+so that it is maintained at 64KiB when we upgrade clusters from `Octopus` to `Pacific`
+but also to deploy new `Pacific` clusters using a bigger `bluestore_min_alloc_size_hdd`
+parameter.
+
+ask for an application profile type: `Small objects` or `Large objects`. The
+process could include asking for input parameters to dynamically calculate
+what the best options are.
+
+IMPORTANT: Raising the `bluestore_min_alloc_size_hdd` parameter on OSDs may lead to
+a more important write amplification in case the application ends up loading
+small objects while the configuration was designed for large objects.
+
+IMPORTANT: This change requires the OSDs to be redeployed.
+
+
 
 
 
