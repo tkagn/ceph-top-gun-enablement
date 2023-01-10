@@ -60,7 +60,7 @@ with help of the `ceph fs volume` interface
 +
 [source,sh]
 ----
-# ceph fs volume create fs_name --placement=ceph-node01.example.com,proxy01.example.com
+# ceph fs volume create fs_name --placement=ceph-node01,proxy01
 Volume created successfully (no MDS daemons created)
 ----
 
@@ -89,6 +89,9 @@ service_type: mds
 service_id: fs_name
 placement:
   count: 2
+  hosts:
+  - ceph-node01
+  - proxy01
 EOF
 ----
 
@@ -115,8 +118,8 @@ mds.fs_name                           2/2  3m ago     3m   count:2
 -----
 # ceph orch ps | grep mds
 NAME                               HOST                    PORTS        STATUS         REFRESHED  AGE  VERSION  IMAGE ID      CONTAINER ID
-mds.fs_name.ceph-node01.vnuima      ceph-node01.example.com               running (19s)  13s ago    19s  16.2.4   8d91d370c2b8  c91ca8508916
-mds.fs_name.proxy01.txydml         proxy01.example.com                  running (17s)  15s ago    17s  16.2.4   8d91d370c2b8  d4c2cd362001
+mds.fs_name.ceph-node01.vnuima      ceph-node01               running (19s)  13s ago    19s  16.2.4   8d91d370c2b8  c91ca8508916
+mds.fs_name.proxy01.txydml         proxy01                running (17s)  15s ago    17s  16.2.4   8d91d370c2b8  d4c2cd362001
 -----
 
 . Verify that `mds` is available and up:
@@ -434,7 +437,7 @@ touch: cannot touch '/mnt/dir2': Permission denied
 ----
 
 === More examples
-By yourself checkout what these other examples allow the user to do:
+By yourself checkout what these other example client caps allow the user to do:
 
 1. 
 ----

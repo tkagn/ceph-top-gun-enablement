@@ -48,6 +48,31 @@ Layout fields
     Integer in bytes.  File data is chunked into RADOS objects of this size.
 
 
+[NOTE]
+====
+RADOS enforces a configurable limit on object sizes: if you increase CephFS object sizes beyond that limit then writes may not succeed. The OSD setting is osd_max_object_size, which is 128MB by default. Very large RADOS objects may prevent smooth operation of the cluster, so increasing the object size limit past the default is not recommended.
+====
 
 
-== 
+== Cephfs Layouts Hands-On
+
+First we need to install the `attr` RPM so we have access to the `setfattr` and
+`getfattr` commands
+
+----
+# dnf install -y attr
+----
+
+We mount the cepfs filesystem at the root level with user id 0, this user has
+Read/Write client caps at the / level
+
+----
+mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=0,secret="AQA+KrxjWUovChAACWGj0YUbUEZHSKmNtYxriw=="
+----
+
+
+----
+# getfattr -n ceph.dir.layout /mnt
+# file: mnt
+ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data"
+----
