@@ -95,6 +95,15 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph RADOS Block Device</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephrbd_intro.html">RADOS Block Device introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">CephFS Shared FileSystem</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -252,19 +261,11 @@ installed an inventory available in <code>/usr/share/cephadm-ansible/inventory</
 </tr>
 </table>
 </div>
-<div class="ulist">
-<div class="title">Prerequisites</div>
-<ul>
-<li>
-<p>Initial admin host is up and running</p>
-</li>
-<li>
-<p>Ansible Automation Platform is installed on the host</p>
-</li>
-<li>
-<p>Root-level access to all nodes in the storage cluster</p>
-</li>
-</ul>
+<div class="paragraph">
+<p>Prerequisites
+* Initial admin host is up and running
+* Ansible Automation Platform is installed on the host
+* Root-level access to all nodes in the storage cluster</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -278,13 +279,9 @@ Run the <code>cephadm-preflight</code> playbook before you bootstrap the initial
 </tr>
 </table>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>If needed edit the inventory file at <code>/usr/share/cephadm-ansible/inventory</code>
 leaving:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -391,23 +388,13 @@ the needed auth details, if any modifications are needed edit the file.</p>
 </li>
 </ul>
 </div>
-<div class="ulist">
-<div class="title">Prerequisites</div>
-<ul>
-<li>
-<p>An IP address for the first Ceph Monitor container, usually the IP address for the first node in the storage
-cluster</p>
-</li>
-<li>
-<p>Root access to all nodes</p>
-</li>
-<li>
-<p>Login access to <code>registry.redhat.io</code></p>
-</li>
-<li>
-<p>A minimum of 10 GB of free space for <code>/var/lib/containers/</code></p>
-</li>
-</ul>
+<div class="paragraph">
+<p>Prerequisites
+* An IP address for the first Ceph Monitor container, usually the IP address for the first node in the storage
+cluster
+* Root access to all nodes
+* Login access to <code>registry.redhat.io</code>
+* A minimum of 10 GB of free space for <code>/var/lib/containers/</code></p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -428,12 +415,8 @@ cluster</p>
 <div class="sect1">
 <h2 id="_bootstrap_new_storage_cluster"><a class="anchor" href="#_bootstrap_new_storage_cluster"></a>Bootstrap New Storage Cluster</h2>
 <div class="sectionbody">
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Bootstrap a storage cluster:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -507,12 +490,8 @@ accessible by any node that uses the storage cluster.</p>
 </tr>
 </table>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Get the Public IP address of <code>ceph-node01</code> to access the dashboard from your browser:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -520,10 +499,9 @@ accessible by any node that uses the storage cluster.</p>
 52.117.178.51</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Go to a browser and enter a URL matching the pattern <code><a href="https://$IP_ADDRESS:8443" class="bare">https://$IP_ADDRESS:8443</a></code>, using the IP address returned in the previous step and accepting the certificate and key in warnings:</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
@@ -536,9 +514,6 @@ accessible by any node that uses the storage cluster.</p>
 <p>admin user to the dashboard[you can avoid this by using the option].</p>
 </li>
 </ul>
-</div>
-</li>
-</ol>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -651,12 +626,8 @@ Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef8
 <div class="paragraph">
 <p>After the <code>cephadm</code> bootstrap process is complete, you can verify that your new installation is running properly. <code>cephadm</code> installs and configures <code>mon</code>, <code>mgr</code> , <code>crash</code>, <code>prometheus</code>, <code>grafana</code>, <code>alertmanager</code>, and <code>node-exporter</code>.</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Launch the <code>cephadm</code> shell:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -671,12 +642,8 @@ Inferring config /var/lib/ceph/99e4add2-d971-11eb-ad7e-2cc260754989/mon.ceph-nod
 Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef866ebbb214b195a009e87aae4eba9d282949</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Verify that the installation is up and running:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -698,12 +665,8 @@ Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef8
     pgs:</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>List the services that are running on the new installation:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -718,12 +681,8 @@ node-exporter             1/1  21s ago    67m  *
 prometheus                1/1  21s ago    67m  count:1</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>View the daemon processes that are running on the new installation:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -746,12 +705,8 @@ prometheus.ceph-node01              ceph-node01.example.com  *:9095       runnin
 <div class="paragraph">
 <p>Bootstrapping the installation of Red Hat Ceph Storage creates a basic single-node storage cluster, consisting of one Monitor daemon and one Manager daemon. You can use <code>cephadm</code> to add more hosts to the newly created storage cluster.</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Install the storage cluster’s public SSH key in the root user’s <code>authorized_keys</code> file on the new host:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -761,12 +716,8 @@ ssh-copy-id -f -i /etc/ceph/ceph.pub root@ceph-node03.example.com
 ssh-copy-id -f -i /etc/ceph/ceph.pub root@proxy01.example.com</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>On the bootstrap node, launch the <code>cephadm</code> shell to access the <code>cephadm</code> orchestrator:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -776,12 +727,8 @@ Inferring config /var/lib/ceph/99e4add2-d971-11eb-ad7e-2cc260754989/mon.ceph-nod
 Using recent ceph image docker.io/ceph/ceph@sha256:54e95ae1e11404157d7b329d0bef866ebbb214b195a009e87aae4eba9d282949</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Add the new host to the storage cluster using the <code>addr</code> option to identify hosts with IP address in addition to the host name:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -793,13 +740,9 @@ Added host 'ceph-node03'
 Added host 'proxy01'</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>View the status of the storage cluster and verify that the new
 host was added:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -812,12 +755,8 @@ proxy01      192.168.56.24
 4 hosts in cluster</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>List the services that are running on the new installation:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -832,12 +771,8 @@ node-exporter  ?:9100           4/4  1s ago     5m   *
 prometheus     ?:9095           1/1  0s ago     5m   count:1</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>View the daemon processes that are running on the new installation:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -939,12 +874,8 @@ ceph-node03  /dev/vdd  hdd   4e55c310-fa55-42a8-8  10.7G  Yes        6m ago
 ceph-node03  /dev/vde  hdd   d74446e5-3b7a-4bec-a  10.7G  Yes        6m ago</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Make sure that the disk is clean from any partitions on all three hosts:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -953,17 +884,13 @@ ceph-node03  /dev/vde  hdd   d74446e5-3b7a-4bec-a  10.7G  Yes        6m ago</cod
 [ceph: root@ceph-node01 /]# ceph orch device zap ceph-node03 /dev/vdb --force</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Invoke the <code>cephadm shell</code> command to give yourself the ability to add the disks as OSDs to the cluster.</p>
-</li>
-<li>
+</div>
+<div class="paragraph">
 <p>Create the OSD daemons with the Ceph orchestrator, we can use different
 parameter depending on the OSDs per node that we want to configure we could
 use <code>--all-available-devices</code></p>
-</li>
-</ol>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -1048,12 +975,8 @@ You have examples on configuration options you can use this <a href="https://doc
 Created osd(s) 2 on host 'ceph-node01', Created osd(s) 1 on host 'ceph-node02', Created osd(s) 0 on host 'ceph-node03'</pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>List the services that are running on the new installation to verify that the OSDs are created:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1063,12 +986,8 @@ osd.1                      ceph-node02               running (94s)    88s ago  9
 osd.2                      ceph-node01               running (94s)    85s ago  93s    30.7M    4096M  16.2.8-85.el8cp  b2c997ff1898  428c6c0289cf</pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Because this is a lab environment and there are insufficient resources to handle the scrubbing process, stop the deep scrub in the cluster:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -1076,44 +995,26 @@ osd.2                      ceph-node01               running (94s)    85s ago  9
 nodeep-scrub is set</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>Determine the Ceph storage cluster status:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-node01 /]# ceph -s</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Sample Output</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-texinfo hljs" data-lang="texinfo">cluster:
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-node01 /]# ceph -s
+cluster:
     id:     bdef9acc-d99c-11eb-9652-2cc260754989
     health: HEALTH_OK
                 nodeep-scrub flag(s) set
  ...</code></pre>
 </div>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
+<div class="paragraph">
 <p>List the OSDs:</p>
-</li>
-</ol>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-node01 /]# ceph osd tree</code></pre>
-</div>
-</div>
-<div class="listingblock">
-<div class="title">Sample Output</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-texinfo hljs" data-lang="texinfo">ID  CLASS  WEIGHT   TYPE NAME            STATUS  REWEIGHT  PRI-AFF
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh">[ceph: root@ceph-node01 /]# ceph osd tree
+ID  CLASS  WEIGHT   TYPE NAME            STATUS  REWEIGHT  PRI-AFF
 -1         0.02939  root default
 -5         0.00980      host ceph-node01
  2    hdd  0.00980          osd.2            up   1.00000  1.00000

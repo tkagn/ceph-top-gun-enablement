@@ -95,6 +95,15 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph RADOS Block Device</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephrbd_intro.html">RADOS Block Device introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">CephFS Shared FileSystem</span>
 <ul class="nav-list">
   <li class="nav-item is-current-page" data-depth="1">
@@ -302,7 +311,7 @@ with help of the <code>ceph fs volume</code> interface</p>
 <p>Create a CephFS volume, specifying <code>fs_name</code> as the name, and a comma-separated list of host names as the placement:</p>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph fs volume create fs_name --placement=ceph-node01.example.com,proxy01.example.com
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph fs volume create fs_name --placement=ceph-node01,proxy01
 Volume created successfully (no MDS daemons created)</code></pre>
 </div>
 </div>
@@ -333,6 +342,9 @@ service_type: mds
 service_id: fs_name
 placement:
   count: 2
+  hosts:
+  - ceph-node01
+  - proxy01
 EOF</code></pre>
 </div>
 </div>
@@ -362,8 +374,8 @@ mds.fs_name                           2/2  3m ago     3m   count:2</code></pre>
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ceph orch ps | grep mds
 NAME                               HOST                    PORTS        STATUS         REFRESHED  AGE  VERSION  IMAGE ID      CONTAINER ID
-mds.fs_name.ceph-node01.vnuima      ceph-node01.example.com               running (19s)  13s ago    19s  16.2.4   8d91d370c2b8  c91ca8508916
-mds.fs_name.proxy01.txydml         proxy01.example.com                  running (17s)  15s ago    17s  16.2.4   8d91d370c2b8  d4c2cd362001</code></pre>
+mds.fs_name.ceph-node01.vnuima      ceph-node01               running (19s)  13s ago    19s  16.2.4   8d91d370c2b8  c91ca8508916
+mds.fs_name.proxy01.txydml         proxy01                running (17s)  15s ago    17s  16.2.4   8d91d370c2b8  d4c2cd362001</code></pre>
 </div>
 </div>
 </li>
@@ -790,7 +802,7 @@ touch: cannot touch '/mnt/dir2': Permission denied
 <div class="sect2">
 <h3 id="_more_examples"><a class="anchor" href="#_more_examples"></a>More examples</h3>
 <div class="paragraph">
-<p>By yourself checkout what these other examples allow the user to do:</p>
+<p>By yourself checkout what these other example client caps allow the user to do:</p>
 </div>
 <div class="paragraph">
 <p>1.</p>
