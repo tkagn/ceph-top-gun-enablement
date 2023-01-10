@@ -56,7 +56,7 @@ RADOS enforces a configurable limit on object sizes: if you increase CephFS obje
 
 == Cephfs Layouts Hands-On
 
-First we need to install the `attr` RPM so we have access to the `setfattr` and
+From the `workstation` server we first we need to install the `attr` RPM so we have access to the `setfattr` and
 `getfattr` commands
 
 ----
@@ -70,9 +70,335 @@ Read/Write client caps at the / level
 mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=0,secret="AQA+KrxjWUovChAACWGj0YUbUEZHSKmNtYxriw=="
 ----
 
+We can check the layout attributes of the root filesystem 
 
 ----
 # getfattr -n ceph.dir.layout /mnt
 # file: mnt
 ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data"
 ----
+
+Because user `0` was created with the following client capabilities.
+
+----
+# ceph auth get client.0
+[client.0]
+	key = AQA+KrxjWUovChAACWGj0YUbUEZHSKmNtYxriw==
+	caps mds = "allow rw fsname=fs_name"
+	caps mon = "allow r fsname=fs_name"
+	caps osd = "allow rw tag cephfs data=fs_name"
+----
+
+If we try to modify the attribute for the / cephfs filesystem we will get
+permision denied
+
+----
+# setfattr -n ceph.dir.layout.stripe_count -v 2 /mnt
+setfattr: /mnt: Permission denied
+----
+
+TIP: Users need the 'P' client capability to be able to modify FS attributes
+and quotas
+
+
+Lets create a new cephx user that has the `P` capability flag to modify
+attributes in the `/dir4` folder
+
+----
+# mkdir /mnt/dir4
+#  ceph fs authorize fs_name client.4 / rw /dir4 rwp
+[client.4]
+	key = AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ==
+----
+
+Now lets re-mount the FS using user with id `4` that we just created
+
+----
+# umount /mnt
+[root@workstation-lb1719 ~]# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=4,secret="AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ=="
+----
+
+Let's modify the attributes of a file in dir4
+
+----
+# touch /mnt/dir4/file1
+# setfattr -n ceph.file.layout.stripe_count -v 2 /mnt/dir4/file1
+# getfattr -n ceph.file.layout /mnt/dir4/file1 
+# file: mnt/dir4/file1
+ceph.file.layout="stripe_unit=4194304 stripe_count=2 object_size=4194304 pool=cephfs.fs_name.data"
+----
+
+NOTE:Files inherit the layout of their parent directory at creation time. However, subsequent changes to the parent directory’s layout do not affect children.
+
+NOTE:Files created as descendents of the directory also inherit the layout, if the intermediate directories do not have layouts set
+
+=== Creating files in different Rados Namespaces
+
+Using the dir layout we can select a rados namespace for a directory
+
+----
+# mkdir /mnt/dir4/dir-namespace
+# setfattr -n ceph.dir.layout.pool_namespace -v client4 /mnt/dir4/dir-namespace
+# getfattr -n ceph.dir.layout /mnt/dir4/dir-namespace
+# file: mnt/dir4/dir-namespace
+ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data pool_namespace=client4"
+----
+
+Let's mount at the new directory level and create a file 
+
+----
+# umount /mnt
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/dir4/dir-namespace /mnt -o name=4,secret="AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ=="
+# echo "Here we go" > /mnt/file-in-namespace
+# getfattr -n ceph.file.layout /mnt/file-in-namespace
+# file: mnt/file-in-namespace
+ceph.file.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data pool_namespace=client4"
+----
+
+If we check at the rados level we can see that the new file is created in the
+client4 rados namespace, there is no data on the default namespace for the data
+cephfs pool
+
+----
+# rados ls -p cephfs.fs_name.data
+#
+# rados ls -p cephfs.fs_name.data -N client4
+10000000003.00000000
+# echo "Here we go 2" > /mnt/file-in-namespace2
+# rados ls -p cephfs.fs_name.data --all
+client4	10000000003.00000000
+client4	10000000004.00000000
+----
+
+=== Adding a different pool to a path in a filesystem
+
+We are going to create a new EC cephfs data pool and use it in our cephfs
+`fs_name` filesystem
+
+----
+# ceph osd pool create cephfs-data-ec 16 erasure
+pool 'cephfs-data-ec' created
+# ceph osd pool set cephfs-data-ec allow_ec_overwrites true
+set pool 5 allow_ec_overwrites to true
+# ceph osd pool application enable cephfs-data-ec cephfs
+enabled application 'cephfs' on pool 'cephfs-data-ec'
+----
+
+Lets add the new pool to our filesystem
+
+----
+# ceph fs add_data_pool fs_name cephfs-data-ec
+added data pool 5 to fsmap
+----
+
+We create a new user that is going to have permissions to access the new
+filesystem directory that will map to the new EC pool we created
+
+----
+# ceph auth get-or-create client.ec mon 'allow r' mds 'allow r, allow rw path=/clientec' osd 'allow rw pool=cephfs-data-ec'
+[client.ec]
+	key = AQDpSr1jQm/yGBAAst+6elZFUY3BIZqeySZZ+w==
+----
+
+Let's mount the Cephfs root filesystem with the admin key, so we can modify the
+layout properties for the fs directory `/clientec`
+
+
+----
+# umount /mnt
+# cat /etc/ceph/ceph.client.admin.keyring | grep key
+	key = AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg==
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="
+----
+
+Let's create the directory `/clientec` and change the attributes, so we use a
+rados namespace called `clientec` inside the new pool `cephfs-data-ec`
+
+----
+# mkdir /mnt/clientec
+# setfattr -n ceph.dir.layout.pool_namespace -v clientec /mnt/clientec
+# setfattr -n ceph.dir.layout.pool -v cephfs-data-ec /mnt/clientec
+----
+
+Now let's mount the direcory with the client.ec we created before, and by
+creating a file we can check that the file went to the rados namespace called `clientec` inside the new pool `cephfs-data-ec`
+
+----
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/clientec /mnt -o name=ec,secret="AQDpSr1jQm/yGBAAst+6elZFUY3BIZqeySZZ+w=="
+# echo "Here we go 2" > /mnt/file-in-ecpool
+# rados ls -p cephfs-data-ec --all
+clientec	10000000006.00000000
+----
+
+
+== CephFS Quotas
+
+=== *Quota Restrictions*
+
+Quotas are cooperative and non-adversarial. CephFS quotas rely on the cooperation of the client who is mounting the file system to stop writers when a limit is reached. A modified or adversarial client cannot be prevented from writing as much data as it needs. Quotas should not be relied on to prevent filling the system in environments where the clients are fully untrusted.
+
+Quotas are imprecise. Processes that are writing to the file system will be stopped a short time after the quota limit is reached. They will inevitably be allowed to write some amount of data over the configured limit. How far over the quota they are able to go depends primarily on the amount of time, not the amount of data. Generally speaking writers will be stopped within 10s of seconds of crossing the configured limit.
+
+Quotas are implemented in the kernel client 4.17 and higher. Quotas are supported by the userspace client (libcephfs, ceph-fuse). Linux kernel clients >= 4.17 support CephFS quotas but only on mimic+ clusters. Kernel clients (even recent versions) will fail to handle quotas on older clusters, even if they may be able to set the quotas extended attributes.
+
+Quotas must be configured carefully when used with path-based mount restrictions. The client needs to have access to the directory inode on which quotas are configured in order to enforce them. If the client has restricted access to a specific path (e.g., /home/user) based on the MDS capability, and a quota is configured on an ancestor directory they do not have access to (e.g., /home), the client will not enforce it. When using path-based access restrictions be sure to configure the quota on the directory the client is restricted too (e.g., /home/user) or something nested beneath it.
+
+=== *Example*
+
+As the admin user, let's mount the Filesystem
+
+----
+# umount /mnt
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="
+----
+
+And we set a quota of 10MB max in size and a max of 10 files on the root of
+the filesystem
+
+----
+# setfattr -n ceph.quota.max_bytes -v 10000000 /mnt
+# setfattr -n ceph.quota.max_files -v 10 /mnt
+# getfattr -n ceph.quota.max_bytes /mnt
+ceph.quota.max_bytes="10000000"
+----
+
+If we check with the `df` command we can see the available space is the one we have specified with the quota
+
+----
+# df -h /mnt/clientec
+Filesystem                     Size  Used Avail Use% Mounted on
+192.168.56.61,192.168.56.62:/  8.0M     0  8.0M   0% /mnt
+----
+
+If we now try to exeed the file count quota or max space, we can see it takes some time to
+sync and block the writes as it specifies in the second point of the quota
+restrictions
+
+----
+# for i in {1..1000};do touch /mnt/file-${i}.txt;done
+touch: cannot touch '/mnt/file-503.txt': Disk quota exceeded
+touch: cannot touch '/mnt/file-504.txt': Disk quota exceeded
+
+# dd if=/dev/zero of=/mnt/test-quota bs=1M count=100
+dd: error writing '/mnt/test-quota': Disk quota exceeded
+14+0 records in
+13+0 records out
+13631488 bytes (14 MB, 13 MiB) copied, 0.0367228 s, 371 MB/s
+
+# df -h /mnt/
+Filesystem                     Size  Used Avail Use% Mounted on
+192.168.56.61,192.168.56.62:/  8.0M  8.0M     0 100% /mnt
+----
+
+To remove the Quotas
+
+----
+# setfattr -n ceph.quota.max_files -v 0 /mnt/
+# setfattr -n ceph.quota.max_bytes -v 0 /mnt/
+----
+
+== MDS High Availability
+
+If an MDS daemon stops communicating with the cluster’s monitors, the monitors will wait mds_beacon_grace seconds (default 15) before marking the daemon as laggy. If a standby MDS is available, the monitor will immediately replace the laggy daemon.
+
+Each file system may specify a minimum number of standby daemons in order to be considered healthy. This number includes daemons in the standby-replay state waiting for a rank to fail. Note that a standby-replay daemon will not be assigned to take over a failure for another rank or a failure in a different CephFS file system). The pool of standby daemons not in replay counts towards any file system count.
+
+Each file system may set the desired number of standby daemons by setting the
+`ceph fs set <fs name> standby_count_wanted <count>` command.
+
+By default it's set to 1, if we for example increase it to two, wi will get a
+new MDS daemon deployed as standby
+
+----
+# ceph fs get fs_name | grep standby_count_wanted
+standby_count_wanted	1
+# ceph fs status
+fs_name - 1 clients
+=======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  fs_name.proxy01.bbnkcu  Reqs:    0 /s   520     21     15      1
+        POOL           TYPE     USED  AVAIL
+cephfs.fs_name.meta  metadata  10.5M  9695M
+cephfs.fs_name.data    data    39.0M  9695M
+   cephfs-data-ec      data    12.0k  18.9G
+       STANDBY MDS
+fs_name.ceph-node01.uygvno  <------ We have one MDS daemon as standby
+MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)
+----
+
+Because we configured the MDS service placement to a count of two and with
+dedicated hosts `ceph-node01,proxy01`, ceph can't add a new MDS daemon to
+fulfill the requirement of two `standby_count_wanted` per Filesystem.
+
+----
+# ceph -s
+  cluster:
+    id:     e6c62efc-9016-11ed-b206-2cc26078e4ef
+    health: HEALTH_WARN
+            insufficient standby MDS daemons available
+----
+
+We are going to modify our MDS service configuration, to add one more host into
+the placement, let's use a spec file for a change.
+
+
+----
+# ceph orch ls mds mds.fs_name --export | tee mds.yaml
+service_type: mds
+service_id: fs_name
+service_name: mds.fs_name
+placement:
+  count: 2
+  hosts:
+  - ceph-node01
+  - proxy01
+----
+
+Once we have exported the config to a file open with an editor and increment
+the `count: 3` and the `hosts:` with ceph-node02
+
+----
+# vi mds.yaml
+# cat mds.yaml
+service_type: mds
+service_id: fs_name
+service_name: mds.fs_name
+placement:
+  count: 3
+  hosts:
+  - ceph-node01
+  - ceph-node02
+  - proxy01
+----
+
+Apply the config(we can use dry-run option if we want)
+
+----
+ceph orch apply -i mds.yaml
+Scheduled mds.fs_name update...
+----
+
+Lets check if we now have 2 standby MDS demons
+
+----
+# ceph -s | grep mds
+    mds: 1/1 daemons up, 2 standby
+# ceph orch ps | grep mds
+mds.fs_name.ceph-node01.uygvno  ceph-node01               running (10h)     8m ago   7h    37.3M        -  16.2.8-85.el8cp  b2c997ff1898  d6169aee0209  
+mds.fs_name.ceph-node02.kxxoad  ceph-node02               running (68s)    63s ago  68s    32.7M        -  16.2.8-85.el8cp  b2c997ff1898  6ba364178785  
+mds.fs_name.proxy01.bbnkcu      proxy01                   running (14h)     9m ago   6h    70.5M        -  16.2.8-85.el8cp  b2c997ff1898  df91160e7fa6
+# ceph fs status
+fs_name - 1 clients
+=======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  fs_name.proxy01.bbnkcu  Reqs:    0 /s   520     21     15      1
+        POOL           TYPE     USED  AVAIL
+cephfs.fs_name.meta  metadata  10.5M  9694M
+cephfs.fs_name.data    data    39.0M  9694M
+   cephfs-data-ec      data    12.0k  18.9G
+       STANDBY MDS
+fs_name.ceph-node01.uygvno    <----------- 2 standby 
+fs_name.ceph-node02.kxxoad    <-----------
+MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)
+----
+

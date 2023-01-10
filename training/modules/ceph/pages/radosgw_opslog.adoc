@@ -1,0 +1,87 @@
+= Ceph RadosGW Opslog configuration
+
+== Enable Opslog in RGW
+
+First thing we need to do is adding the following options in our
+ceph-ansible `group_vars/all.yml` file:
+
+* *rgw_enable_ops_log:* Enable/Disable rgw_ops_log.
+* *rgw_ops_log_rados:* Whether the operations log should be written to
+the Ceph Storage Cluster backend.
+the following HTTP headers:
+* *rgw_ops_log_socket_path:* Socket path where Ceph RadosGW `ops_log`
+will be stored.
+
+....
+$ vim /usr/share/ceph-ansible/group_vars/all.yml
+...
+ceph_conf_overrides:
+  client.rgw.ceph1.rgw0:
+    rgw_enable_ops_log = true
+    rgw_ops_log_rados = false
+    rgw_log_http_headers = http_x_forwarded_for,http_custom_header,http_host
+    rgw_ops_log_socket_path = /var/run/ceph/opslog
+  client.rgw.ceph2.rgw0:
+    rgw_enable_ops_log = true
+    rgw_ops_log_rados = false
+    rgw_log_http_headers = http_x_forwarded_for,http_custom_header,http_host
+    rgw_ops_log_socket_path = /var/run/ceph/opslog
+...
+...
+$ cd /usr/share/ceph-ansible/
+$ ansible-playbook -i inventory site-container.yml
+....
+
+to check our RadosGW ops log:
+....
+$ nc -U --recv-only /var/run/ceph/opslog
+{"bucket":"test-bucket","time":"2020-11-19 14:43:56.098286Z","time_local":"2020-11-19 09:43:56.098286","remote_addr":"10.10.0.6","user":"test-user-no-container","operation":"get_bucket_location","uri":"GET /test-bucket/?location HTTP/1.1","http_status":"200","error_code":"","bytes_sent":134,"bytes_received":0,"object_size":0,"total_time":2,"user_agent":"custom","referrer":"","http_x_headers":[{"HTTP_CUSTOM_HEADER":"test"},{"HTTP_HOST":"lb-zone1:8080"},{"HTTP_X_FORWARDED_FOR":"10.10.0.5"}]},
+{"bucket":"test-bucket","time":"2020-11-19 14:43:56.102286Z","time_local":"2020-11-19 09:43:56.102286","remote_addr":"10.10.0.6","user":"test-user-no-container","operation":"put_obj","uri":"PUT /test-bucket/a HTTP/1.1","http_status":"200","error_code":"","bytes_sent":0,"bytes_received":370,"object_size":370,"total_time":11,"user_agent":"custom","referrer":"","http_x_headers":[{"HTTP_CUSTOM_HEADER":"test"},{"HTTP_HOST":"lb-zone1:8080"},{"HTTP_X_FORWARDED_FOR":"10.10.0.5"}]},
+....
+
+Currently, RadosGW `ops_log` is stored in a socket. We would like to
+send these logs to a file in our server or even to log aggregation server. 
+
+As a workaround until the feature described above is implemented, we can:
+
+* Create a systemd unit:
+
+....
+$ vim /etc/systemd/system/rgwopslog.service
+[Unit]
+Description=RGW opslog
+After=network.target
+
+[Service]
+ExecStartPre=/bin/bash -c 'until ss -lnt |grep 8080; do sleep 1; done;'
+ExecStart=/bin/bash -c "/usr/bin/nc -U  --recv-only /var/run/ceph/opslog >> /var/log/ceph/rgwops.log"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+....
+
+* Create a task to rotate the opslog:
+
+....
+$ vim /etc/logrotate.d/opslogs
+/var/log/ceph/rgwops.log {
+  rotate 4
+  daily
+  dateext
+  compress
+  postrotate
+    systemctl restart rgwopslog
+  endscript
+  missingok
+  notifempty
+}
+....
+
+*NOTE:* The RadosGW `ops_log` can become quickly very big, thus if there
+is a concern about the space usage in the system we recommend to rotate
+the RadosGW `ops_log` based on the file size.
+
+*NOTE:* Even when using STS temporary tokens assuming roles, the
+`ops_log` is able to identify and log the original user starting the
+transaction, not the temportal token itself.
