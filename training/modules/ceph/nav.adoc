@@ -10,6 +10,9 @@
 * xref:ceph_cephadm_intro.adoc[Cephadm Orchestrator]
 * xref:ceph_deploy_basic.adoc[Lab. Deploy Ceph with Cephadm]
 
+.Ceph RADOS Block Device
+* xref:cephrbd_intro.adoc[RADOS Block Device introduction]
+
 .CephFS Shared FileSystem
 * xref:cephfs_intro.adoc[CephFS introduction & Deployment]
  
