@@ -1,0 +1,179 @@
+== RADOS Block Device (RBD)
+
+=== Introduction 
+
+Ceph supports block storage through the RADOS Block Device (aka RBD) access
+method for Linux distributions and Kubernetes. RBDs can be accessed either through a kernel module (Linux, Kubernetes)
+or through the `librbd` API (OpenStack, Proxmox). In the Kubernetes world,
+RBDs are designed to address the need for RWO PVCs. `Pacific` provides a
+major update to `librbd` aimed at reducing the performance gap with `kRBD`.
+
+=== Details
+
+Each block device is known as a RBD Image and has a set of characteristics:
+
+* Image Name - a character string that supports Unicode
+* Image Order - Also known as Image Object Size
+* Image Size - The size of the block device
+* Stripe Unit - To configure `librbd` striping (defaults to 4MiB)
+* Stripe Count - To configure `librbd` striping (defaults to 1)
+* Format - To control the image format (defaults to 2)
+* Image features 
+** `layering`: layering support
+** `striping`: striping v2 support
+** `exclusive-lock`: exclusive locking support
+** `object-map`: object map support (requires exclusive-lock)
+** `fast-diff`: fast diff calculations (requires object-map)
+** `deep-flatten`: snapshot flatten support
+** `journaling`: journaled IO support (requires exclusive-lock)
+** `data-pool`: erasure coded pool support
+
+In order to provide the best performance and avoid bottlenecks Ceph Block Devices
+are broken down into smaller pieces. Therefor, a single 32MiB RBD Image will be broken
+down in as many object as possible, each object conforming to the size configured
+for a specific RBD. 
+
+As a result of this breakdown each object of a given RBD Image will have a different name.
+The name of each object is formatted as `{rbd_image_id}.{offset}`. You can visualize RBD objects
+in a Ceph pool using the `rados -p {pool_name} ls`. As each object is assigned a different
+RADOS name, each object will be assigned to a specific Placement Group as described earlier
+in the Data Placement chapter.
+
+NOTE: The cluster sets a default parameter `rbd_default_order` to a value of `22`
+that configures the RBD Images to use 4MiB objects. This parameter can be set
+on a per client basis.
+
+WARNING: To avoid unnecessary cluster warning, make sure that a pool that contains RBD
+Images is assigend a `rbd` label. This is easily achieved through the `rbd init pool {pool_name}`.
+
+The RBD Image order is expressed as an integer between 12 and 25. It is a bit-shift operator and as such
+the default `22` value is for 4MiB objects while `21` maps to 2MiB and `23` maps to 8MiB. Since
+Red Hat Ceph Storage 4 (Nautilus based) you can specify either the size of the object as an order
+(`--image-order`) or as a pure object size (`--object-size`).
+
+IMPORTANT: All RBD Images are thin provisioned. To reclaim the unused sectors of a RBD Image
+you must configure the `discard` option when mounting the filesystem hosted on the RBD Image
+or run the `fstrim` command at regular intervals.
+
+=== Accessing RBD Images
+
+The kernel RBD driver offers superior performance while not providing the
+same level of functionality. e.g., no RBD Mirroring until `Pacific`.
+
+.kRBD Diagram
+image::cephrbd-krbd-nobg.png[Kernel based RADOS Block Device, align="center"]
+
+To map a RBD Image using the kernel RBD module, aka `krbd`, use the `rbd map {pool_name}/{image_name}`
+or the `rbd -p {pool_name} {image_name}` commands. As a result the RBD Image is mapped as
+`/dev/rbd{n}` on the Linux server where the command is issued. `{n}` will be `0` for the
+first RBD Image mapped onto the node.
+
+To view the RBD Images mapped into a node you can use `rbd showmapped` or `rbd device ls` starting
+with Red Hat Storage 5 for the latter.
+
+~~~
+[root@node ~]# rbd showmapped
+id pool namespace image snap device
+0 rbd test - /dev/rbd0
+~~~
+
+Once the RBD Image has been mapped onto the server it is available for regular block device
+commands such as `mkfs`.
+
+To unmap a RBD Image from a node use the `rbd unmap {rbd_device_name}`. e.g. `rbd unmap /dev/rbd0`.
+
+WARNING: A the `rbd map` and `rbd unmap` commands manipulate the Linux `dev` directory content
+`root` privilege is required to issue those commands.
+
+NOTE: By default the cluster is configured to use the pool name `rbd` to access RBD Images.
+The default pool can be modified on a per client machine basis using the `rbd_default_pool`
+parameter. Therefor, if the name of the pool is omitted the `rbd` command will try to
+access the default pool.
+
+*_Userspace RBD (librbd)_*
+
+This access method leverages all existing RBD features such as RBD Mirroring.
+
+.librbd Diagram
+image::cephrbd-librbd-nobg.png[Userspace RADOS Block Device, align="center"]
+
+Because the user space implementation of the Ceph block device (for example, librbd) cannot take
+advantage of the Linux page cache, it performs its own in-memory caching, known as
+RBD caching. When the OS implements a barrier mechanism or a flush request, Ceph writes all dirty
+data to the OSDs. This means that using write-back caching is just as safe as using physical hard
+disk caching with a VM that properly sends flushes (for example, Linux kernel >= 2.6.32). The
+cache uses a Least Recently Used (LRU) algorithm, and in write-back mode it can coalesce contiguous
+requests for better throughput.
+
+NOTE: The RBD Cache is local to the client that issues the IO request. By default RBD Cache is
+enabled on Ceph client machine.
+
+IMPORTANT: By default the Cache is enabled in write-back mode but it can be set to write-through mode.
+
+The following parameters can be used to control each `librbd` client caching:
+
+* `rbd_cache` - `true` or `false` (defaults to `true`)
+* `rbd_cache_size` - Cache size in bytes (defaults to 32MiB per RBD Image)
+* `rbd_cache_max_dirty` - Max dirty bytes (defaults to 24MiB. Set to 0 for write-through mode)
+* `rbd_cache_target_dirty` - Dirty bytes to start preemptive flush (defaults to 16MiB)
+
+NOTE: Use the `ceph config set {client} {parameter} {value}` to change those parameters.
+
+
+=== Manipulating
+
+The `rbd` command is used to create, modify and in general manipulate RBD Images.
+The following table provides a summary of the different RBD commands.
+
+* `rbd create` - To create a RBD Image
+* `rbd rm` - To delete a RBD Image
+* `rbd ls` - List the RBD Images in a pool
+* `rbd info` - To view RBD Image parameters
+* `rbd du` - To view the space used in a RBD Image
+* `rbd snap` - To create a snapshot of a RBD Image
+* `rbd clone` - To create a clone based on a RBD Image snapshot
+
+=== Snapshots
+
+RBD snapshots are read-only copies of an RBD image created at a particular time. RBD snapshots use
+a COW technique to reduce the amount of storage needed to maintain snapshots. Before applying a
+write I/O request to an RBD snapshot image, the cluster copies the original data to another area
+in the placement group of the object affected by the I/O operation. Snapshots do not consume any
+storage space when created, but grow in size as the objects that they contain change. RBD images
+support incremental snapshots
+
+IMPORTANT: Remember to suspend access to the block device via the `fsfreeze` command before creating
+a snapshot and to thaw the block device using `fsfreeze --unfreeze` once done.
+
+Creating a snapshot is simple: `rbd snap create {pool_name/}{rbd_image}@{snap_name}`
+
+To manipulate the snapshots, the following command are available:
+
+* `rbd snap ls` - To list the snapshot of a RBD Image
+* `rbd snap rollback` - To rollback a snapshot (restore)
+* `rbd snap rm` - To delete a snapshot
+* `rbd snap protect` - To protect s snapshot (used for cloning)
+
+=== Clones
+
+RBD clones are read-write copies of an RBD image that use a protected RBD snapshot as a base. A
+RBD clone can also be flattened, which converts it into an RBD image independent of its source.
+The cloning process has three steps:
+
+* Create a snapshot
+* Protect the snapshot
+* Create a clone using the protected snapshot
+
+WARNING: By default Copy-On-Read (COR) is not enabled on RBD clones. This results in the data
+potentially always being read from the parent RBD Image as long as the original RBD Image parent
+has not been modified. The `rbd_clone_copy_on_read` is used to control COR.
+
+IMPORTANT: By default only Copy_On_Write (COW) is enabled and can not be disabled.
+
+To manipulate RBD Clones the following commands are available:
+
+* `rbd children` - To list the clones of a RBD Image
+* `rbd clone` - to create a clone
+* `rbd flatten` - To flatten a clone
+
+NOTE: A RBD clone, as it behaves like a regular RBD Image is deleted via the `rbd rm` command.
