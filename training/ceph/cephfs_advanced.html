@@ -95,6 +95,15 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph RADOS Block Device</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephrbd_intro.html">RADOS Block Device introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">CephFS Shared FileSystem</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -298,8 +307,49 @@ be written to.  Empty by default (i.e. default namespace).</pre>
 <pre>Integer in bytes.  File data is chunked into RADOS objects of this size.</pre>
 </div>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
 <div class="paragraph">
-<p>==</p>
+<p>RADOS enforces a configurable limit on object sizes: if you increase CephFS object sizes beyond that limit then writes may not succeed. The OSD setting is osd_max_object_size, which is 128MB by default. Very large RADOS objects may prevent smooth operation of the cluster, so increasing the object size limit past the default is not recommended.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cephfs_layouts_hands_on"><a class="anchor" href="#_cephfs_layouts_hands_on"></a>Cephfs Layouts Hands-On</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>First we need to install the <code>attr</code> RPM so we have access to the <code>setfattr</code> and
+<code>getfattr</code> commands</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># dnf install -y attr</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We mount the cepfs filesystem at the root level with user id 0, this user has
+Read/Write client caps at the / level</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=0,secret="AQA+KrxjWUovChAACWGj0YUbUEZHSKmNtYxriw=="</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># getfattr -n ceph.dir.layout /mnt
+# file: mnt
+ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data"</pre>
+</div>
 </div>
 </div>
 </div>
