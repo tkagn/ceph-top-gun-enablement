@@ -6,7 +6,7 @@ All file data in CephFS is stored as RADOS objects. CephFS clients can directly 
 
 To read/write a CephFS file, client needs to have ‘file read/write’ capabilities for corresponding inode. If client does not have required capabilities, it sends a ‘cap message’ to MDS, telling MDS what it wants. MDS will issue capabilities to client when it is possible. Once client has ‘file read/write’ capabilities, it can directly access RADOS to read/write file data. File data are stored as RADOS objects in the form of <inode number>.<object index>. See ‘Data Striping’ section of Architecture for more information. If the file is only opened by one client, MDS also issues ‘file cache/buffer’ capabilities to the only client. The ‘file cache’ capability means that file read can be satisfied by client cache. The ‘file buffer’ capability means that file write can be buffered in client cache.
 
-image:::cephfs_io_path.png[cephfs layout]
+image:::cephfs_io_path.png[cephfs layout,840,680]
 
 == Cephfs File Layouts
 
@@ -615,9 +615,13 @@ RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   
 1-s   standby-replay  fs_name.ceph-node03.zamikx  Evts:    0 /s     0      3      1      0
 ----
 
-In multiple active metadata server configurations, a balancer runs which works to spread metadata load evenly across the cluster. This usually works well enough for most users but sometimes it is desirable to override the dynamic balancer with explicit mappings of metadata to particular ranks. This can allow the administrator or users to evenly spread application load or limit impact of users’ metadata requests on the entire cluster.
+*In multiple active metadata server configurations* a balancer runs which works to spread metadata load evenly across the cluster. 
 
-image:::subtree-partitioning.svg[Subtree Partitioning]
+This usually works well enough for most users but sometimes it is desirable to override the dynamic balancer with explicit mappings of metadata to particular ranks. 
+
+This can allow the administrator or users to evenly spread application load or limit impact of users’ metadata requests on the entire cluster.
+
+image:::subtree-partitioning.svg[Subtree Partitioning,840,680]
 
 Let's mount our FS with the admin user at the root of the FS
 

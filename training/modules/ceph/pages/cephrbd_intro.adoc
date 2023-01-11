@@ -1,6 +1,21 @@
-== RADOS Block Device (RBD)
+= RADOS Block Device (RBD)
 
-=== Introduction 
+//++++
+//<link rel="stylesheet"  href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.1.0/css/font-awesome.min.css">
+//++++
+:icons: font
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+:source-highlighter: pygments
+:sectnums:
+:sectnumlevels: 6
+:toc: left
+:toclevels: 4
+
+
+== Introduction 
 
 Ceph supports block storage through the RADOS Block Device (aka RBD) access
 method for Linux distributions and Kubernetes. RBDs can be accessed either through a kernel module (Linux, Kubernetes)
@@ -8,7 +23,7 @@ or through the `librbd` API (OpenStack, Proxmox). In the Kubernetes world,
 RBDs are designed to address the need for RWO PVCs. `Pacific` provides a
 major update to `librbd` aimed at reducing the performance gap with `kRBD`.
 
-=== Details
+== Details
 
 Each block device is known as a RBD Image and has a set of characteristics:
 
@@ -55,7 +70,7 @@ IMPORTANT: All RBD Images are thin provisioned. To reclaim the unused sectors of
 you must configure the `discard` option when mounting the filesystem hosted on the RBD Image
 or run the `fstrim` command at regular intervals.
 
-=== Accessing RBD Images
+== Accessing RBD Images
 
 The kernel RBD driver offers superior performance while not providing the
 same level of functionality. e.g., no RBD Mirroring until `Pacific`.
@@ -120,7 +135,7 @@ The following parameters can be used to control each `librbd` client caching:
 NOTE: Use the `ceph config set {client} {parameter} {value}` to change those parameters.
 
 
-=== Manipulating
+== Manipulating
 
 The `rbd` command is used to create, modify and in general manipulate RBD Images.
 The following table provides a summary of the different RBD commands.
@@ -133,7 +148,7 @@ The following table provides a summary of the different RBD commands.
 * `rbd snap` - To create a snapshot of a RBD Image
 * `rbd clone` - To create a clone based on a RBD Image snapshot
 
-=== Snapshots
+== Snapshots
 
 RBD snapshots are read-only copies of an RBD image created at a particular time. RBD snapshots use
 a COW technique to reduce the amount of storage needed to maintain snapshots. Before applying a
@@ -154,7 +169,7 @@ To manipulate the snapshots, the following command are available:
 * `rbd snap rm` - To delete a snapshot
 * `rbd snap protect` - To protect s snapshot (used for cloning)
 
-=== Clones
+== Clones
 
 RBD clones are read-write copies of an RBD image that use a protected RBD snapshot as a base. A
 RBD clone can also be flattened, which converts it into an RBD image independent of its source.
