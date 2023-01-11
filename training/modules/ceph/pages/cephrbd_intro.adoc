@@ -86,11 +86,11 @@ first RBD Image mapped onto the node.
 To view the RBD Images mapped into a node you can use `rbd showmapped` or `rbd device ls` starting
 with Red Hat Storage 5 for the latter.
 
-~~~
-[root@node ~]# rbd showmapped
+----
+# rbd showmapped
 id pool namespace image snap device
 0 rbd test - /dev/rbd0
-~~~
+----
 
 Once the RBD Image has been mapped onto the server it is available for regular block device
 commands such as `mkfs`.
