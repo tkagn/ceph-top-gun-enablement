@@ -402,3 +402,289 @@ fs_name.ceph-node02.kxxoad    <-----------
 MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)
 ----
 
+
+=== MDS configure Standby-replay
+
+Each CephFS file system may be configured to add standby-replay daemons. These standby daemons follow the active MDS’s metadata journal in order to reduce failover time in the event that the active MDS becomes unavailable. Each active MDS may have only one standby-replay daemon following it.
+
+[TIP]
+====
+Once an MDS has entered the standby-replay state, it will only be used as a standby for the rank that it is following. If another rank fails, this standby-replay daemon will not be used as a replacement, even if no other standbys are available. For this reason, it is advised that if standby-replay is used then every active MDS should have a standby-replay daemon.
+====
+
+Configuration of standby-replay on a file system is done using the below:
+
+----
+# ceph fs set fs_name allow_standby_replay true
+# ceph -s | grep mds
+    mds: 1/1 daemons up, 1 standby, 1 hot standby
+# ceph fs status
+fs_name - 0 clients
+=======
+RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0        active      fs_name.ceph-node01.uygvno  Reqs:    0 /s  1022     21     15      0
+0-s   standby-replay    fs_name.proxy01.bbnkcu    Evts:    0 /s  1013     12      6      0  <-------- New Standby reply for Rank 0
+        POOL           TYPE     USED  AVAIL
+cephfs.fs_name.meta  metadata  10.5M  9693M
+cephfs.fs_name.data    data    39.0M  9693M
+   cephfs-data-ec      data    12.0k  18.9G
+       STANDBY MDS
+fs_name.ceph-node02.kxxoad
+----
+
+=== MDS Stand-by Affinity
+ 
+When failing over MDS daemons, a cluster’s monitors will prefer standby daemons with mds_join_fs equal to the file system name with the failed rank. If no standby exists with mds_join_fs equal to the file system name, it will choose an unqualified standby (no setting for mds_join_fs) for the replacement, or any other available standby, as a last resort. Note, this does not change the behavior that standby-replay daemons are always selected before other standbys.
+
+
+We can check our current status with the `ceph fs dump` command, our standby
+daemon `ceph-node02.kxxoad` currently doesn't have any affinity defined
+
+----
+# ceph fs dump | tail -7
+[mds.fs_name.ceph-node01.uygvno{0:144102} state up:active seq 22 join_fscid=1 addr [v2:192.168.56.61:6800/1486188007,v1:192.168.56.61:6801/1486188007] compat {c=[1],r=[1],i=[7ff]}]
+[mds.fs_name.proxy01.bbnkcu{0:144104} state up:standby-replay seq 1 join_fscid=1 addr [v2:192.168.56.24:6800/2208661102,v1:192.168.56.24:6801/2208661102] compat {c=[1],r=[1],i=[7ff]}]
+
+Standby daemons:
+[mds.fs_name.ceph-node02.kxxoad{-1:144140} state up:standby seq 1 join_fscid=1 addr [v2:192.168.56.62:6800/331662506,v1:192.168.56.62:6801/331662506] compat {c=[1],r=[1],i=[7ff]}]
+----
+
+Let's set the affinity for `ceph-node02.kxxoad` to our FS `fs_name`
+
+----
+# ceph config set mds.fs_name.ceph-node02.kxxoad  mds_join_fs fs_name
+----
+
+== Running more than one Active MDS per Filesystem
+
+You should configure multiple active MDS daemons when your metadata performance is bottlenecked on the single MDS that runs by default.
+
+Adding more daemons may not increase performance on all workloads. Typically, a single application running on a single client will not benefit from an increased number of MDS daemons unless the application is doing a lot of metadata operations in parallel.
+
+Workloads that typically benefit from a larger number of active MDS daemons are those with many clients, perhaps working on many separate directories.
+
+*Example*
+
+First let's reduce the count of wanted stand by daemos, currently we have it
+set to `2`
+
+----
+# ceph fs set fs_name  standby_count_wanted 1
+----
+
+Now let's modify the count and placement in the mds service spec file, I'm
+taking out the host `ceph-node02` from the list:
+
+----
+# vi mds.yaml
+# cat mds.yaml
+service_type: mds
+service_id: fs_name
+service_name: mds.fs_name
+placement:
+  count: 2
+  hosts:
+  - ceph-node01
+  - proxy01
+# ceph orch apply -i mds.yaml
+Scheduled mds.fs_name update...
+----
+
+Now we can check that we only have 2 daemons, one of them as a hot-standby
+
+----
+# ceph orch ps | grep mds
+mds.fs_name.ceph-node01.uygvno  ceph-node01               running (56m)     5m ago  17h    39.4M        -  16.2.8-85.el8cp  b2c997ff1898  4711409b661d
+mds.fs_name.proxy01.bbnkcu      proxy01                   running (56m)     5m ago  17h    53.3M        -  16.2.8-85.el8cp  b2c997ff1898  5030c8246c68
+# ceph -s | grep mds
+    mds: 1/1 daemons up, 1 hot standby
+----
+
+Now we can start with the configuration of a new Active MDS for our FS.
+
+----
+# ceph fs get fs_name | grep max_mds
+max_mds	1
+# ceph fs set fs_name max_mds 2
+# ceph -s
+  cluster:
+    id:     e6c62efc-9016-11ed-b206-2cc26078e4ef
+    health: HEALTH_WARN
+            1 filesystem is online with fewer MDS than max_mds
+----
+
+We are missing one MDS daemon, to have 2 active MDS daemons, as we requested. Let's modify the spec again
+
+----
+# vi mds.yaml
+# cat mds.yaml
+service_type: mds
+service_id: fs_name
+service_name: mds.fs_name
+placement:
+  count: 3
+  hosts:
+  - ceph-node01
+  - ceph-node02
+  - proxy01
+# ceph orch apply -i mds.yaml
+Scheduled mds.fs_name update...
+# ceph -s | grep mds
+    mds: 2/2 daemons up, 1 hot standby
+# ceph fs status
+fs_name - 0 clients
+=======
+RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   DIRS   CAPS  
+ 0        active      fs_name.ceph-node01.uygvno  Reqs:    0 /s  1022     21     15      0   
+ 1        active      fs_name.ceph-node02.jsvbzq  Reqs:    0 /s    10     13     11      0   
+0-s   standby-replay    fs_name.proxy01.bbnkcu    Evts:    0 /s  1013     12      6      0   
+----
+
+[TIP] 
+====
+- *dns*: dentries. Dentries is a data structure which represents a directory or a folder.
+- *inos*: inodes. Inode is a data structure which provides a representation of a file
+====
+
+
+Currently Rank0 with MDS `fs_name.ceph-node01.uygvno` has a standby daemon, but
+out new MDS `fs_name.ceph-node02.jsvbzq` with rank1 has not standy daemon,
+let's add one more MDS for standby.
+
+NOTE: Even with multiple active MDS daemons, a highly available system still requires standby daemons to take over if any of the servers running an active daemon fail.
+
+----
+# vi mds.yaml
+# cat mds.yaml
+service_type: mds
+service_id: fs_name
+service_name: mds.fs_name
+placement:
+  count: 4
+  hosts:
+  - ceph-node01
+  - ceph-node02
+  - ceph-node03
+  - proxy01
+# ceph orch apply -i mds.yaml
+# ceph orch ps | grep mds
+mds.fs_name.ceph-node01.uygvno  ceph-node01               running (67m)     5m ago  17h    41.3M        -  16.2.8-85.el8cp  b2c997ff1898  4711409b661d
+mds.fs_name.ceph-node02.jsvbzq  ceph-node02               running (6m)      6m ago   6m    15.8M        -  16.2.8-85.el8cp  b2c997ff1898  83f83ab42547
+mds.fs_name.ceph-node03.zamikx  ceph-node03               running (27s)    24s ago  27s    22.1M        -  16.2.8-85.el8cp  b2c997ff1898  a62184868686
+mds.fs_name.proxy01.bbnkcu      proxy01                   running (66m)     5m ago  17h    53.5M        -  16.2.8-85.el8cp  b2c997ff1898  5030c8246c68
+# ceph fs status
+fs_name - 0 clients
+=======
+RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0        active      fs_name.ceph-node01.uygvno  Reqs:    0 /s  1022     21     15      0
+ 1        active      fs_name.ceph-node02.jsvbzq  Reqs:    0 /s    10     13     11      0
+0-s   standby-replay    fs_name.proxy01.bbnkcu    Evts:    0 /s  1013     12      6      0
+1-s   standby-replay  fs_name.ceph-node03.zamikx  Evts:    0 /s     0      3      1      0
+----
+
+In multiple active metadata server configurations, a balancer runs which works to spread metadata load evenly across the cluster. This usually works well enough for most users but sometimes it is desirable to override the dynamic balancer with explicit mappings of metadata to particular ranks. This can allow the administrator or users to evenly spread application load or limit impact of users’ metadata requests on the entire cluster.
+
+image:::subtree-partitioning.svg[Subtree Partitioning]
+
+Let's mount our FS with the admin user at the root of the FS
+
+----
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="
+# ls -l /mnt
+total 13312
+drwxr-xr-x. 2 root root        1 Jan 10 06:41 clientec
+drwxr-xr-x. 3 root root        2 Jan 10 05:45 dir4
+-rw-r--r--. 1 root root 13631488 Jan 10 16:17 test-quota
+----
+
+Let's configure static pinning, `dir4` will go to `rank0` and `clientec` to `rank1`
+
+----
+# setfattr -n ceph.dir.pin -v 1 /mnt/dir4/
+# setfattr -n ceph.dir.pin -v 0 /mnt/clientec/
+# getfattr -n ceph.dir.pin /mnt/dir4
+# file: mnt/dir4
+ceph.dir.pin="1"
+----
+
+The problem with traditional subtree partitioning is that the workload growth by depth (across a single MDS) leads to a hotspot of activity. This results in lack of vertical scaling and wastage of non-busy resources/MDSs.
+
+This led to the adoption of a more dynamic way of handling metadata: Dynamic
+Subtree Partitioning, where load intensive portions of the directory hierarchy
+from busy MDSs are migrated to non busy MDSs. , check out more information on
+this https://docs.ceph.com/en/quincy/cephfs/multimds/#setting-subtree-partitioning-policies[upstream doc]
+
+
+== MDS Cache
+
+While the data for inodes in a Ceph file system is stored in RADOS and accessed by the clients directly, inode metadata and directory information is managed by the Ceph metadata server (MDS). The MDS’s act as mediator for all metadata related activity, storing the resulting information in a separate RADOS pool from the file data.
+
+The Metadata Server coordinates a distributed cache among all MDS and CephFS clients. The cache serves to improve metadata access latency and allow clients to safely (coherently) mutate metadata state (e.g. via chmod). The MDS issues capabilities and directory entry leases to indicate what state clients may cache and what manipulations clients may perform (e.g. writing to a file).
+
+A capability grants the client the ability to cache and possibly manipulate some portion of the data or metadata associated with the inode. When another client needs access to the same information, the MDS will revoke the capability and the client will eventually return it, along with an updated version of the inode’s metadata (in the event that it made changes to it while it held the capability).
+
+
+. *mds_cache_memory_limit*
+This sets a target maximum memory usage of the MDS cache and is the primary tunable to limit the MDS memory usage. The MDS will try to stay under a reservation of this limit (by default 95%; 1 - mds_cache_reservation) by trimming unused metadata in its cache and recalling cached items in the client caches. 
+
+----
+# ceph config get mds.fs_name.ceph-node01.uygvno mds_cache_memory_limit
+4294967296    ----> 4GB
+----
+
+. *mds_cache_reservation*
+The cache reservation (memory or inodes) for the MDS cache to maintain. Once the MDS begins dipping into its reservation, it will recall client state until its cache size shrinks to restore the reservation.
+
+----
+# ceph config get mds.fs_name.ceph-node01.uygvno mds_cache_reservation
+0.050000   ----> 5%
+----
+
+ 
+== FS Volumes and Subvolumes
+
+A single source of truth for CephFS exports is implemented in the volumes module of the Ceph Manager daemon (ceph-mgr). The OpenStack shared file system service (manila), Ceph Container Storage Interface (CSI), storage administrators among others can use the common CLI provided by the ceph-mgr volumes module to manage the CephFS exports.
+
+The ceph-mgr volumes module implements the following file system export abstractions:
+
+.FS volumes, an abstraction for CephFS file systems
+.FS subvolumes, an abstraction for independent CephFS directory trees
+.FS subvolume groups, an abstraction for a directory level higher than FS subvolumes to effect policies
+
+NOTE: Volumes and Subvolumes are used by rook in turn by ODF & Fusion/ODF.
+
+----
+# ceph fs volume ls
+[
+    {
+        "name": "fs_name"
+    }
+]
+# ceph fs subvolume create fs_name subvol1 --namespace-isolated
+# ceph fs subvolume ls fs_name
+[
+    {
+        "name": "subvol1"
+    }
+]
+# ceph fs subvolume authorize  fs_name subvol1 cli_sub
+# ceph fs subvolume authorized_list fs_name subvol1
+[
+    {
+        "subvol1": "rw"
+    }
+]
+# ceph auth get client.cli_sub
+[client.cli_sub]
+	key = AQCvfL5jF5NLGBAATtMf58oSE8KInuRqgG4Lug==
+	caps mds = "allow rw path=/volumes/_nogroup/subvol1/8ee41860-a331-4aae-b95c-1ba0540ae883"
+	caps mon = "allow r"
+	caps osd = "allow rw pool=cephfs.fs_name.data namespace=fsvolumens_subvol1"
+# ceph fs subvolume getpath fs_name subvol1
+/volumes/_nogroup/subvol1/8ee41860-a331-4aae-b95c-1ba0540ae883
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/volumes/_nogroup/subvol1/8ee41860-a331-4aae-b95c-1ba0540ae883 /mnt -o name=cli_sub,secret="AQCvfL5jF5NLGBAATtMf58oSE8KInuRqgG4Lug=="
+# touch /mnt/ok
+#
+----
+
+
