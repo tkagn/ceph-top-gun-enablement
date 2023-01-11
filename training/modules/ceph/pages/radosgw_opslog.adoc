@@ -1,5 +1,16 @@
 = Ceph RadosGW Opslog configuration
 
+:icons: font
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+:source-highlighter: pygments
+:sectnums:
+:sectnumlevels: 6
+:toc:
+
+
 == Enable Opslog in RGW
 
 First thing we need to do is adding the following options in our ceph database
@@ -46,7 +57,7 @@ upload: ../etc/hosts to s3://demobucket/hosts
 Connect to the node where the RGW daemon is running, in our case `ceph-mon02`,
 to check our RadosGW ops log socket.
 
-On the opslog we have both actions log, creating the bucket `demobucket` and
+On the opslog socket we have both of the actions logged, creating the bucket `demobucket` and
 uploading a file to the bucket
 
 ....
@@ -97,7 +108,7 @@ WantedBy=multi-user.target
 }
 ----
 
-Lets test the configuration forcing a log rotation in debug mode
+* Lets test the configuration forcing a log rotation in debug mode
 
 ----
 # logrotate  -d -f  /etc/logrotate.d/opslogs
@@ -122,10 +133,16 @@ compressing log with: /bin/gzip
 switching euid to 0 and egid to 0
 ----
 
-*NOTE:* The RadosGW `ops_log` can become quickly very big, thus if there
+[NOTE]
+----
+The RadosGW `ops_log` can become quickly very big, thus if there
 is a concern about the space usage in the system we recommend to rotate
 the RadosGW `ops_log` based on the file size.
+----
 
-*NOTE:* Even when using STS temporary tokens assuming roles, the
+[NOTE]
+----
+Even when using STS temporary tokens assuming roles, the
 `ops_log` is able to identify and log the original user starting the
 transaction, not the temportal token itself.
+----

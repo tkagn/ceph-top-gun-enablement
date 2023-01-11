@@ -33,6 +33,7 @@
 * xref:radosgw_multisite.adoc[RGW Multisite Replication]
 * xref:radosgw_cloudsync.adoc[RGW Object Cloud Transition]
 * xref:radosgw_presignedurl.adoc[RGW presigned URL]
+* xref:radosgw_opslog.adoc[RGW Opslog]
 
 .Ceph Troubleshooting 
 * xref:trouble-shooting-nearfull-osds.adoc[Troubleshooting nearfull OSDs]
