@@ -15,6 +15,7 @@
 
 .CephFS Shared FileSystem
 * xref:cephfs_intro.adoc[CephFS introduction & Deployment]
+* xref:cephfs_advanced.adoc[CephFS Deep Dive]
  
 .Ceph RadosGW
 * xref:radosgw_intro.adoc[RGW Introduction & Deployment]

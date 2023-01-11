@@ -170,6 +170,27 @@ client4	10000000003.00000000
 client4	10000000004.00000000
 ----
 
+[TIP]
+====
+How to map a cephfs file to a rados object?
+
+----
+# pwd
+/mnt/dir4/dir-namespace
+# ls -l
+total 1
+-rw-r--r--. 1 root root 11 Jan 10 05:50 file-in-namespace
+-rw-r--r--. 1 root root 13 Jan 10 05:53 file-in-namespace2
+# printf '%x\n' $(stat -c %i file-in-namespace)
+10000000003
+# rados ls -p cephfs.fs_name.data -N client4
+10000000003.00000000
+10000000004.00000000
+----
+
+====
+
+
 === Adding a different pool to a path in a filesystem
 
 We are going to create a new EC cephfs data pool and use it in our cephfs
@@ -687,4 +708,67 @@ NOTE: Volumes and Subvolumes are used by rook in turn by ODF & Fusion/ODF.
 #
 ----
 
+== Snapshots
+CephFS enables asynchronous snapshots by default These snapshots are stored in a hidden directory called .snap.
 
+To create a snapshot, first mount the CephFS file system on your client node. 
+Create a subdirectory inside the .snap directory. The snapshot name is the new subdirectory name. This
+snapshot contains a copy of all the current files in the CephFS file system.
+
+----
+# umount /mnt
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="
+# mkdir /mnt/.snap/snapshot1
+# mkdir /mnt/.snap/snapshot1
+# ls /mnt
+clientec  dir4  test-quota  volumes
+# ls /mnt/.snap/snapshot1
+clientec  dir4  test-quota  volumes
+# rm -Rf /mnt/.snap/snapshot1
+----
+
+TIP: We are using admin, but you need to authorize clients to make snapshots
+for the CephFS file system with the `s` client capability option.
+
+=== Schedule snapshots
+
+The snap_schedule module is enabled with:
+
+----
+ceph mgr module enable snap_schedule
+----
+
+You can schedule a snapshot and check it's status with the help of the `ceph fs snap-schedule` command
+
+----
+# ceph fs snap-schedule add / 1h
+Schedule set for path /
+# ceph fs snap-schedule list /
+/ 1h
+# ceph fs snap-schedule status / | jq .
+{
+  "fs": "fs_name",
+  "subvol": null,
+  "path": "/",
+  "rel_path": "/",
+  "schedule": "1h",
+  "retention": {},
+  "start": "2023-01-11T00:00:00",
+  "created": "2023-01-11T09:38:07",
+  "first": null,
+  "last": null,
+  "last_pruned": null,
+  "created_count": 0,
+  "pruned_count": 0,
+  "active": true
+}
+----
+
+keep 24 snapshots at least an hour apart
+
+----
+# ceph fs snap-schedule retention add / h 24
+Retention added to path /
+----
+
+NOTE: The snapshot schedule data is stored in a rados object in the cephfs metadata pool. At runtime all data lives in a sqlite database that is serialized and stored as a rados object.
