@@ -163,6 +163,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_opslog.html">RGW Opslog</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -1557,6 +1560,26 @@ mds1_inotable
 </div>
 <div class="paragraph">
 <p>Controlled by <code>file_layout_t</code> , Layout can only be changed on empty files: once data is written it is not moved around.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mds_autoscaler"><a class="anchor" href="#_mds_autoscaler"></a>13. MDS Autoscaler</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>CephFS shared file systems require at least one active MDS service for correct operation, and
+at least one standby MDS to ensure high availability. The MDS autoscaler module ensures the
+availability of enough MDS daemons.
+This module monitors the number of ranks and the number of standby daemons, and adjusts the
+number of MDS daemons that the orchestrator spawns.</p>
+</div>
+<div class="paragraph">
+<p>To enable the MDS autoscaler module.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph mgr module enable mds_autoscaler</code></pre>
 </div>
 </div>
 </div>
