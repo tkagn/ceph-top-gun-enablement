@@ -1025,3 +1025,17 @@ It follows the patter: <inode number>.<stripe index>
 
 Controlled by `file_layout_t` , Layout can only be changed on empty files: once data is written it is not moved around.
 
+
+== MDS Autoscaler
+CephFS shared file systems require at least one active MDS service for correct operation, and
+at least one standby MDS to ensure high availability. The MDS autoscaler module ensures the
+availability of enough MDS daemons.
+This module monitors the number of ranks and the number of standby daemons, and adjusts the
+number of MDS daemons that the orchestrator spawns.
+
+To enable the MDS autoscaler module.
+
+----
+# ceph mgr module enable mds_autoscaler
+----
+

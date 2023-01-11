@@ -456,27 +456,7 @@ touch: cannot touch '/mnt/dir2': Permission denied
 === More examples
 By yourself checkout what these other example client caps allow the user to do:
 
-1. 
 ----
 # ceph fs authorize cephfs client.2 /client2 rw
-----
-
-2.
-----
 # ceph fs authorize cephfs client.4 /client4 rwp
-----
-
-
-
-== MDS Autoscaler
-CephFS shared file systems require at least one active MDS service for correct operation, and
-at least one standby MDS to ensure high availability. The MDS autoscaler module ensures the
-availability of enough MDS daemons.
-This module monitors the number of ranks and the number of standby daemons, and adjusts the
-number of MDS daemons that the orchestrator spawns.
-
-To enable the MDS autoscaler module.
-
-----
-# ceph mgr module enable mds_autoscaler
 ----

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: Ceph Top Gun Enablement</title>
+    <title>RADOS Block Device (RBD) :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/cephrbd_intro.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -223,11 +223,10 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
+<h1 class="page">RADOS Block Device (RBD)</h1>
 <div class="sect1">
-<h2 id="_rados_block_device_rbd"><a class="anchor" href="#_rados_block_device_rbd"></a>RADOS Block Device (RBD)</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h3>
 <div class="paragraph">
 <p>Ceph supports block storage through the RADOS Block Device (aka RBD) access
 method for Linux distributions and Kubernetes. RBDs can be accessed either through a kernel module (Linux, Kubernetes)
@@ -236,8 +235,10 @@ RBDs are designed to address the need for RWO PVCs. <code>Pacific</code> provide
 major update to <code>librbd</code> aimed at reducing the performance gap with <code>kRBD</code>.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_details"><a class="anchor" href="#_details"></a>Details</h3>
+</div>
+<div class="sect1">
+<h2 id="_details"><a class="anchor" href="#_details"></a>2. Details</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Each block device is known as a RBD Image and has a set of characteristics:</p>
 </div>
@@ -355,8 +356,10 @@ or run the <code>fstrim</code> command at regular intervals.
 </table>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_accessing_rbd_images"><a class="anchor" href="#_accessing_rbd_images"></a>Accessing RBD Images</h3>
+</div>
+<div class="sect1">
+<h2 id="_accessing_rbd_images"><a class="anchor" href="#_accessing_rbd_images"></a>3. Accessing RBD Images</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The kernel RBD driver offers superior performance while not providing the
 same level of functionality. e.g., no RBD Mirroring until <code>Pacific</code>.</p>
@@ -497,8 +500,10 @@ Use the <code>ceph config set {client} {parameter} {value}</code> to change thos
 </table>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_manipulating"><a class="anchor" href="#_manipulating"></a>Manipulating</h3>
+</div>
+<div class="sect1">
+<h2 id="_manipulating"><a class="anchor" href="#_manipulating"></a>4. Manipulating</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>The <code>rbd</code> command is used to create, modify and in general manipulate RBD Images.
 The following table provides a summary of the different RBD commands.</p>
@@ -529,8 +534,10 @@ The following table provides a summary of the different RBD commands.</p>
 </ul>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_snapshots"><a class="anchor" href="#_snapshots"></a>Snapshots</h3>
+</div>
+<div class="sect1">
+<h2 id="_snapshots"><a class="anchor" href="#_snapshots"></a>5. Snapshots</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>RBD snapshots are read-only copies of an RBD image created at a particular time. RBD snapshots use
 a COW technique to reduce the amount of storage needed to maintain snapshots. Before applying a
@@ -575,8 +582,10 @@ a snapshot and to thaw the block device using <code>fsfreeze --unfreeze</code> o
 </ul>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_clones"><a class="anchor" href="#_clones"></a>Clones</h3>
+</div>
+<div class="sect1">
+<h2 id="_clones"><a class="anchor" href="#_clones"></a>6. Clones</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>RBD clones are read-write copies of an RBD image that use a protected RBD snapshot as a base. A
 RBD clone can also be flattened, which converts it into an RBD image independent of its source.
@@ -648,7 +657,6 @@ A RBD clone, as it behaves like a regular RBD Image is deleted via the <code>rbd
 </td>
 </tr>
 </table>
-</div>
 </div>
 </div>
 </div>

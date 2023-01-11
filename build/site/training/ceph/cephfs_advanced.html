@@ -225,7 +225,7 @@
 <article class="doc">
 <h1 class="page">Ceph CephFS Deep Dive and Advanced Topics</h1>
 <div class="sect1">
-<h2 id="_ceph_file_system_io_path"><a class="anchor" href="#_ceph_file_system_io_path"></a>Ceph File System IO-PATH</h2>
+<h2 id="_ceph_file_system_io_path"><a class="anchor" href="#_ceph_file_system_io_path"></a>1. Ceph File System IO-PATH</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>All file data in CephFS is stored as RADOS objects. CephFS clients can directly access RADOS to operate on file data. MDS only handles metadata operations.</p>
@@ -241,7 +241,7 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cephfs_file_layouts"><a class="anchor" href="#_cephfs_file_layouts"></a>Cephfs File Layouts</h2>
+<h2 id="_cephfs_file_layouts"><a class="anchor" href="#_cephfs_file_layouts"></a>2. Cephfs File Layouts</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The layout of a file controls how its contents are mapped to Ceph RADOS objects. You can read and write a file’s layout using virtual extended attributes or xattrs.</p>
@@ -252,7 +252,7 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_layout_fields"><a class="anchor" href="#_layout_fields"></a>Layout fields</h2>
+<h2 id="_layout_fields"><a class="anchor" href="#_layout_fields"></a>3. Layout fields</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p><strong>pool</strong></p>
@@ -314,7 +314,7 @@
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cephfs_layouts_hands_on"><a class="anchor" href="#_cephfs_layouts_hands_on"></a>Cephfs Layouts Hands-On</h2>
+<h2 id="_cephfs_layouts_hands_on"><a class="anchor" href="#_cephfs_layouts_hands_on"></a>4. Cephfs Layouts Hands-On</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>From the <code>workstation</code> server we first we need to install the <code>attr</code> RPM so we have access to the <code>setfattr</code> and
@@ -322,7 +322,7 @@
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># dnf install -y attr</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># dnf install -y attr</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -331,7 +331,7 @@ Read/Write client caps at the / level</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=0,secret="AQA+KrxjWUovChAACWGj0YUbUEZHSKmNtYxriw=="</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=0,secret="AQA+KrxjWUovChAACWGj0YUbUEZHSKmNtYxriw=="</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -339,9 +339,9 @@ Read/Write client caps at the / level</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># getfattr -n ceph.dir.layout /mnt
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># getfattr -n ceph.dir.layout /mnt
 # file: mnt
-ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data"</pre>
+ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -349,12 +349,12 @@ ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cep
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph auth get client.0
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph auth get client.0
 [client.0]
 	key = AQA+KrxjWUovChAACWGj0YUbUEZHSKmNtYxriw==
 	caps mds = "allow rw fsname=fs_name"
 	caps mon = "allow r fsname=fs_name"
-	caps osd = "allow rw tag cephfs data=fs_name"</pre>
+	caps osd = "allow rw tag cephfs data=fs_name"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -363,8 +363,8 @@ permision denied</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># setfattr -n ceph.dir.layout.stripe_count -v 2 /mnt
-setfattr: /mnt: Permission denied</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># setfattr -n ceph.dir.layout.stripe_count -v 2 /mnt
+setfattr: /mnt: Permission denied</code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -386,10 +386,10 @@ attributes in the <code>/dir4</code> folder</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># mkdir /mnt/dir4
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># mkdir /mnt/dir4
 #  ceph fs authorize fs_name client.4 / rw /dir4 rwp
 [client.4]
-	key = AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ==</pre>
+	key = AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ==</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -397,8 +397,8 @@ attributes in the <code>/dir4</code> folder</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># umount /mnt
-[root@workstation-lb1719 ~]# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=4,secret="AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ=="</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># umount /mnt
+[root@workstation-lb1719 ~]# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=4,secret="AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ=="</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -406,11 +406,11 @@ attributes in the <code>/dir4</code> folder</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># touch /mnt/dir4/file1
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># touch /mnt/dir4/file1
 # setfattr -n ceph.file.layout.stripe_count -v 2 /mnt/dir4/file1
 # getfattr -n ceph.file.layout /mnt/dir4/file1
 # file: mnt/dir4/file1
-ceph.file.layout="stripe_unit=4194304 stripe_count=2 object_size=4194304 pool=cephfs.fs_name.data"</pre>
+ceph.file.layout="stripe_unit=4194304 stripe_count=2 object_size=4194304 pool=cephfs.fs_name.data"</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -438,17 +438,17 @@ Files created as descendents of the directory also inherit the layout, if the in
 </table>
 </div>
 <div class="sect2">
-<h3 id="_creating_files_in_different_rados_namespaces"><a class="anchor" href="#_creating_files_in_different_rados_namespaces"></a>Creating files in different Rados Namespaces</h3>
+<h3 id="_creating_files_in_different_rados_namespaces"><a class="anchor" href="#_creating_files_in_different_rados_namespaces"></a>4.1. Creating files in different Rados Namespaces</h3>
 <div class="paragraph">
 <p>Using the dir layout we can select a rados namespace for a directory</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># mkdir /mnt/dir4/dir-namespace
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># mkdir /mnt/dir4/dir-namespace
 # setfattr -n ceph.dir.layout.pool_namespace -v client4 /mnt/dir4/dir-namespace
 # getfattr -n ceph.dir.layout /mnt/dir4/dir-namespace
 # file: mnt/dir4/dir-namespace
-ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data pool_namespace=client4"</pre>
+ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data pool_namespace=client4"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -456,12 +456,12 @@ ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cep
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># umount /mnt
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># umount /mnt
 # mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/dir4/dir-namespace /mnt -o name=4,secret="AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ=="
 # echo "Here we go" &gt; /mnt/file-in-namespace
 # getfattr -n ceph.file.layout /mnt/file-in-namespace
 # file: mnt/file-in-namespace
-ceph.file.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data pool_namespace=client4"</pre>
+ceph.file.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data pool_namespace=client4"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -471,14 +471,14 @@ cephfs pool</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># rados ls -p cephfs.fs_name.data
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># rados ls -p cephfs.fs_name.data
 #
 # rados ls -p cephfs.fs_name.data -N client4
 10000000003.00000000
 # echo "Here we go 2" &gt; /mnt/file-in-namespace2
 # rados ls -p cephfs.fs_name.data --all
 client4	10000000003.00000000
-client4	10000000004.00000000</pre>
+client4	10000000004.00000000</code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -493,7 +493,7 @@ client4	10000000004.00000000</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># pwd
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># pwd
 /mnt/dir4/dir-namespace
 # ls -l
 total 1
@@ -503,7 +503,7 @@ total 1
 10000000003
 # rados ls -p cephfs.fs_name.data -N client4
 10000000003.00000000
-10000000004.00000000</pre>
+10000000004.00000000</code></pre>
 </div>
 </div>
 </td>
@@ -512,19 +512,19 @@ total 1
 </div>
 </div>
 <div class="sect2">
-<h3 id="_adding_a_different_pool_to_a_path_in_a_filesystem"><a class="anchor" href="#_adding_a_different_pool_to_a_path_in_a_filesystem"></a>Adding a different pool to a path in a filesystem</h3>
+<h3 id="_adding_a_different_pool_to_a_path_in_a_filesystem"><a class="anchor" href="#_adding_a_different_pool_to_a_path_in_a_filesystem"></a>4.2. Adding a different pool to a path in a filesystem</h3>
 <div class="paragraph">
 <p>We are going to create a new EC cephfs data pool and use it in our cephfs
 <code>fs_name</code> filesystem</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph osd pool create cephfs-data-ec 16 erasure
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph osd pool create cephfs-data-ec 16 erasure
 pool 'cephfs-data-ec' created
 # ceph osd pool set cephfs-data-ec allow_ec_overwrites true
 set pool 5 allow_ec_overwrites to true
 # ceph osd pool application enable cephfs-data-ec cephfs
-enabled application 'cephfs' on pool 'cephfs-data-ec'</pre>
+enabled application 'cephfs' on pool 'cephfs-data-ec'</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -532,8 +532,8 @@ enabled application 'cephfs' on pool 'cephfs-data-ec'</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph fs add_data_pool fs_name cephfs-data-ec
-added data pool 5 to fsmap</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph fs add_data_pool fs_name cephfs-data-ec
+added data pool 5 to fsmap</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -542,9 +542,9 @@ filesystem directory that will map to the new EC pool we created</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph auth get-or-create client.ec mon 'allow r' mds 'allow r, allow rw path=/clientec' osd 'allow rw pool=cephfs-data-ec'
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph auth get-or-create client.ec mon 'allow r' mds 'allow r, allow rw path=/clientec' osd 'allow rw pool=cephfs-data-ec'
 [client.ec]
-	key = AQDpSr1jQm/yGBAAst+6elZFUY3BIZqeySZZ+w==</pre>
+	key = AQDpSr1jQm/yGBAAst+6elZFUY3BIZqeySZZ+w==</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -553,10 +553,10 @@ layout properties for the fs directory <code>/clientec</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># umount /mnt
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># umount /mnt
 # cat /etc/ceph/ceph.client.admin.keyring | grep key
 	key = AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg==
-# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="</pre>
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -565,9 +565,9 @@ rados namespace called <code>clientec</code> inside the new pool <code>cephfs-da
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># mkdir /mnt/clientec
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># mkdir /mnt/clientec
 # setfattr -n ceph.dir.layout.pool_namespace -v clientec /mnt/clientec
-# setfattr -n ceph.dir.layout.pool -v cephfs-data-ec /mnt/clientec</pre>
+# setfattr -n ceph.dir.layout.pool -v cephfs-data-ec /mnt/clientec</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -576,20 +576,20 @@ creating a file we can check that the file went to the rados namespace called <c
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/clientec /mnt -o name=ec,secret="AQDpSr1jQm/yGBAAst+6elZFUY3BIZqeySZZ+w=="
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/clientec /mnt -o name=ec,secret="AQDpSr1jQm/yGBAAst+6elZFUY3BIZqeySZZ+w=="
 # echo "Here we go 2" &gt; /mnt/file-in-ecpool
 # rados ls -p cephfs-data-ec --all
-clientec	10000000006.00000000</pre>
+clientec	10000000006.00000000</code></pre>
 </div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_cephfs_quotas"><a class="anchor" href="#_cephfs_quotas"></a>CephFS Quotas</h2>
+<h2 id="_cephfs_quotas"><a class="anchor" href="#_cephfs_quotas"></a>5. CephFS Quotas</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_quota_restrictions"><a class="anchor" href="#_quota_restrictions"></a><strong>Quota Restrictions</strong></h3>
+<h3 id="_quota_restrictions"><a class="anchor" href="#_quota_restrictions"></a>5.1. <strong>Quota Restrictions</strong></h3>
 <div class="paragraph">
 <p>Quotas are cooperative and non-adversarial. CephFS quotas rely on the cooperation of the client who is mounting the file system to stop writers when a limit is reached. A modified or adversarial client cannot be prevented from writing as much data as it needs. Quotas should not be relied on to prevent filling the system in environments where the clients are fully untrusted.</p>
 </div>
@@ -604,14 +604,14 @@ clientec	10000000006.00000000</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_example"><a class="anchor" href="#_example"></a><strong>Example</strong></h3>
+<h3 id="_example"><a class="anchor" href="#_example"></a>5.2. <strong>Example</strong></h3>
 <div class="paragraph">
 <p>As the admin user, let&#8217;s mount the Filesystem</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># umount /mnt
-# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># umount /mnt
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -620,10 +620,10 @@ the filesystem</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># setfattr -n ceph.quota.max_bytes -v 10000000 /mnt
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># setfattr -n ceph.quota.max_bytes -v 10000000 /mnt
 # setfattr -n ceph.quota.max_files -v 10 /mnt
 # getfattr -n ceph.quota.max_bytes /mnt
-ceph.quota.max_bytes="10000000"</pre>
+ceph.quota.max_bytes="10000000"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -631,9 +631,9 @@ ceph.quota.max_bytes="10000000"</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># df -h /mnt/clientec
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># df -h /mnt/clientec
 Filesystem                     Size  Used Avail Use% Mounted on
-192.168.56.61,192.168.56.62:/  8.0M     0  8.0M   0% /mnt</pre>
+192.168.56.61,192.168.56.62:/  8.0M     0  8.0M   0% /mnt</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -643,7 +643,7 @@ restrictions</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># for i in {1..1000};do touch /mnt/file-${i}.txt;done
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># for i in {1..1000};do touch /mnt/file-${i}.txt;done
 touch: cannot touch '/mnt/file-503.txt': Disk quota exceeded
 touch: cannot touch '/mnt/file-504.txt': Disk quota exceeded
 
@@ -655,7 +655,7 @@ dd: error writing '/mnt/test-quota': Disk quota exceeded
 
 # df -h /mnt/
 Filesystem                     Size  Used Avail Use% Mounted on
-192.168.56.61,192.168.56.62:/  8.0M  8.0M     0 100% /mnt</pre>
+192.168.56.61,192.168.56.62:/  8.0M  8.0M     0 100% /mnt</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -663,15 +663,15 @@ Filesystem                     Size  Used Avail Use% Mounted on
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># setfattr -n ceph.quota.max_files -v 0 /mnt/
-# setfattr -n ceph.quota.max_bytes -v 0 /mnt/</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># setfattr -n ceph.quota.max_files -v 0 /mnt/
+# setfattr -n ceph.quota.max_bytes -v 0 /mnt/</code></pre>
 </div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_mds_high_availability"><a class="anchor" href="#_mds_high_availability"></a>MDS High Availability</h2>
+<h2 id="_mds_high_availability"><a class="anchor" href="#_mds_high_availability"></a>6. MDS High Availability</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>If an MDS daemon stops communicating with the cluster’s monitors, the monitors will wait mds_beacon_grace seconds (default 15) before marking the daemon as laggy. If a standby MDS is available, the monitor will immediately replace the laggy daemon.</p>
@@ -689,7 +689,7 @@ new MDS daemon deployed as standby</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph fs get fs_name | grep standby_count_wanted
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph fs get fs_name | grep standby_count_wanted
 standby_count_wanted	1
 # ceph fs status
 fs_name - 1 clients
@@ -702,7 +702,7 @@ cephfs.fs_name.data    data    39.0M  9695M
    cephfs-data-ec      data    12.0k  18.9G
        STANDBY MDS
 fs_name.ceph-node01.uygvno  &lt;------ We have one MDS daemon as standby
-MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)</pre>
+MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -712,11 +712,11 @@ fulfill the requirement of two <code>standby_count_wanted</code> per Filesystem.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph -s
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph -s
   cluster:
     id:     e6c62efc-9016-11ed-b206-2cc26078e4ef
     health: HEALTH_WARN
-            insufficient standby MDS daemons available</pre>
+            insufficient standby MDS daemons available</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -725,7 +725,7 @@ the placement, let&#8217;s use a spec file for a change.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph orch ls mds mds.fs_name --export | tee mds.yaml
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph orch ls mds mds.fs_name --export | tee mds.yaml
 service_type: mds
 service_id: fs_name
 service_name: mds.fs_name
@@ -733,7 +733,7 @@ placement:
   count: 2
   hosts:
   - ceph-node01
-  - proxy01</pre>
+  - proxy01</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -742,7 +742,7 @@ the <code>count: 3</code> and the <code>hosts:</code> with ceph-node02</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># vi mds.yaml
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># vi mds.yaml
 # cat mds.yaml
 service_type: mds
 service_id: fs_name
@@ -752,7 +752,7 @@ placement:
   hosts:
   - ceph-node01
   - ceph-node02
-  - proxy01</pre>
+  - proxy01</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -760,8 +760,8 @@ placement:
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>ceph orch apply -i mds.yaml
-Scheduled mds.fs_name update...</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">ceph orch apply -i mds.yaml
+Scheduled mds.fs_name update...</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -769,7 +769,7 @@ Scheduled mds.fs_name update...</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph -s | grep mds
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph -s | grep mds
     mds: 1/1 daemons up, 2 standby
 # ceph orch ps | grep mds
 mds.fs_name.ceph-node01.uygvno  ceph-node01               running (10h)     8m ago   7h    37.3M        -  16.2.8-85.el8cp  b2c997ff1898  d6169aee0209
@@ -787,11 +787,11 @@ cephfs.fs_name.data    data    39.0M  9694M
        STANDBY MDS
 fs_name.ceph-node01.uygvno    &lt;----------- 2 standby
 fs_name.ceph-node02.kxxoad    &lt;-----------
-MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)</pre>
+MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)</code></pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_mds_configure_standby_replay"><a class="anchor" href="#_mds_configure_standby_replay"></a>MDS configure Standby-replay</h3>
+<h3 id="_mds_configure_standby_replay"><a class="anchor" href="#_mds_configure_standby_replay"></a>6.1. MDS configure Standby-replay</h3>
 <div class="paragraph">
 <p>Each CephFS file system may be configured to add standby-replay daemons. These standby daemons follow the active MDS’s metadata journal in order to reduce failover time in the event that the active MDS becomes unavailable. Each active MDS may have only one standby-replay daemon following it.</p>
 </div>
@@ -814,7 +814,7 @@ MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph fs set fs_name allow_standby_replay true
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph fs set fs_name allow_standby_replay true
 # ceph -s | grep mds
     mds: 1/1 daemons up, 1 standby, 1 hot standby
 # ceph fs status
@@ -828,12 +828,12 @@ cephfs.fs_name.meta  metadata  10.5M  9693M
 cephfs.fs_name.data    data    39.0M  9693M
    cephfs-data-ec      data    12.0k  18.9G
        STANDBY MDS
-fs_name.ceph-node02.kxxoad</pre>
+fs_name.ceph-node02.kxxoad</code></pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_mds_stand_by_affinity"><a class="anchor" href="#_mds_stand_by_affinity"></a>MDS Stand-by Affinity</h3>
+<h3 id="_mds_stand_by_affinity"><a class="anchor" href="#_mds_stand_by_affinity"></a>6.2. MDS Stand-by Affinity</h3>
 <div class="paragraph">
 <p>When failing over MDS daemons, a cluster’s monitors will prefer standby daemons with mds_join_fs equal to the file system name with the failed rank. If no standby exists with mds_join_fs equal to the file system name, it will choose an unqualified standby (no setting for mds_join_fs) for the replacement, or any other available standby, as a last resort. Note, this does not change the behavior that standby-replay daemons are always selected before other standbys.</p>
 </div>
@@ -843,12 +843,12 @@ daemon <code>ceph-node02.kxxoad</code> currently doesn&#8217;t have any affinity
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph fs dump | tail -7
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph fs dump | tail -7
 [mds.fs_name.ceph-node01.uygvno{0:144102} state up:active seq 22 join_fscid=1 addr [v2:192.168.56.61:6800/1486188007,v1:192.168.56.61:6801/1486188007] compat {c=[1],r=[1],i=[7ff]}]
 [mds.fs_name.proxy01.bbnkcu{0:144104} state up:standby-replay seq 1 join_fscid=1 addr [v2:192.168.56.24:6800/2208661102,v1:192.168.56.24:6801/2208661102] compat {c=[1],r=[1],i=[7ff]}]
 
 Standby daemons:
-[mds.fs_name.ceph-node02.kxxoad{-1:144140} state up:standby seq 1 join_fscid=1 addr [v2:192.168.56.62:6800/331662506,v1:192.168.56.62:6801/331662506] compat {c=[1],r=[1],i=[7ff]}]</pre>
+[mds.fs_name.ceph-node02.kxxoad{-1:144140} state up:standby seq 1 join_fscid=1 addr [v2:192.168.56.62:6800/331662506,v1:192.168.56.62:6801/331662506] compat {c=[1],r=[1],i=[7ff]}]</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -856,14 +856,14 @@ Standby daemons:
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph config set mds.fs_name.ceph-node02.kxxoad  mds_join_fs fs_name</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph config set mds.fs_name.ceph-node02.kxxoad  mds_join_fs fs_name</code></pre>
 </div>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_running_more_than_one_active_mds_per_filesystem"><a class="anchor" href="#_running_more_than_one_active_mds_per_filesystem"></a>Running more than one Active MDS per Filesystem</h2>
+<h2 id="_running_more_than_one_active_mds_per_filesystem"><a class="anchor" href="#_running_more_than_one_active_mds_per_filesystem"></a>7. Running more than one Active MDS per Filesystem</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>You should configure multiple active MDS daemons when your metadata performance is bottlenecked on the single MDS that runs by default.</p>
@@ -883,7 +883,7 @@ set to <code>2</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph fs set fs_name  standby_count_wanted 1</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph fs set fs_name  standby_count_wanted 1</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -892,7 +892,7 @@ taking out the host <code>ceph-node02</code> from the list:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># vi mds.yaml
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># vi mds.yaml
 # cat mds.yaml
 service_type: mds
 service_id: fs_name
@@ -903,7 +903,7 @@ placement:
   - ceph-node01
   - proxy01
 # ceph orch apply -i mds.yaml
-Scheduled mds.fs_name update...</pre>
+Scheduled mds.fs_name update...</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -911,11 +911,11 @@ Scheduled mds.fs_name update...</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph orch ps | grep mds
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph orch ps | grep mds
 mds.fs_name.ceph-node01.uygvno  ceph-node01               running (56m)     5m ago  17h    39.4M        -  16.2.8-85.el8cp  b2c997ff1898  4711409b661d
 mds.fs_name.proxy01.bbnkcu      proxy01                   running (56m)     5m ago  17h    53.3M        -  16.2.8-85.el8cp  b2c997ff1898  5030c8246c68
 # ceph -s | grep mds
-    mds: 1/1 daemons up, 1 hot standby</pre>
+    mds: 1/1 daemons up, 1 hot standby</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -923,14 +923,14 @@ mds.fs_name.proxy01.bbnkcu      proxy01                   running (56m)     5m a
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph fs get fs_name | grep max_mds
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph fs get fs_name | grep max_mds
 max_mds	1
 # ceph fs set fs_name max_mds 2
 # ceph -s
   cluster:
     id:     e6c62efc-9016-11ed-b206-2cc26078e4ef
     health: HEALTH_WARN
-            1 filesystem is online with fewer MDS than max_mds</pre>
+            1 filesystem is online with fewer MDS than max_mds</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -938,7 +938,7 @@ max_mds	1
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># vi mds.yaml
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># vi mds.yaml
 # cat mds.yaml
 service_type: mds
 service_id: fs_name
@@ -959,7 +959,7 @@ fs_name - 0 clients
 RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   DIRS   CAPS
  0        active      fs_name.ceph-node01.uygvno  Reqs:    0 /s  1022     21     15      0
  1        active      fs_name.ceph-node02.jsvbzq  Reqs:    0 /s    10     13     11      0
-0-s   standby-replay    fs_name.proxy01.bbnkcu    Evts:    0 /s  1013     12      6      0</pre>
+0-s   standby-replay    fs_name.proxy01.bbnkcu    Evts:    0 /s  1013     12      6      0</code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -1022,7 +1022,7 @@ Even with multiple active MDS daemons, a highly available system still requires 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># vi mds.yaml
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># vi mds.yaml
 # cat mds.yaml
 service_type: mds
 service_id: fs_name
@@ -1047,11 +1047,17 @@ RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   
  0        active      fs_name.ceph-node01.uygvno  Reqs:    0 /s  1022     21     15      0
  1        active      fs_name.ceph-node02.jsvbzq  Reqs:    0 /s    10     13     11      0
 0-s   standby-replay    fs_name.proxy01.bbnkcu    Evts:    0 /s  1013     12      6      0
-1-s   standby-replay  fs_name.ceph-node03.zamikx  Evts:    0 /s     0      3      1      0</pre>
+1-s   standby-replay  fs_name.ceph-node03.zamikx  Evts:    0 /s     0      3      1      0</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>In multiple active metadata server configurations, a balancer runs which works to spread metadata load evenly across the cluster. This usually works well enough for most users but sometimes it is desirable to override the dynamic balancer with explicit mappings of metadata to particular ranks. This can allow the administrator or users to evenly spread application load or limit impact of users’ metadata requests on the entire cluster.</p>
+<p><strong>In multiple active metadata server configurations</strong> a balancer runs which works to spread metadata load evenly across the cluster.</p>
+</div>
+<div class="paragraph">
+<p>This usually works well enough for most users but sometimes it is desirable to override the dynamic balancer with explicit mappings of metadata to particular ranks.</p>
+</div>
+<div class="paragraph">
+<p>This can allow the administrator or users to evenly spread application load or limit impact of users’ metadata requests on the entire cluster.</p>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -1063,12 +1069,12 @@ RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="
 # ls -l /mnt
 total 13312
 drwxr-xr-x. 2 root root        1 Jan 10 06:41 clientec
 drwxr-xr-x. 3 root root        2 Jan 10 05:45 dir4
--rw-r--r--. 1 root root 13631488 Jan 10 16:17 test-quota</pre>
+-rw-r--r--. 1 root root 13631488 Jan 10 16:17 test-quota</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1076,11 +1082,11 @@ drwxr-xr-x. 3 root root        2 Jan 10 05:45 dir4
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># setfattr -n ceph.dir.pin -v 1 /mnt/dir4/
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># setfattr -n ceph.dir.pin -v 1 /mnt/dir4/
 # setfattr -n ceph.dir.pin -v 0 /mnt/clientec/
 # getfattr -n ceph.dir.pin /mnt/dir4
 # file: mnt/dir4
-ceph.dir.pin="1"</pre>
+ceph.dir.pin="1"</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1095,7 +1101,7 @@ this <a href="https://docs.ceph.com/en/quincy/cephfs/multimds/#setting-subtree-p
 </div>
 </div>
 <div class="sect1">
-<h2 id="_mds_cache"><a class="anchor" href="#_mds_cache"></a>MDS Cache</h2>
+<h2 id="_mds_cache"><a class="anchor" href="#_mds_cache"></a>8. MDS Cache</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>While the data for inodes in a Ceph file system is stored in RADOS and accessed by the clients directly, inode metadata and directory information is managed by the Ceph metadata server (MDS). The MDS’s act as mediator for all metadata related activity, storing the resulting information in a separate RADOS pool from the file data.</p>
@@ -1116,8 +1122,8 @@ This sets a target maximum memory usage of the MDS cache and is the primary tuna
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph config get mds.fs_name.ceph-node01.uygvno mds_cache_memory_limit
-4294967296    ----&gt; 4GB</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph config get mds.fs_name.ceph-node01.uygvno mds_cache_memory_limit
+4294967296    ----&gt; 4GB</code></pre>
 </div>
 </div>
 <div class="olist arabic">
@@ -1130,14 +1136,14 @@ The cache reservation (memory or inodes) for the MDS cache to maintain. Once the
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph config get mds.fs_name.ceph-node01.uygvno mds_cache_reservation
-0.050000   ----&gt; 5%</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph config get mds.fs_name.ceph-node01.uygvno mds_cache_reservation
+0.050000   ----&gt; 5%</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_fs_volumes_and_subvolumes"><a class="anchor" href="#_fs_volumes_and_subvolumes"></a>FS Volumes and Subvolumes</h2>
+<h2 id="_fs_volumes_and_subvolumes"><a class="anchor" href="#_fs_volumes_and_subvolumes"></a>9. FS Volumes and Subvolumes</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>A single source of truth for CephFS exports is implemented in the volumes module of the Ceph Manager daemon (ceph-mgr). The OpenStack shared file system service (manila), Ceph Container Storage Interface (CSI), storage administrators among others can use the common CLI provided by the ceph-mgr volumes module to manage the CephFS exports.</p>
@@ -1160,7 +1166,7 @@ Volumes and Subvolumes are used by rook in turn by ODF &amp; Fusion/ODF.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph fs volume ls
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph fs volume ls
 [
     {
         "name": "fs_name"
@@ -1190,13 +1196,13 @@ Volumes and Subvolumes are used by rook in turn by ODF &amp; Fusion/ODF.
 /volumes/_nogroup/subvol1/8ee41860-a331-4aae-b95c-1ba0540ae883
 # mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/volumes/_nogroup/subvol1/8ee41860-a331-4aae-b95c-1ba0540ae883 /mnt -o name=cli_sub,secret="AQCvfL5jF5NLGBAATtMf58oSE8KInuRqgG4Lug=="
 # touch /mnt/ok
-#</pre>
+#</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_snapshots"><a class="anchor" href="#_snapshots"></a>Snapshots</h2>
+<h2 id="_snapshots"><a class="anchor" href="#_snapshots"></a>10. Snapshots</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>CephFS enables asynchronous snapshots by default These snapshots are stored in a hidden directory called .snap.</p>
@@ -1208,7 +1214,7 @@ snapshot contains a copy of all the current files in the CephFS file system.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># umount /mnt
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># umount /mnt
 # mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="
 # mkdir /mnt/.snap/snapshot1
 # mkdir /mnt/.snap/snapshot1
@@ -1216,7 +1222,7 @@ snapshot contains a copy of all the current files in the CephFS file system.</p>
 clientec  dir4  test-quota  volumes
 # ls /mnt/.snap/snapshot1
 clientec  dir4  test-quota  volumes
-# rm -Rf /mnt/.snap/snapshot1</pre>
+# rm -Rf /mnt/.snap/snapshot1</code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -1233,13 +1239,13 @@ for the CephFS file system with the <code>s</code> client capability option.
 </table>
 </div>
 <div class="sect2">
-<h3 id="_schedule_snapshots"><a class="anchor" href="#_schedule_snapshots"></a>Schedule snapshots</h3>
+<h3 id="_schedule_snapshots"><a class="anchor" href="#_schedule_snapshots"></a>10.1. Schedule snapshots</h3>
 <div class="paragraph">
 <p>The snap_schedule module is enabled with:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>ceph mgr module enable snap_schedule</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">ceph mgr module enable snap_schedule</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1247,7 +1253,7 @@ for the CephFS file system with the <code>s</code> client capability option.
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph fs snap-schedule add / 1h
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph fs snap-schedule add / 1h
 Schedule set for path /
 # ceph fs snap-schedule list /
 / 1h
@@ -1267,7 +1273,7 @@ Schedule set for path /
   "created_count": 0,
   "pruned_count": 0,
   "active": true
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1275,8 +1281,8 @@ Schedule set for path /
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph fs snap-schedule retention add / h 24
-Retention added to path /</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph fs snap-schedule retention add / h 24
+Retention added to path /</code></pre>
 </div>
 </div>
 <div class="admonitionblock note">
@@ -1295,7 +1301,7 @@ The snapshot schedule data is stored in a rados object in the cephfs metadata po
 </div>
 </div>
 <div class="sect1">
-<h2 id="_client_sessions"><a class="anchor" href="#_client_sessions"></a>Client Sessions</h2>
+<h2 id="_client_sessions"><a class="anchor" href="#_client_sessions"></a>11. Client Sessions</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>If a client is misbehaving, or has died, we may want to evict it from the system
@@ -1409,7 +1415,7 @@ Eviction is a “big hammer”: it&#8217;s for when something has gone wrong, no
 </div>
 </div>
 <div class="sect1">
-<h2 id="_deep_dive_metadata_layout"><a class="anchor" href="#_deep_dive_metadata_layout"></a>Deep Dive Metadata layout</h2>
+<h2 id="_deep_dive_metadata_layout"><a class="anchor" href="#_deep_dive_metadata_layout"></a>12. Deep Dive Metadata layout</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Let&#8217;s take a look at the CephFS metadata layout in RADOS.</p>
@@ -1428,7 +1434,7 @@ Eviction is a “big hammer”: it&#8217;s for when something has gone wrong, no
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># rados -p cephfs.fs_name.meta ls
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># rados -p cephfs.fs_name.meta ls
 601.00000000
 602.00000000
 600.00000000
@@ -1470,7 +1476,7 @@ mds1_inotable
 201.00000000
 400.00000000
 100.00000000.inode
-1.00000000</pre>
+1.00000000</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1479,7 +1485,7 @@ mds1_inotable
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># cephfs-table-tool 0 show inode
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># cephfs-table-tool 0 show inode
 {
     "0": {
         "data": {
@@ -1501,7 +1507,7 @@ mds1_inotable
         },
         "result": 0
     }
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1511,7 +1517,7 @@ mds1_inotable
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># cephfs-table-tool all show session
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># cephfs-table-tool all show session
 {
     "0": {
         "data": {
@@ -1525,7 +1531,7 @@ mds1_inotable
         },
         "result": 0
     }
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -1533,7 +1539,7 @@ mds1_inotable
 <strong>Journal objects</strong> 200.00000000,200.00000001,200.0000000X .Object names increment as journal grows, multiple objects will exist depending on length of journal.  200.0000000 remains as journal header (contains expire/trim/write positions)</p>
 </div>
 <div class="sect2">
-<h3 id="_objects_from_data_pool"><a class="anchor" href="#_objects_from_data_pool"></a>Objects from Data pool</h3>
+<h3 id="_objects_from_data_pool"><a class="anchor" href="#_objects_from_data_pool"></a>12.1. Objects from Data pool</h3>
 <div class="paragraph">
 <p>Cephfs uses striping: like RBD, RGW.</p>
 </div>
@@ -1542,11 +1548,11 @@ mds1_inotable
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># rados -p cephfs.fs_name.data ls
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># rados -p cephfs.fs_name.data ls
 100000003f0.00000003
 100000003f0.00000002
 100000003f0.00000001
-100000003f0.00000000</pre>
+100000003f0.00000000</code></pre>
 </div>
 </div>
 <div class="paragraph">
