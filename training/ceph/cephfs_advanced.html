@@ -235,7 +235,7 @@
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/cephfs_io_path.png" alt="cephfs layout">
+<img src="_images/cephfs_io_path.png" alt="cephfs layout" width="840" height="680">
 </div>
 </div>
 </div>
@@ -257,59 +257,45 @@
 <div class="paragraph">
 <p><strong>pool</strong></p>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>String, giving ID or name. String can only have characters in the set [a-zA-Z0-9\_-.]. Which RADOS pool a file's data objects will be stored in.</pre>
-</div>
+<div class="paragraph">
+<p>String, giving ID or name. String can only have characters in the set [a-zA-Z0-9\_-.]. Which RADOS pool a file&#8217;s data objects will be stored in.</p>
 </div>
 <div class="paragraph">
 <p><strong>pool_id</strong></p>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>String of digits. This is the system assigned pool id for the RADOS pool whenever it is created.</pre>
-</div>
+<div class="paragraph">
+<p>String of digits. This is the system assigned pool id for the RADOS pool whenever it is created.</p>
 </div>
 <div class="paragraph">
 <p><strong>pool_name</strong></p>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>String, given name. This is the user defined name for the RADOS pool whenever user creates it.</pre>
-</div>
+<div class="paragraph">
+<p>String, given name. This is the user defined name for the RADOS pool whenever user creates it.</p>
 </div>
 <div class="paragraph">
 <p><strong>pool_namespace</strong></p>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>String with only characters in the set [a-zA-Z0-9\_-.].  Within the data pool, which RADOS namespace the objects will
-be written to.  Empty by default (i.e. default namespace).</pre>
-</div>
+<div class="paragraph">
+<p>String with only characters in the set [a-zA-Z0-9\_-.].  Within the data pool, which RADOS namespace the objects will
+    be written to.  Empty by default (i.e. default namespace).</p>
 </div>
 <div class="paragraph">
 <p><strong>stripe_unit</strong></p>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>Integer in bytes.  The size (in bytes) of a block of data used in the RAID 0 distribution of a file. All stripe units for a file have equal size. The last stripe unit is typically incomplete–i.e. it represents the data at the end of the file as well as unused “space” beyond it up to the end of the fixed stripe unit size.</pre>
-</div>
+<div class="paragraph">
+<p>Integer in bytes.  The size (in bytes) of a block of data used in the RAID 0 distribution of a file. All stripe units for a file have equal size. The last stripe unit is typically incomplete–i.e. it represents the data at the end of the file as well as unused “space” beyond it up to the end of the fixed stripe unit size.</p>
 </div>
 <div class="paragraph">
 <p><strong>stripe_count</strong></p>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>Integer.  The number of consecutive stripe units that constitute a RAID 0 “stripe” of file data.</pre>
-</div>
+<div class="paragraph">
+<p>Integer.  The number of consecutive stripe units that constitute a RAID 0 “stripe” of file data.</p>
 </div>
 <div class="paragraph">
 <p><strong>object_size</strong></p>
 </div>
-<div class="literalblock">
-<div class="content">
-<pre>Integer in bytes.  File data is chunked into RADOS objects of this size.</pre>
-</div>
+<div class="paragraph">
+<p>Integer in bytes.  File data is chunked into RADOS objects of this size.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -427,11 +413,29 @@ attributes in the <code>/dir4</code> folder</p>
 ceph.file.layout="stripe_unit=4194304 stripe_count=2 object_size=4194304 pool=cephfs.fs_name.data"</pre>
 </div>
 </div>
-<div class="paragraph">
-<p>NOTE:Files inherit the layout of their parent directory at creation time. However, subsequent changes to the parent directory’s layout do not affect children.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Files inherit the layout of their parent directory at creation time. However, subsequent changes to the parent directory’s layout do not affect children.
+</td>
+</tr>
+</table>
 </div>
-<div class="paragraph">
-<p>NOTE:Files created as descendents of the directory also inherit the layout, if the intermediate directories do not have layouts set</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Files created as descendents of the directory also inherit the layout, if the intermediate directories do not have layouts set
+</td>
+</tr>
+</table>
 </div>
 <div class="sect2">
 <h3 id="_creating_files_in_different_rados_namespaces"><a class="anchor" href="#_creating_files_in_different_rados_namespaces"></a>Creating files in different Rados Namespaces</h3>
@@ -979,6 +983,26 @@ RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   
 </tr>
 </table>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Once an MDS rank is assigned to a daemon, it proceeds through a series of states to start:
+replay – replaying journal
+resolve – disambiguating perhaps-incomplete MDCache operations such as import/export
+reconnect – waiting for clients to send reconnect messages
+rejoin – bring cache into consistent state with peers (load)
+clientreplay – execute part-done client requests
+active – normal operation</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
 <p>Currently Rank0 with MDS <code>fs_name.ceph-node01.uygvno</code> has a standby daemon, but
 out new MDS <code>fs_name.ceph-node02.jsvbzq</code> with rank1 has not standy daemon,
@@ -1031,7 +1055,7 @@ RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="_images/subtree-partitioning.svg" alt="Subtree Partitioning">
+<img src="_images/subtree-partitioning.svg" alt="Subtree Partitioning" width="840" height="680">
 </div>
 </div>
 <div class="paragraph">
@@ -1266,6 +1290,267 @@ The snapshot schedule data is stored in a rados object in the cephfs metadata po
 </td>
 </tr>
 </table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_client_sessions"><a class="anchor" href="#_client_sessions"></a>Client Sessions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If a client is misbehaving, or has died, we may want to evict it from the system
+Eviction terminates the client&#8217;s session with the MDS (the one where you ran the command), and blacklists the client: i.e. records its address in the OSDMap as an instruction to the OSDs to refuse I/O to the client.
+Other MDS daemons also watch the OSDMap and kill their sessions with the client, and refuse to open new sessions with it.
+Eviction is a “big hammer”: it&#8217;s for when something has gone wrong, not a convenient way of unmounting clients.</p>
+</div>
+<div class="paragraph">
+<p>Each client has a session with each MDS daemon to which it submits MDS requests.  MDS also stores a small metadata map for each session.  We can list these:</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p># ceph tell mds.0 client ls
+2023-01-11T05:44:46.262-0500 7f0803fff700  0 client.144601 ms_handle_reset on v2:192.168.56.24:6800/2208661102
+2023-01-11T05:44:46.284-0500 7f0803fff700  0 client.144659 ms_handle_reset on v2:192.168.56.24:6800/2208661102
+[
+    {
+        "id": 144451,
+        "entity": {
+            "name": {
+                "type": "client",
+                "num": 144451
+            },
+            "addr": {
+                "type": "v1",
+                "addr": "192.168.56.252:0",
+                "nonce": 797768304
+            }
+        },
+        "state": "open",
+        "num_leases": 0,
+        "num_caps": 1,
+        "request_load_avg": 0,
+        "uptime": 4779.8243540920002,
+        "requests_in_flight": 0,
+        "num_completed_requests": 1,
+        "num_completed_flushes": 0,
+        "reconnecting": false,
+        "recall_caps": {
+            "value": 0,
+            "halflife": 60
+        },
+        "release_caps": {
+            "value": 0,
+            "halflife": 60
+        },
+        "recall_caps_throttle": {
+            "value": 0,
+            "halflife": 1.5
+        },
+        "recall_caps_throttle2o": {
+            "value": 0,
+            "halflife": 0.5
+        },
+        "session_cache_liveness": {
+            "value": 0,
+            "halflife": 300
+        },
+        "cap_acquisition": {
+            "value": 0,
+            "halflife": 10
+        },
+        "delegated_inos": [],
+        "inst": "client.144451 v1:192.168.56.252:0/797768304",
+        "completed_requests": [
+            {
+                "tid": 9,
+                "created_ino": "0x0"
+            }
+        ],
+        "prealloc_inos": [],
+        "client_metadata": {
+            "client_features": {
+                "feature_bits": "0x0000000000007bff"
+            },
+            "metric_spec": {
+                "metric_flags": {
+                    "feature_bits": "0x000000000000001f"
+                }
+            },
+            "entity_id": "admin",
+            "hostname": "workstation-lb1719.rhpds.opentlc.com",
+            "kernel_version": "4.18.0-305.el8.x86_64",
+            "root": "/"
+        }
+    }
+]</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>MDS daemons will sometimes evict a client automatically, if the client has not communicated for a period of time.</p>
+</div>
+<div class="paragraph">
+<p>Can be troublesome if the system has badly behaved clients:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Clients with flaky networks</p>
+</li>
+<li>
+<p>Overloaded clients that go into swap-hell and stop responding</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>You can configure timeout <code>mds_session_timeout</code> (default 60s) and set <code>mds_session_blacklist_on_timeout</code> to false to attempt to let flaky clients rejoin after eviction.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_deep_dive_metadata_layout"><a class="anchor" href="#_deep_dive_metadata_layout"></a>Deep Dive Metadata layout</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Let&#8217;s take a look at the CephFS metadata layout in RADOS.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<code>ceph daemon mds.&lt;id&gt; flush journal</code> first if your filesystem is new to flush the metadata
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># rados -p cephfs.fs_name.meta ls
+601.00000000
+602.00000000
+600.00000000
+603.00000000
+60a.00000000
+613.00000000
+1.00000000.inode
+200.00000000
+610.00000000
+200.00000001
+606.00000000
+607.00000000
+60e.00000000
+mds1_openfiles.0
+mds0_openfiles.0
+60f.00000000
+608.00000000
+500.00000001
+501.00000000
+612.00000000
+401.00000000
+604.00000000
+101.00000000.inode
+500.00000000
+mds_snaptable
+605.00000000
+101.00000000
+mds1_sessionmap
+mds0_inotable
+611.00000000
+100.00000000
+mds0_sessionmap
+60c.00000000
+201.00000001
+mds1_inotable
+609.00000000
+60b.00000000
+60d.00000000
+201.00000000
+400.00000000
+100.00000000.inode
+1.00000000</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>mds_snaptable</strong> Tracks snapshots (obviously), One per filesystem: owned by rank 0, Map of snapid_t to SnapInfo Stored as normal object (not omap)
+<strong>Inode table</strong> mds0_inotable/mds1_inotable. Free list of inode numbers (no actual inodes in here) One per MDS rank: each rank is granted 1/MAX_MDS share of overall space.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># cephfs-table-tool 0 show inode
+{
+    "0": {
+        "data": {
+            "version": 0,
+            "inotable": {
+                "projected_free": [
+                    {
+                        "start": 1099511627776,
+                        "len": 1099511627776
+                    }
+                ],
+                "free": [
+                    {
+                        "start": 1099511627776,
+                        "len": 1099511627776
+                    }
+                ]
+            }
+        },
+        "result": 0
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Session Map</strong> mds0_sessionmap/mds1_sessionmap. One per MDS rank Internal class
+<code>SessionMapStore</code> Stored as OMAP, keys are <code>entity_name_t</code>, values are
+<code>Session</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># cephfs-table-tool all show session
+{
+    "0": {
+        "data": {
+            "sessions": []
+        },
+        "result": 0
+    },
+    "1": {
+        "data": {
+            "sessions": []
+        },
+        "result": 0
+    }
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Journal Pointer objects</strong> 400.00000000. MDS daemons have ability to rewrite their journals safely by writing out a fresh one and then switching the “pointer” object over before purging the old one.
+<strong>Journal objects</strong> 200.00000000,200.00000001,200.0000000X .Object names increment as journal grows, multiple objects will exist depending on length of journal.  200.0000000 remains as journal header (contains expire/trim/write positions)</p>
+</div>
+<div class="sect2">
+<h3 id="_objects_from_data_pool"><a class="anchor" href="#_objects_from_data_pool"></a>Objects from Data pool</h3>
+<div class="paragraph">
+<p>Cephfs uses striping: like RBD, RGW.</p>
+</div>
+<div class="paragraph">
+<p>It follows the patter: &lt;inode number&gt;.&lt;stripe index&gt;</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># rados -p cephfs.fs_name.data ls
+100000003f0.00000003
+100000003f0.00000002
+100000003f0.00000001
+100000003f0.00000000</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Controlled by <code>file_layout_t</code> , Layout can only be changed on empty files: once data is written it is not moved around.</p>
 </div>
 </div>
 </div>
