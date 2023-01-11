@@ -19,33 +19,33 @@ Layout fields
 
 *pool*
 
-    String, giving ID or name. String can only have characters in the set [a-zA-Z0-9\_-.]. Which RADOS pool a file's data objects will be stored in.
+String, giving ID or name. String can only have characters in the set [a-zA-Z0-9\_-.]. Which RADOS pool a file's data objects will be stored in.
 
 *pool_id*
 
-    String of digits. This is the system assigned pool id for the RADOS pool whenever it is created.
+String of digits. This is the system assigned pool id for the RADOS pool whenever it is created.
 
 *pool_name*
 
-    String, given name. This is the user defined name for the RADOS pool whenever user creates it.
+String, given name. This is the user defined name for the RADOS pool whenever user creates it.
 
 *pool_namespace*
 
-    String with only characters in the set [a-zA-Z0-9\_-.].  Within the data pool, which RADOS namespace the objects will
+String with only characters in the set [a-zA-Z0-9\_-.].  Within the data pool, which RADOS namespace the objects will
     be written to.  Empty by default (i.e. default namespace).
 
 *stripe_unit*
 
-    Integer in bytes.  The size (in bytes) of a block of data used in the RAID 0 distribution of a file. All stripe units for a file have equal size. The last stripe unit is typically incomplete–i.e. it represents the data at the end of the file as well as unused “space” beyond it up to the end of the fixed stripe unit size.
+Integer in bytes.  The size (in bytes) of a block of data used in the RAID 0 distribution of a file. All stripe units for a file have equal size. The last stripe unit is typically incomplete–i.e. it represents the data at the end of the file as well as unused “space” beyond it up to the end of the fixed stripe unit size.
 
 
 *stripe_count*
 
-    Integer.  The number of consecutive stripe units that constitute a RAID 0 “stripe” of file data.
+Integer.  The number of consecutive stripe units that constitute a RAID 0 “stripe” of file data.
 
 *object_size*
 
-    Integer in bytes.  File data is chunked into RADOS objects of this size.
+Integer in bytes.  File data is chunked into RADOS objects of this size.
 
 
 [NOTE]
@@ -128,9 +128,9 @@ Let's modify the attributes of a file in dir4
 ceph.file.layout="stripe_unit=4194304 stripe_count=2 object_size=4194304 pool=cephfs.fs_name.data"
 ----
 
-NOTE:Files inherit the layout of their parent directory at creation time. However, subsequent changes to the parent directory’s layout do not affect children.
+NOTE: Files inherit the layout of their parent directory at creation time. However, subsequent changes to the parent directory’s layout do not affect children.
 
-NOTE:Files created as descendents of the directory also inherit the layout, if the intermediate directories do not have layouts set
+NOTE: Files created as descendents of the directory also inherit the layout, if the intermediate directories do not have layouts set
 
 === Creating files in different Rados Namespaces
 
@@ -568,6 +568,18 @@ RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   
 ====
 
 
+[TIP]
+====
+Once an MDS rank is assigned to a daemon, it proceeds through a series of states to start:
+replay – replaying journal
+resolve – disambiguating perhaps-incomplete MDCache operations such as import/export
+reconnect – waiting for clients to send reconnect messages
+rejoin – bring cache into consistent state with peers (load)
+clientreplay – execute part-done client requests
+active – normal operation
+====
+
+
 Currently Rank0 with MDS `fs_name.ceph-node01.uygvno` has a standby daemon, but
 out new MDS `fs_name.ceph-node02.jsvbzq` with rank1 has not standy daemon,
 let's add one more MDS for standby.
@@ -772,3 +784,225 @@ Retention added to path /
 ----
 
 NOTE: The snapshot schedule data is stored in a rados object in the cephfs metadata pool. At runtime all data lives in a sqlite database that is serialized and stored as a rados object.
+
+== Client Sessions
+
+If a client is misbehaving, or has died, we may want to evict it from the system
+Eviction terminates the client's session with the MDS (the one where you ran the command), and blacklists the client: i.e. records its address in the OSDMap as an instruction to the OSDs to refuse I/O to the client.
+Other MDS daemons also watch the OSDMap and kill their sessions with the client, and refuse to open new sessions with it.
+Eviction is a “big hammer”: it's for when something has gone wrong, not a convenient way of unmounting clients.
+
+
+Each client has a session with each MDS daemon to which it submits MDS requests.  MDS also stores a small metadata map for each session.  We can list these:
+
+====
+# ceph tell mds.0 client ls
+2023-01-11T05:44:46.262-0500 7f0803fff700  0 client.144601 ms_handle_reset on v2:192.168.56.24:6800/2208661102
+2023-01-11T05:44:46.284-0500 7f0803fff700  0 client.144659 ms_handle_reset on v2:192.168.56.24:6800/2208661102
+[
+    {
+        "id": 144451,
+        "entity": {
+            "name": {
+                "type": "client",
+                "num": 144451
+            },
+            "addr": {
+                "type": "v1",
+                "addr": "192.168.56.252:0",
+                "nonce": 797768304
+            }
+        },
+        "state": "open",
+        "num_leases": 0,
+        "num_caps": 1,
+        "request_load_avg": 0,
+        "uptime": 4779.8243540920002,
+        "requests_in_flight": 0,
+        "num_completed_requests": 1,
+        "num_completed_flushes": 0,
+        "reconnecting": false,
+        "recall_caps": {
+            "value": 0,
+            "halflife": 60
+        },
+        "release_caps": {
+            "value": 0,
+            "halflife": 60
+        },
+        "recall_caps_throttle": {
+            "value": 0,
+            "halflife": 1.5
+        },
+        "recall_caps_throttle2o": {
+            "value": 0,
+            "halflife": 0.5
+        },
+        "session_cache_liveness": {
+            "value": 0,
+            "halflife": 300
+        },
+        "cap_acquisition": {
+            "value": 0,
+            "halflife": 10
+        },
+        "delegated_inos": [],
+        "inst": "client.144451 v1:192.168.56.252:0/797768304",
+        "completed_requests": [
+            {
+                "tid": 9,
+                "created_ino": "0x0"
+            }
+        ],
+        "prealloc_inos": [],
+        "client_metadata": {
+            "client_features": {
+                "feature_bits": "0x0000000000007bff"
+            },
+            "metric_spec": {
+                "metric_flags": {
+                    "feature_bits": "0x000000000000001f"
+                }
+            },
+            "entity_id": "admin",
+            "hostname": "workstation-lb1719.rhpds.opentlc.com",
+            "kernel_version": "4.18.0-305.el8.x86_64",
+            "root": "/"
+        }
+    }
+]
+====
+
+MDS daemons will sometimes evict a client automatically, if the client has not communicated for a period of time.
+
+Can be troublesome if the system has badly behaved clients:
+
+. Clients with flaky networks
+. Overloaded clients that go into swap-hell and stop responding
+
+You can configure timeout `mds_session_timeout` (default 60s) and set `mds_session_blacklist_on_timeout` to false to attempt to let flaky clients rejoin after eviction.
+
+== Deep Dive Metadata layout
+
+Let's take a look at the CephFS metadata layout in RADOS.
+
+TIP: `ceph daemon mds.<id> flush journal` first if your filesystem is new to flush the metadata
+
+----
+# rados -p cephfs.fs_name.meta ls
+601.00000000
+602.00000000
+600.00000000
+603.00000000
+60a.00000000
+613.00000000
+1.00000000.inode
+200.00000000
+610.00000000
+200.00000001
+606.00000000
+607.00000000
+60e.00000000
+mds1_openfiles.0
+mds0_openfiles.0
+60f.00000000
+608.00000000
+500.00000001
+501.00000000
+612.00000000
+401.00000000
+604.00000000
+101.00000000.inode
+500.00000000
+mds_snaptable
+605.00000000
+101.00000000
+mds1_sessionmap
+mds0_inotable
+611.00000000
+100.00000000
+mds0_sessionmap
+60c.00000000
+201.00000001
+mds1_inotable
+609.00000000
+60b.00000000
+60d.00000000
+201.00000000
+400.00000000
+100.00000000.inode
+1.00000000
+----
+
+*mds_snaptable* Tracks snapshots (obviously), One per filesystem: owned by rank 0, Map of snapid_t to SnapInfo Stored as normal object (not omap)
+*Inode table* mds0_inotable/mds1_inotable. Free list of inode numbers (no actual inodes in here) One per MDS rank: each rank is granted 1/MAX_MDS share of overall space.
+----
+# cephfs-table-tool 0 show inode
+{
+    "0": {
+        "data": {
+            "version": 0,
+            "inotable": {
+                "projected_free": [
+                    {
+                        "start": 1099511627776,
+                        "len": 1099511627776
+                    }
+                ],
+                "free": [
+                    {
+                        "start": 1099511627776,
+                        "len": 1099511627776
+                    }
+                ]
+            }
+        },
+        "result": 0
+    }
+}
+----
+
+*Session Map* mds0_sessionmap/mds1_sessionmap. One per MDS rank Internal class
+`SessionMapStore` Stored as OMAP, keys are `entity_name_t`, values are
+`Session`
+
+----
+# cephfs-table-tool all show session 
+{
+    "0": {
+        "data": {
+            "sessions": []
+        },
+        "result": 0
+    },
+    "1": {
+        "data": {
+            "sessions": []
+        },
+        "result": 0
+    }
+}
+----
+
+
+
+*Journal Pointer objects* 400.00000000. MDS daemons have ability to rewrite their journals safely by writing out a fresh one and then switching the “pointer” object over before purging the old one.
+*Journal objects* 200.00000000,200.00000001,200.0000000X .Object names increment as journal grows, multiple objects will exist depending on length of journal.  200.0000000 remains as journal header (contains expire/trim/write positions)
+
+
+=== Objects from Data pool
+
+Cephfs uses striping: like RBD, RGW.
+
+It follows the patter: <inode number>.<stripe index>
+
+----
+# rados -p cephfs.fs_name.data ls
+100000003f0.00000003
+100000003f0.00000002
+100000003f0.00000001
+100000003f0.00000000
+----
+
+Controlled by `file_layout_t` , Layout can only be changed on empty files: once data is written it is not moved around.
+

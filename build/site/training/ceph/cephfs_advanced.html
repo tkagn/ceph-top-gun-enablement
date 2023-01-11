@@ -109,6 +109,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="cephfs_intro.html">CephFS introduction &amp; Deployment</a>
   </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="cephfs_advanced.html">CephFS Deep Dive</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -209,7 +212,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
-    <li><a href="cephfs_advanced.html">Ceph CephFS Deep Dive and Advanced Topics</a></li>
+    <li>CephFS Shared FileSystem</li>
+    <li><a href="cephfs_advanced.html">CephFS Deep Dive</a></li>
   </ul>
 </nav>
   <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/cephfs_advanced.adoc">Edit this Page</a></div>
@@ -327,7 +331,7 @@ be written to.  Empty by default (i.e. default namespace).</pre>
 <h2 id="_cephfs_layouts_hands_on"><a class="anchor" href="#_cephfs_layouts_hands_on"></a>Cephfs Layouts Hands-On</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>First we need to install the <code>attr</code> RPM so we have access to the <code>setfattr</code> and
+<p>From the <code>workstation</code> server we first we need to install the <code>attr</code> RPM so we have access to the <code>setfattr</code> and
 <code>getfattr</code> commands</p>
 </div>
 <div class="listingblock">
@@ -344,11 +348,924 @@ Read/Write client caps at the / level</p>
 <pre>mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=0,secret="AQA+KrxjWUovChAACWGj0YUbUEZHSKmNtYxriw=="</pre>
 </div>
 </div>
+<div class="paragraph">
+<p>We can check the layout attributes of the root filesystem</p>
+</div>
 <div class="listingblock">
 <div class="content">
 <pre># getfattr -n ceph.dir.layout /mnt
 # file: mnt
 ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Because user <code>0</code> was created with the following client capabilities.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph auth get client.0
+[client.0]
+	key = AQA+KrxjWUovChAACWGj0YUbUEZHSKmNtYxriw==
+	caps mds = "allow rw fsname=fs_name"
+	caps mon = "allow r fsname=fs_name"
+	caps osd = "allow rw tag cephfs data=fs_name"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we try to modify the attribute for the / cephfs filesystem we will get
+permision denied</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># setfattr -n ceph.dir.layout.stripe_count -v 2 /mnt
+setfattr: /mnt: Permission denied</pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Users need the 'P' client capability to be able to modify FS attributes
+and quotas
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Lets create a new cephx user that has the <code>P</code> capability flag to modify
+attributes in the <code>/dir4</code> folder</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># mkdir /mnt/dir4
+#  ceph fs authorize fs_name client.4 / rw /dir4 rwp
+[client.4]
+	key = AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ==</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now lets re-mount the FS using user with id <code>4</code> that we just created</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># umount /mnt
+[root@workstation-lb1719 ~]# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=4,secret="AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ=="</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s modify the attributes of a file in dir4</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># touch /mnt/dir4/file1
+# setfattr -n ceph.file.layout.stripe_count -v 2 /mnt/dir4/file1
+# getfattr -n ceph.file.layout /mnt/dir4/file1
+# file: mnt/dir4/file1
+ceph.file.layout="stripe_unit=4194304 stripe_count=2 object_size=4194304 pool=cephfs.fs_name.data"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>NOTE:Files inherit the layout of their parent directory at creation time. However, subsequent changes to the parent directory’s layout do not affect children.</p>
+</div>
+<div class="paragraph">
+<p>NOTE:Files created as descendents of the directory also inherit the layout, if the intermediate directories do not have layouts set</p>
+</div>
+<div class="sect2">
+<h3 id="_creating_files_in_different_rados_namespaces"><a class="anchor" href="#_creating_files_in_different_rados_namespaces"></a>Creating files in different Rados Namespaces</h3>
+<div class="paragraph">
+<p>Using the dir layout we can select a rados namespace for a directory</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># mkdir /mnt/dir4/dir-namespace
+# setfattr -n ceph.dir.layout.pool_namespace -v client4 /mnt/dir4/dir-namespace
+# getfattr -n ceph.dir.layout /mnt/dir4/dir-namespace
+# file: mnt/dir4/dir-namespace
+ceph.dir.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data pool_namespace=client4"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s mount at the new directory level and create a file</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># umount /mnt
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/dir4/dir-namespace /mnt -o name=4,secret="AQBmK71j0FcKERAAJqwhXOHoucR+iY0nzGV9BQ=="
+# echo "Here we go" &gt; /mnt/file-in-namespace
+# getfattr -n ceph.file.layout /mnt/file-in-namespace
+# file: mnt/file-in-namespace
+ceph.file.layout="stripe_unit=4194304 stripe_count=1 object_size=4194304 pool=cephfs.fs_name.data pool_namespace=client4"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we check at the rados level we can see that the new file is created in the
+client4 rados namespace, there is no data on the default namespace for the data
+cephfs pool</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># rados ls -p cephfs.fs_name.data
+#
+# rados ls -p cephfs.fs_name.data -N client4
+10000000003.00000000
+# echo "Here we go 2" &gt; /mnt/file-in-namespace2
+# rados ls -p cephfs.fs_name.data --all
+client4	10000000003.00000000
+client4	10000000004.00000000</pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>How to map a cephfs file to a rados object?</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># pwd
+/mnt/dir4/dir-namespace
+# ls -l
+total 1
+-rw-r--r--. 1 root root 11 Jan 10 05:50 file-in-namespace
+-rw-r--r--. 1 root root 13 Jan 10 05:53 file-in-namespace2
+# printf '%x\n' $(stat -c %i file-in-namespace)
+10000000003
+# rados ls -p cephfs.fs_name.data -N client4
+10000000003.00000000
+10000000004.00000000</pre>
+</div>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adding_a_different_pool_to_a_path_in_a_filesystem"><a class="anchor" href="#_adding_a_different_pool_to_a_path_in_a_filesystem"></a>Adding a different pool to a path in a filesystem</h3>
+<div class="paragraph">
+<p>We are going to create a new EC cephfs data pool and use it in our cephfs
+<code>fs_name</code> filesystem</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph osd pool create cephfs-data-ec 16 erasure
+pool 'cephfs-data-ec' created
+# ceph osd pool set cephfs-data-ec allow_ec_overwrites true
+set pool 5 allow_ec_overwrites to true
+# ceph osd pool application enable cephfs-data-ec cephfs
+enabled application 'cephfs' on pool 'cephfs-data-ec'</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Lets add the new pool to our filesystem</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs add_data_pool fs_name cephfs-data-ec
+added data pool 5 to fsmap</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We create a new user that is going to have permissions to access the new
+filesystem directory that will map to the new EC pool we created</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph auth get-or-create client.ec mon 'allow r' mds 'allow r, allow rw path=/clientec' osd 'allow rw pool=cephfs-data-ec'
+[client.ec]
+	key = AQDpSr1jQm/yGBAAst+6elZFUY3BIZqeySZZ+w==</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s mount the Cephfs root filesystem with the admin key, so we can modify the
+layout properties for the fs directory <code>/clientec</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># umount /mnt
+# cat /etc/ceph/ceph.client.admin.keyring | grep key
+	key = AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg==
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s create the directory <code>/clientec</code> and change the attributes, so we use a
+rados namespace called <code>clientec</code> inside the new pool <code>cephfs-data-ec</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># mkdir /mnt/clientec
+# setfattr -n ceph.dir.layout.pool_namespace -v clientec /mnt/clientec
+# setfattr -n ceph.dir.layout.pool -v cephfs-data-ec /mnt/clientec</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now let&#8217;s mount the direcory with the client.ec we created before, and by
+creating a file we can check that the file went to the rados namespace called <code>clientec</code> inside the new pool <code>cephfs-data-ec</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/clientec /mnt -o name=ec,secret="AQDpSr1jQm/yGBAAst+6elZFUY3BIZqeySZZ+w=="
+# echo "Here we go 2" &gt; /mnt/file-in-ecpool
+# rados ls -p cephfs-data-ec --all
+clientec	10000000006.00000000</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_cephfs_quotas"><a class="anchor" href="#_cephfs_quotas"></a>CephFS Quotas</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_quota_restrictions"><a class="anchor" href="#_quota_restrictions"></a><strong>Quota Restrictions</strong></h3>
+<div class="paragraph">
+<p>Quotas are cooperative and non-adversarial. CephFS quotas rely on the cooperation of the client who is mounting the file system to stop writers when a limit is reached. A modified or adversarial client cannot be prevented from writing as much data as it needs. Quotas should not be relied on to prevent filling the system in environments where the clients are fully untrusted.</p>
+</div>
+<div class="paragraph">
+<p>Quotas are imprecise. Processes that are writing to the file system will be stopped a short time after the quota limit is reached. They will inevitably be allowed to write some amount of data over the configured limit. How far over the quota they are able to go depends primarily on the amount of time, not the amount of data. Generally speaking writers will be stopped within 10s of seconds of crossing the configured limit.</p>
+</div>
+<div class="paragraph">
+<p>Quotas are implemented in the kernel client 4.17 and higher. Quotas are supported by the userspace client (libcephfs, ceph-fuse). Linux kernel clients &gt;= 4.17 support CephFS quotas but only on mimic+ clusters. Kernel clients (even recent versions) will fail to handle quotas on older clusters, even if they may be able to set the quotas extended attributes.</p>
+</div>
+<div class="paragraph">
+<p>Quotas must be configured carefully when used with path-based mount restrictions. The client needs to have access to the directory inode on which quotas are configured in order to enforce them. If the client has restricted access to a specific path (e.g., /home/user) based on the MDS capability, and a quota is configured on an ancestor directory they do not have access to (e.g., /home), the client will not enforce it. When using path-based access restrictions be sure to configure the quota on the directory the client is restricted too (e.g., /home/user) or something nested beneath it.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example"><a class="anchor" href="#_example"></a><strong>Example</strong></h3>
+<div class="paragraph">
+<p>As the admin user, let&#8217;s mount the Filesystem</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># umount /mnt
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>And we set a quota of 10MB max in size and a max of 10 files on the root of
+the filesystem</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># setfattr -n ceph.quota.max_bytes -v 10000000 /mnt
+# setfattr -n ceph.quota.max_files -v 10 /mnt
+# getfattr -n ceph.quota.max_bytes /mnt
+ceph.quota.max_bytes="10000000"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we check with the <code>df</code> command we can see the available space is the one we have specified with the quota</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># df -h /mnt/clientec
+Filesystem                     Size  Used Avail Use% Mounted on
+192.168.56.61,192.168.56.62:/  8.0M     0  8.0M   0% /mnt</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If we now try to exeed the file count quota or max space, we can see it takes some time to
+sync and block the writes as it specifies in the second point of the quota
+restrictions</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># for i in {1..1000};do touch /mnt/file-${i}.txt;done
+touch: cannot touch '/mnt/file-503.txt': Disk quota exceeded
+touch: cannot touch '/mnt/file-504.txt': Disk quota exceeded
+
+# dd if=/dev/zero of=/mnt/test-quota bs=1M count=100
+dd: error writing '/mnt/test-quota': Disk quota exceeded
+14+0 records in
+13+0 records out
+13631488 bytes (14 MB, 13 MiB) copied, 0.0367228 s, 371 MB/s
+
+# df -h /mnt/
+Filesystem                     Size  Used Avail Use% Mounted on
+192.168.56.61,192.168.56.62:/  8.0M  8.0M     0 100% /mnt</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>To remove the Quotas</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># setfattr -n ceph.quota.max_files -v 0 /mnt/
+# setfattr -n ceph.quota.max_bytes -v 0 /mnt/</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mds_high_availability"><a class="anchor" href="#_mds_high_availability"></a>MDS High Availability</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If an MDS daemon stops communicating with the cluster’s monitors, the monitors will wait mds_beacon_grace seconds (default 15) before marking the daemon as laggy. If a standby MDS is available, the monitor will immediately replace the laggy daemon.</p>
+</div>
+<div class="paragraph">
+<p>Each file system may specify a minimum number of standby daemons in order to be considered healthy. This number includes daemons in the standby-replay state waiting for a rank to fail. Note that a standby-replay daemon will not be assigned to take over a failure for another rank or a failure in a different CephFS file system). The pool of standby daemons not in replay counts towards any file system count.</p>
+</div>
+<div class="paragraph">
+<p>Each file system may set the desired number of standby daemons by setting the
+<code>ceph fs set &lt;fs name&gt; standby_count_wanted &lt;count&gt;</code> command.</p>
+</div>
+<div class="paragraph">
+<p>By default it&#8217;s set to 1, if we for example increase it to two, wi will get a
+new MDS daemon deployed as standby</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs get fs_name | grep standby_count_wanted
+standby_count_wanted	1
+# ceph fs status
+fs_name - 1 clients
+=======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  fs_name.proxy01.bbnkcu  Reqs:    0 /s   520     21     15      1
+        POOL           TYPE     USED  AVAIL
+cephfs.fs_name.meta  metadata  10.5M  9695M
+cephfs.fs_name.data    data    39.0M  9695M
+   cephfs-data-ec      data    12.0k  18.9G
+       STANDBY MDS
+fs_name.ceph-node01.uygvno  &lt;------ We have one MDS daemon as standby
+MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Because we configured the MDS service placement to a count of two and with
+dedicated hosts <code>ceph-node01,proxy01</code>, ceph can&#8217;t add a new MDS daemon to
+fulfill the requirement of two <code>standby_count_wanted</code> per Filesystem.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph -s
+  cluster:
+    id:     e6c62efc-9016-11ed-b206-2cc26078e4ef
+    health: HEALTH_WARN
+            insufficient standby MDS daemons available</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We are going to modify our MDS service configuration, to add one more host into
+the placement, let&#8217;s use a spec file for a change.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph orch ls mds mds.fs_name --export | tee mds.yaml
+service_type: mds
+service_id: fs_name
+service_name: mds.fs_name
+placement:
+  count: 2
+  hosts:
+  - ceph-node01
+  - proxy01</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once we have exported the config to a file open with an editor and increment
+the <code>count: 3</code> and the <code>hosts:</code> with ceph-node02</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># vi mds.yaml
+# cat mds.yaml
+service_type: mds
+service_id: fs_name
+service_name: mds.fs_name
+placement:
+  count: 3
+  hosts:
+  - ceph-node01
+  - ceph-node02
+  - proxy01</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Apply the config(we can use dry-run option if we want)</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>ceph orch apply -i mds.yaml
+Scheduled mds.fs_name update...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Lets check if we now have 2 standby MDS demons</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph -s | grep mds
+    mds: 1/1 daemons up, 2 standby
+# ceph orch ps | grep mds
+mds.fs_name.ceph-node01.uygvno  ceph-node01               running (10h)     8m ago   7h    37.3M        -  16.2.8-85.el8cp  b2c997ff1898  d6169aee0209
+mds.fs_name.ceph-node02.kxxoad  ceph-node02               running (68s)    63s ago  68s    32.7M        -  16.2.8-85.el8cp  b2c997ff1898  6ba364178785
+mds.fs_name.proxy01.bbnkcu      proxy01                   running (14h)     9m ago   6h    70.5M        -  16.2.8-85.el8cp  b2c997ff1898  df91160e7fa6
+# ceph fs status
+fs_name - 1 clients
+=======
+RANK  STATE            MDS               ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0    active  fs_name.proxy01.bbnkcu  Reqs:    0 /s   520     21     15      1
+        POOL           TYPE     USED  AVAIL
+cephfs.fs_name.meta  metadata  10.5M  9694M
+cephfs.fs_name.data    data    39.0M  9694M
+   cephfs-data-ec      data    12.0k  18.9G
+       STANDBY MDS
+fs_name.ceph-node01.uygvno    &lt;----------- 2 standby
+fs_name.ceph-node02.kxxoad    &lt;-----------
+MDS version: ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)</pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_mds_configure_standby_replay"><a class="anchor" href="#_mds_configure_standby_replay"></a>MDS configure Standby-replay</h3>
+<div class="paragraph">
+<p>Each CephFS file system may be configured to add standby-replay daemons. These standby daemons follow the active MDS’s metadata journal in order to reduce failover time in the event that the active MDS becomes unavailable. Each active MDS may have only one standby-replay daemon following it.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Once an MDS has entered the standby-replay state, it will only be used as a standby for the rank that it is following. If another rank fails, this standby-replay daemon will not be used as a replacement, even if no other standbys are available. For this reason, it is advised that if standby-replay is used then every active MDS should have a standby-replay daemon.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Configuration of standby-replay on a file system is done using the below:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs set fs_name allow_standby_replay true
+# ceph -s | grep mds
+    mds: 1/1 daemons up, 1 standby, 1 hot standby
+# ceph fs status
+fs_name - 0 clients
+=======
+RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0        active      fs_name.ceph-node01.uygvno  Reqs:    0 /s  1022     21     15      0
+0-s   standby-replay    fs_name.proxy01.bbnkcu    Evts:    0 /s  1013     12      6      0  &lt;-------- New Standby reply for Rank 0
+        POOL           TYPE     USED  AVAIL
+cephfs.fs_name.meta  metadata  10.5M  9693M
+cephfs.fs_name.data    data    39.0M  9693M
+   cephfs-data-ec      data    12.0k  18.9G
+       STANDBY MDS
+fs_name.ceph-node02.kxxoad</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_mds_stand_by_affinity"><a class="anchor" href="#_mds_stand_by_affinity"></a>MDS Stand-by Affinity</h3>
+<div class="paragraph">
+<p>When failing over MDS daemons, a cluster’s monitors will prefer standby daemons with mds_join_fs equal to the file system name with the failed rank. If no standby exists with mds_join_fs equal to the file system name, it will choose an unqualified standby (no setting for mds_join_fs) for the replacement, or any other available standby, as a last resort. Note, this does not change the behavior that standby-replay daemons are always selected before other standbys.</p>
+</div>
+<div class="paragraph">
+<p>We can check our current status with the <code>ceph fs dump</code> command, our standby
+daemon <code>ceph-node02.kxxoad</code> currently doesn&#8217;t have any affinity defined</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs dump | tail -7
+[mds.fs_name.ceph-node01.uygvno{0:144102} state up:active seq 22 join_fscid=1 addr [v2:192.168.56.61:6800/1486188007,v1:192.168.56.61:6801/1486188007] compat {c=[1],r=[1],i=[7ff]}]
+[mds.fs_name.proxy01.bbnkcu{0:144104} state up:standby-replay seq 1 join_fscid=1 addr [v2:192.168.56.24:6800/2208661102,v1:192.168.56.24:6801/2208661102] compat {c=[1],r=[1],i=[7ff]}]
+
+Standby daemons:
+[mds.fs_name.ceph-node02.kxxoad{-1:144140} state up:standby seq 1 join_fscid=1 addr [v2:192.168.56.62:6800/331662506,v1:192.168.56.62:6801/331662506] compat {c=[1],r=[1],i=[7ff]}]</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s set the affinity for <code>ceph-node02.kxxoad</code> to our FS <code>fs_name</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph config set mds.fs_name.ceph-node02.kxxoad  mds_join_fs fs_name</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_running_more_than_one_active_mds_per_filesystem"><a class="anchor" href="#_running_more_than_one_active_mds_per_filesystem"></a>Running more than one Active MDS per Filesystem</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You should configure multiple active MDS daemons when your metadata performance is bottlenecked on the single MDS that runs by default.</p>
+</div>
+<div class="paragraph">
+<p>Adding more daemons may not increase performance on all workloads. Typically, a single application running on a single client will not benefit from an increased number of MDS daemons unless the application is doing a lot of metadata operations in parallel.</p>
+</div>
+<div class="paragraph">
+<p>Workloads that typically benefit from a larger number of active MDS daemons are those with many clients, perhaps working on many separate directories.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example</strong></p>
+</div>
+<div class="paragraph">
+<p>First let&#8217;s reduce the count of wanted stand by daemos, currently we have it
+set to <code>2</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs set fs_name  standby_count_wanted 1</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now let&#8217;s modify the count and placement in the mds service spec file, I&#8217;m
+taking out the host <code>ceph-node02</code> from the list:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># vi mds.yaml
+# cat mds.yaml
+service_type: mds
+service_id: fs_name
+service_name: mds.fs_name
+placement:
+  count: 2
+  hosts:
+  - ceph-node01
+  - proxy01
+# ceph orch apply -i mds.yaml
+Scheduled mds.fs_name update...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now we can check that we only have 2 daemons, one of them as a hot-standby</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph orch ps | grep mds
+mds.fs_name.ceph-node01.uygvno  ceph-node01               running (56m)     5m ago  17h    39.4M        -  16.2.8-85.el8cp  b2c997ff1898  4711409b661d
+mds.fs_name.proxy01.bbnkcu      proxy01                   running (56m)     5m ago  17h    53.3M        -  16.2.8-85.el8cp  b2c997ff1898  5030c8246c68
+# ceph -s | grep mds
+    mds: 1/1 daemons up, 1 hot standby</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now we can start with the configuration of a new Active MDS for our FS.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs get fs_name | grep max_mds
+max_mds	1
+# ceph fs set fs_name max_mds 2
+# ceph -s
+  cluster:
+    id:     e6c62efc-9016-11ed-b206-2cc26078e4ef
+    health: HEALTH_WARN
+            1 filesystem is online with fewer MDS than max_mds</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>We are missing one MDS daemon, to have 2 active MDS daemons, as we requested. Let&#8217;s modify the spec again</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># vi mds.yaml
+# cat mds.yaml
+service_type: mds
+service_id: fs_name
+service_name: mds.fs_name
+placement:
+  count: 3
+  hosts:
+  - ceph-node01
+  - ceph-node02
+  - proxy01
+# ceph orch apply -i mds.yaml
+Scheduled mds.fs_name update...
+# ceph -s | grep mds
+    mds: 2/2 daemons up, 1 hot standby
+# ceph fs status
+fs_name - 0 clients
+=======
+RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0        active      fs_name.ceph-node01.uygvno  Reqs:    0 /s  1022     21     15      0
+ 1        active      fs_name.ceph-node02.jsvbzq  Reqs:    0 /s    10     13     11      0
+0-s   standby-replay    fs_name.proxy01.bbnkcu    Evts:    0 /s  1013     12      6      0</pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="ulist">
+<ul>
+<li>
+<p><strong>dns</strong>: dentries. Dentries is a data structure which represents a directory or a folder.</p>
+</li>
+<li>
+<p><strong>inos</strong>: inodes. Inode is a data structure which provides a representation of a file</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Currently Rank0 with MDS <code>fs_name.ceph-node01.uygvno</code> has a standby daemon, but
+out new MDS <code>fs_name.ceph-node02.jsvbzq</code> with rank1 has not standy daemon,
+let&#8217;s add one more MDS for standby.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Even with multiple active MDS daemons, a highly available system still requires standby daemons to take over if any of the servers running an active daemon fail.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># vi mds.yaml
+# cat mds.yaml
+service_type: mds
+service_id: fs_name
+service_name: mds.fs_name
+placement:
+  count: 4
+  hosts:
+  - ceph-node01
+  - ceph-node02
+  - ceph-node03
+  - proxy01
+# ceph orch apply -i mds.yaml
+# ceph orch ps | grep mds
+mds.fs_name.ceph-node01.uygvno  ceph-node01               running (67m)     5m ago  17h    41.3M        -  16.2.8-85.el8cp  b2c997ff1898  4711409b661d
+mds.fs_name.ceph-node02.jsvbzq  ceph-node02               running (6m)      6m ago   6m    15.8M        -  16.2.8-85.el8cp  b2c997ff1898  83f83ab42547
+mds.fs_name.ceph-node03.zamikx  ceph-node03               running (27s)    24s ago  27s    22.1M        -  16.2.8-85.el8cp  b2c997ff1898  a62184868686
+mds.fs_name.proxy01.bbnkcu      proxy01                   running (66m)     5m ago  17h    53.5M        -  16.2.8-85.el8cp  b2c997ff1898  5030c8246c68
+# ceph fs status
+fs_name - 0 clients
+=======
+RANK      STATE                  MDS                 ACTIVITY     DNS    INOS   DIRS   CAPS
+ 0        active      fs_name.ceph-node01.uygvno  Reqs:    0 /s  1022     21     15      0
+ 1        active      fs_name.ceph-node02.jsvbzq  Reqs:    0 /s    10     13     11      0
+0-s   standby-replay    fs_name.proxy01.bbnkcu    Evts:    0 /s  1013     12      6      0
+1-s   standby-replay  fs_name.ceph-node03.zamikx  Evts:    0 /s     0      3      1      0</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In multiple active metadata server configurations, a balancer runs which works to spread metadata load evenly across the cluster. This usually works well enough for most users but sometimes it is desirable to override the dynamic balancer with explicit mappings of metadata to particular ranks. This can allow the administrator or users to evenly spread application load or limit impact of users’ metadata requests on the entire cluster.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/subtree-partitioning.svg" alt="Subtree Partitioning">
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s mount our FS with the admin user at the root of the FS</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="
+# ls -l /mnt
+total 13312
+drwxr-xr-x. 2 root root        1 Jan 10 06:41 clientec
+drwxr-xr-x. 3 root root        2 Jan 10 05:45 dir4
+-rw-r--r--. 1 root root 13631488 Jan 10 16:17 test-quota</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s configure static pinning, <code>dir4</code> will go to <code>rank0</code> and <code>clientec</code> to <code>rank1</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># setfattr -n ceph.dir.pin -v 1 /mnt/dir4/
+# setfattr -n ceph.dir.pin -v 0 /mnt/clientec/
+# getfattr -n ceph.dir.pin /mnt/dir4
+# file: mnt/dir4
+ceph.dir.pin="1"</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The problem with traditional subtree partitioning is that the workload growth by depth (across a single MDS) leads to a hotspot of activity. This results in lack of vertical scaling and wastage of non-busy resources/MDSs.</p>
+</div>
+<div class="paragraph">
+<p>This led to the adoption of a more dynamic way of handling metadata: Dynamic
+Subtree Partitioning, where load intensive portions of the directory hierarchy
+from busy MDSs are migrated to non busy MDSs. , check out more information on
+this <a href="https://docs.ceph.com/en/quincy/cephfs/multimds/#setting-subtree-partitioning-policies">upstream doc</a></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_mds_cache"><a class="anchor" href="#_mds_cache"></a>MDS Cache</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>While the data for inodes in a Ceph file system is stored in RADOS and accessed by the clients directly, inode metadata and directory information is managed by the Ceph metadata server (MDS). The MDS’s act as mediator for all metadata related activity, storing the resulting information in a separate RADOS pool from the file data.</p>
+</div>
+<div class="paragraph">
+<p>The Metadata Server coordinates a distributed cache among all MDS and CephFS clients. The cache serves to improve metadata access latency and allow clients to safely (coherently) mutate metadata state (e.g. via chmod). The MDS issues capabilities and directory entry leases to indicate what state clients may cache and what manipulations clients may perform (e.g. writing to a file).</p>
+</div>
+<div class="paragraph">
+<p>A capability grants the client the ability to cache and possibly manipulate some portion of the data or metadata associated with the inode. When another client needs access to the same information, the MDS will revoke the capability and the client will eventually return it, along with an updated version of the inode’s metadata (in the event that it made changes to it while it held the capability).</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>mds_cache_memory_limit</strong>
+This sets a target maximum memory usage of the MDS cache and is the primary tunable to limit the MDS memory usage. The MDS will try to stay under a reservation of this limit (by default 95%; 1 - mds_cache_reservation) by trimming unused metadata in its cache and recalling cached items in the client caches.</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph config get mds.fs_name.ceph-node01.uygvno mds_cache_memory_limit
+4294967296    ----&gt; 4GB</pre>
+</div>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>mds_cache_reservation</strong>
+The cache reservation (memory or inodes) for the MDS cache to maintain. Once the MDS begins dipping into its reservation, it will recall client state until its cache size shrinks to restore the reservation.</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph config get mds.fs_name.ceph-node01.uygvno mds_cache_reservation
+0.050000   ----&gt; 5%</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_fs_volumes_and_subvolumes"><a class="anchor" href="#_fs_volumes_and_subvolumes"></a>FS Volumes and Subvolumes</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A single source of truth for CephFS exports is implemented in the volumes module of the Ceph Manager daemon (ceph-mgr). The OpenStack shared file system service (manila), Ceph Container Storage Interface (CSI), storage administrators among others can use the common CLI provided by the ceph-mgr volumes module to manage the CephFS exports.</p>
+</div>
+<div class="paragraph">
+<p>The ceph-mgr volumes module implements the following file system export abstractions:</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="title">FS subvolume groups, an abstraction for a directory level higher than FS subvolumes to effect policies</div>
+Volumes and Subvolumes are used by rook in turn by ODF &amp; Fusion/ODF.
+</td>
+</tr>
+</table>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs volume ls
+[
+    {
+        "name": "fs_name"
+    }
+]
+# ceph fs subvolume create fs_name subvol1 --namespace-isolated
+# ceph fs subvolume ls fs_name
+[
+    {
+        "name": "subvol1"
+    }
+]
+# ceph fs subvolume authorize  fs_name subvol1 cli_sub
+# ceph fs subvolume authorized_list fs_name subvol1
+[
+    {
+        "subvol1": "rw"
+    }
+]
+# ceph auth get client.cli_sub
+[client.cli_sub]
+	key = AQCvfL5jF5NLGBAATtMf58oSE8KInuRqgG4Lug==
+	caps mds = "allow rw path=/volumes/_nogroup/subvol1/8ee41860-a331-4aae-b95c-1ba0540ae883"
+	caps mon = "allow r"
+	caps osd = "allow rw pool=cephfs.fs_name.data namespace=fsvolumens_subvol1"
+# ceph fs subvolume getpath fs_name subvol1
+/volumes/_nogroup/subvol1/8ee41860-a331-4aae-b95c-1ba0540ae883
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/volumes/_nogroup/subvol1/8ee41860-a331-4aae-b95c-1ba0540ae883 /mnt -o name=cli_sub,secret="AQCvfL5jF5NLGBAATtMf58oSE8KInuRqgG4Lug=="
+# touch /mnt/ok
+#</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_snapshots"><a class="anchor" href="#_snapshots"></a>Snapshots</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>CephFS enables asynchronous snapshots by default These snapshots are stored in a hidden directory called .snap.</p>
+</div>
+<div class="paragraph">
+<p>To create a snapshot, first mount the CephFS file system on your client node.
+Create a subdirectory inside the .snap directory. The snapshot name is the new subdirectory name. This
+snapshot contains a copy of all the current files in the CephFS file system.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># umount /mnt
+# mount -t ceph ceph-node01.example.com,ceph-node02.example.com:/ /mnt -o name=admin,secret="AQDQBLxjayHzNRAAfyt3lqvdAK6kQLN4QgQTSg=="
+# mkdir /mnt/.snap/snapshot1
+# mkdir /mnt/.snap/snapshot1
+# ls /mnt
+clientec  dir4  test-quota  volumes
+# ls /mnt/.snap/snapshot1
+clientec  dir4  test-quota  volumes
+# rm -Rf /mnt/.snap/snapshot1</pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+We are using admin, but you need to authorize clients to make snapshots
+for the CephFS file system with the <code>s</code> client capability option.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_schedule_snapshots"><a class="anchor" href="#_schedule_snapshots"></a>Schedule snapshots</h3>
+<div class="paragraph">
+<p>The snap_schedule module is enabled with:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>ceph mgr module enable snap_schedule</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can schedule a snapshot and check it&#8217;s status with the help of the <code>ceph fs snap-schedule</code> command</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs snap-schedule add / 1h
+Schedule set for path /
+# ceph fs snap-schedule list /
+/ 1h
+# ceph fs snap-schedule status / | jq .
+{
+  "fs": "fs_name",
+  "subvol": null,
+  "path": "/",
+  "rel_path": "/",
+  "schedule": "1h",
+  "retention": {},
+  "start": "2023-01-11T00:00:00",
+  "created": "2023-01-11T09:38:07",
+  "first": null,
+  "last": null,
+  "last_pruned": null,
+  "created_count": 0,
+  "pruned_count": 0,
+  "active": true
+}</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>keep 24 snapshots at least an hour apart</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph fs snap-schedule retention add / h 24
+Retention added to path /</pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The snapshot schedule data is stored in a rados object in the cephfs metadata pool. At runtime all data lives in a sqlite database that is serialized and stored as a rados object.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
