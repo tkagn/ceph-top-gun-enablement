@@ -89,7 +89,16 @@
     <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="ceph_deploy_basic.html">Lab. Deploy Ceph with Cephadm</a>
+    <a class="nav-link" href="ceph_deploy_basic.html">Deploy Ceph with Cephadm</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cli_intro.html">Ceph CLI basic commands</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_pools.html">Ceph storage pools config</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph-upgrades_cephadm.html">Upgrade Ceph with Cephadm</a>
   </li>
 </ul>
   </li>
@@ -383,12 +392,12 @@ first RBD Image mapped onto the node.</p>
 <p>To view the RBD Images mapped into a node you can use <code>rbd showmapped</code> or <code>rbd device ls</code> starting
 with Red Hat Storage 5 for the latter.</p>
 </div>
-<div class="paragraph">
-<p><sub>~</sub>
-[root@node ~]# rbd showmapped
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># rbd showmapped
 id pool namespace image snap device
-0 rbd test - /dev/rbd0
-<sub>~</sub></p>
+0 rbd test - /dev/rbd0</code></pre>
+</div>
 </div>
 <div class="paragraph">
 <p>Once the RBD Image has been mapped onto the server it is available for regular block device
