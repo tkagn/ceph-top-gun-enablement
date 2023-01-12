@@ -29,6 +29,30 @@ Cephadm strictly enforces an order for the upgrade of daemons that is still pres
 If you specify parameters that upgrade daemons out of order, the upgrade command blocks and notes which daemons you need to upgrade before you proceed.
 ----
 
+== Lab pre-req
+
+You will need to have a running 5.2 cluster, if you use the latest image
+available you will get 5.3, to deploy with the specific 5.2 container image
+tag you need to specify the `--image` parameter in the bootstrap command
+
+[WARN]
+====
+Cephadm version and the ceph image version have to be the same for the deployment to work correctly
+====
+
+----
+#ansible -i /usr/share/cephadm-ansible/inventory -a 'yum install cephadm-16.2.8-85.el8cp.noarch -y' all --limit '!workstation'
+
+#cephadm \
+        --image registry.redhat.io/rhceph/rhceph-5-rhel8:5-287 \
+	bootstrap \
+	--registry-json /root/registry.json \
+	--dashboard-password-noupdate \
+	--ssh-user=root --ssh-private-key /root/.ssh/ceph --ssh-public-key /root/.ssh/ceph.pub \
+	--mon-ip 192.168.56.61 \
+	--apply-spec /root/cluster-spec.yaml
+----
+
 
 == Minor version Upgrade 5.2 to 5.3
 

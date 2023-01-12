@@ -1,0 +1,107 @@
+= Ceph CLI Introduction
+
+== Practice basic commands
+
+This chapter will walk you through some basic commands.
+
+.Check the cluster status
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ceph-ansible]# *ceph -s*
+  _cluster:
+    id:     b1929555-282d-4615-a3d1-43ebf3444502
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum ceph-node01,ceph-node02,ceph-node03 (age 3m)
+    mgr: ceph-node01(active, since 21m), standbys: ceph-node02
+    osd: 9 osds: 9 up (since 23m), 9 in (since 23m)
+
+  data:
+    pools:   1 pools, 1 pgs
+    objects: 0 objects, 0 B
+    usage:   9.0 GiB used, 1.1 TiB / 1.1 TiB avail
+    pgs:     1 active+clean_
+----
+
+TIP: You can monitor the flow of events in a cluster using the `ceph -w` command.
+This command does not return and must be interrupted by a kbd:[CTRL+C].
+
+.Check the cluster general status
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ceph-ansible]# *ceph health*
+_HEALTH_OK_
+----
+
+TIP: If the status is not `HEALTH_OK` you can display additional information
+for each specific condition present in the cluster by adding `detail` at the
+end of the `ceph health` command.
+
+.Display storage space information
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ceph-ansible]# *ceph df*
+_--- RAW STORAGE ---
+CLASS  SIZE     AVAIL    USED    RAW USED  %RAW USED
+hdd    1.1 TiB  1.1 TiB  46 MiB   9.0 GiB       0.79
+TOTAL  1.1 TiB  1.1 TiB  46 MiB   9.0 GiB       0.79
+
+--- POOLS ---
+POOL                   ID  PGS  STORED  OBJECTS  USED  %USED  MAX AVAIL
+device_health_metrics   1    1     0 B        0   0 B      0    543 GiB_
+----
+
+.Display Monitor map
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ceph-ansible]# *ceph mon dump*
+_dumped monmap epoch 1
+epoch 1
+fsid b1929555-282d-4615-a3d1-43ebf3444502
+last_changed 2022-07-05T17:18:05.978420-0700
+created 2022-07-05T17:18:05.978420-0700
+min_mon_release 15 (octopus)
+0: [v2:10.0.1.201:3300/0,v1:10.0.1.201:6789/0] mon.ceph-node01
+1: [v2:10.0.1.202:3300/0,v1:10.0.1.202:6789/0] mon.ceph-node02
+2: [v2:10.0.1.203:3300/0,v1:10.0.1.203:6789/0] mon.ceph-node03_
+----
+
+.Display the OSD tree
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ceph-ansible]# *ceph osd tree*
+_ID  CLASS  WEIGHT   TYPE NAME        STATUS  REWEIGHT  PRI-AFF
+-1         1.12500  root default
+-3         0.37500      host ceph-node01
+ 0    hdd  0.12500          osd.0        up   1.00000  1.00000
+ 2    hdd  0.12500          osd.2        up   1.00000  1.00000
+-5         0.37500      host ceph-node02
+ 3    hdd  0.12500          osd.3        up   1.00000  1.00000
+ 5    hdd  0.12500          osd.5        up   1.00000  1.00000
+-7         0.37500      host ceph-node03
+ 6    hdd  0.12500          osd.6        up   1.00000  1.00000
+ 8    hdd  0.12500          osd.8        up   1.00000  1.00000_
+----
+
+NOTE: The perfectly ordered OSDs is the result of the `serial: 1` option we added
+into the `site.yml` file.
+
+.Display the OSD usage and PG assignment
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ceph-ansible]# *ceph osd df*
+_ID  CLASS  WEIGHT   REWEIGHT  SIZE     RAW USE  DATA     OMAP  META   AVAIL    %USE  VAR   PGS  STATUS
+ 0    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
+ 1    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
+ 2    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
+ 3    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    1      up
+ 4    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
+ 5    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
+ 6    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
+ 7    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    1      up
+ 8    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
+                       TOTAL  1.1 TiB  9.0 GiB   48 MiB   0 B  9 GiB  1.1 TiB  0.79
+MIN/MAX VAR: 1.00/1.00  STDDEV: 0_
+----
+

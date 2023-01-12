@@ -1,0 +1,345 @@
+= Configuring your cluster Pools
+
+This chapter is here to provide you with the basic knowledge when it comes to configuring
+your Ceph cluster.
+
+== Ceph storage pools
+
+Pools are logical partitions of the Ceph cluster which store objects. Pools have specific attributes:
+
+• The _pool type_, which determines the data protection mechanism used by the pool. It can be _Replicated_
+or _Erasure Coding_. The Replication type distributes multiple copies of each object across the cluster.
+The Erasure Coding type splits each object into chunks and calculate parity chunks and distributes
+them across OSDs
+• The number of _Placement Groups_ (`PGs`) for the pool
+• A _CRUSH_ (*Controlled Replication Under Scalable Hashing*) to determine how the `PGs` for the pool
+will be mapped to OSDs
+
+When Ceph stores an object, it assigns the object to one and only one `PG` within a pool. The `PG` is mapped
+to a set of OSDs according to the `CRUSH` rule assigned to the pool. The cluster administrator can assign
+one and only one `CRUSH` rule to a pool.
+
+The number of PGs assigned to a pool has an impoact on the performance that can be delivered by a pool. The
+best practice is to assign each OSD in the cluster between 100 and 200 `PGs`. If all the pools in the cluster
+share the same OSDs it means that the total number of `PGs` in the cluster that will result in each OSD
+managing the correct numebr of `PGs` will have to be split across all the pools configured in the cluster.
+
+NOTE: By default, upon pool creation, a Ceph safety checks is in place to make sure each OSD will not
+be assigned more than 200 `PGs`. If this boundary is crossed the pool creation fails.
+
+== Replicated pools
+
+The storage administrator can create a pool using the following command: +
+`ceph osd pool create {pool_name} {pg_num}`
+
+* `{pool_name}` is the name of the pool
+* `{pg_num}` is the number of `PGs` you want to assign to the pool
+
+NOTE: When you create a pool the `size` and `min_size` parameters will be automatically assigend to the
+pool following the `osd_pool_default_size` and `osd_pool_default_min_size` parameters.
+
+Starting with Luminous, each pool is assigned a label to identify the application or the type of data
+rthat will be stored in the pool. This label can be any character string and the following are used
+for the most common use cases of a Ceph cluster:
+
+* `cephfs` for pools used by a Ceph FileSystem (CephFS)
+* `rbd` for pools used for Ceph RBDs
+* `rgw` for pools used by a RADOS Gateway
+
+You can assign the application label using the following command: +
+`ceph osd pool application enable {pool_name} {application}`
+
+== Exercise - Replicated pools
+
+.Create a repluicated pool
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# ceph osd pool create testpool 16
+_pool 'testpool' created_
+----
+
+.List pools in your cluster
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd lspools*
+_1 device_health_metrics
+2 testpool_
+----
+
+.List pools in your cluster another way
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool ls*
+_device_health_metrics
+testpool_
+----
+
+.Detailed list of pools in your cluster
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool ls detail*
+_pool 1 'device_health_metrics' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 1 pgp_num 1 autoscale_mode on last_change 41 flags hashpspool stripe_width 0 pg_num_min 1 application mgr_devicehealth
+pool 2 'testpool' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 16 pgp_num 16 autoscale_mode on last_change 45 flags hashpspool stripe_width 0_
+----
+
+.Assign an application to the pool
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool application enable testpool myapp*
+_enabled application 'myapp' on pool 'testpool'_
+----
+
+.Detailed space usage per pool
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph df*
+_--- RAW STORAGE ---
+CLASS  SIZE     AVAIL    USED    RAW USED  %RAW USED
+hdd    1.1 TiB  1.1 TiB  52 MiB   9.1 GiB       0.79
+TOTAL  1.1 TiB  1.1 TiB  52 MiB   9.1 GiB       0.79
+
+--- POOLS ---
+POOL                   ID  PGS  STORED  OBJECTS  USED  %USED  MAX AVAIL
+device_health_metrics   1    1     0 B        0   0 B      0    543 GiB
+testpool                2   16     0 B        0   0 B      0    543 GiB_
+----
+
+.Pool access statistics
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool stats*
+_pool device_health_metrics id 1
+  nothing is going on
+
+pool testpool id 2
+  nothing is going on_
+----
+
+.Rename a pool
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool rename testpool newpool*
+_pool 'testpool' renamed to 'newpool'_
+----
+
+.Changing pool parameters
+[source, shell, subs="quotes"]
+----
+_[root@ceph00 ]# ceph osd pool set newpool size 3
+set pool 2 size to 3
+[root@ceph00 ]# ceph osd pool set newpool min_size 2
+set pool 2 min_size to 2_
+----
+
+.Checking pool parameters
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool get newpool all*
+_size: 3
+min_size: 2
+pg_num: 16
+pgp_num: 16
+crush_rule: replicated_rule
+hashpspool: true
+nodelete: false
+nopgchange: false
+nosizechange: false
+write_fadvise_dontneed: false
+noscrub: false
+nodeep-scrub: false
+use_gmt_hitset: 1
+fast_read: 0
+pg_autoscale_mode: on_
+----
+
+NOTE: The `get all` command has not been updated to display all parameters on a pool. To view
+all parameters use `ceph osd pool ls detail`.
+
+.Checking a single pool parameter
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool get newpool size*
+_size: 3_
+----
+
+.Delete a pool
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool delete newpool*
+_Error EPERM: WARNING: this will *PERMANENTLY DESTROY* all data stored in pool newpool.  If you are *ABSOLUTELY CERTAIN* that is what you want, pass the pool name *twice*, followed by --yes-i-really-really-mean-it._
+[root@ceph00 ]# *ceph osd pool delete newpool newpool --yes-i-really-really-mean-it*
+_pool 'newpool' removed_
+----
+
+IMPORTANT: Once a pool is deleted the data for this pool can not be recovered as all the `PGs` will
+be removed from the cluster immediately.
+
+NOTE: This command requires that you enter the name of the pool twice followed by the special
+`--yes-i-really-really-mean-it` flag. Failing to do so will result in the command doing nothing.
+
+.Uploading data to a pool
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool create radospool 16*
+_pool 'radospool' created_
+[root@ceph00 ]# *rados -p radospool put nons /etc/services*
+[root@ceph00 ]# *rados -p radospool put -N system withns /etc/services*
+[root@ceph00 ]# *rados -p radospool ls --all*
+_system	withns
+	nons_
+[root@ceph00 ]# *rados -p radospool ls --all -f json-pretty*
+_[
+    {
+        "namespace": "system",
+        "name": "withns"
+    },
+    {
+        "namespace": "",
+        "name": "nons"
+    }
+]_
+----
+
+.Delete a pool
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool delete radospool radospool --yes-i-really-really-mean-it*
+_pool 'radospool' removed_
+----
+
+=== Erasure Coded pools
+
+Erasure coded pools use erasure coding instead of replication to protect object data.  The object is
+divided into a number of data chunks, and the data chunks are stored in separate OSDs. In addition,
+a number of coding chunks are calculated based on the data chunks, and are also stored in different
+OSDs. Erasure coding mechanism will enable the rebuild of the data using surviving chunks in the same
+way RAID-5 or RAID-6 do.
+
+Erasure coded pools obey the following logic:
+
+* Data is divided into `k` data chunks
+* `m` coding chunks are calculated
+Chunks are written to disk using `k + m` OSDs
+
+NOTE: All chunks, data or parity, are the same size.
+
+== Exercise - Erasure coded pools
+
+.Create an Erasure code profile
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd erasure-code-profile set myprofile k=2 m=1*
+[root@ceph00 ]# *ceph osd erasure-code-profile ls*
+_default
+myprofile_
+[root@ceph00 ]# *ceph osd erasure-code-profile get myprofile*
+_crush-device-class=
+crush-failure-domain=host
+crush-root=default
+jerasure-per-chunk-alignment=false
+k=2
+m=1
+plugin=jerasure
+technique=reed_sol_van
+w=8_
+----
+
+TIP: When the failure domain is not specified for a profile the default is `host`.
+
+IMPORTANT: Once a pool has been created using an Erasure Code profile you can not change the parameters
+of the Erasure Code profile.
+
+.Modify the Erasure Code profile
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd erasure-code-profile set myprofile k=3 m=2 \ 
+                                                      crush-failure-domain=osd --force*
+[root@ceph00 ]# *ceph osd erasure-code-profile get myprofile*
+_crush-device-class=
+crush-failure-domain=*osd*
+crush-root=default
+jerasure-per-chunk-alignment=false
+k=*3*
+m=*2*
+plugin=jerasure
+technique=reed_sol_van
+w=8_
+----
+
+.Create a pool using the Erasure Code profile
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool create ecpool 16 16 erasure myprofile*
+_pool 'ecpool' created_
+----
+.Verify all PGs are active+clean
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph pg stat*
+_33 pgs: 33 active+clean; 1.3 MiB data, 74 MiB used, 1.1 TiB / 1.1 TiB avail_
+----
+
+.Assign the pool an application
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool application enable ecpool rgw*
+_enabled application 'rgw' on pool 'ecpool'_
+----
+
+.Verify space for existing pools
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph df*
+_--- RAW STORAGE ---
+CLASS  SIZE     AVAIL    USED    RAW USED  %RAW USED
+hdd    1.1 TiB  1.1 TiB  73 MiB   9.1 GiB       0.79
+TOTAL  1.1 TiB  1.1 TiB  73 MiB   9.1 GiB       0.79
+
+--- POOLS ---
+POOL                   ID  PGS  STORED  OBJECTS  USED  %USED  MAX AVAIL
+device_health_metrics   1    1     0 B        0   0 B      0    543 GiB
+ecpool                  4   16     0 B        0   0 B      0    651 GiB_
+----
+
+.Verify the pool parameters
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool ls detail*
+_pool 1 'device_health_metrics' replicated size 2 min_size 1 crush_rule 0 object_hash rjenkins pg_num 1 pgp_num 1 autoscale_mode on last_change 41 flags hashpspool stripe_width 0 pg_num_min 1 application mgr_devicehealth
+pool 4 'ecpool' erasure profile myprofile size 5 min_size 4 crush_rule 1 object_hash rjenkins pg_num 16 pgp_num 16 autoscale_mode on last_change 61 flags hashpspool stripe_width 12288 application rgw_
+----
+
+.Upload an object and verify EC pool usage
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *rados -p ecpool put mytestvi /usr/bin/vi*
+[root@ceph00 ]# *ceph df*
+_--- RAW STORAGE ---
+CLASS  SIZE     AVAIL    USED    RAW USED  %RAW USED
+hdd    1.1 TiB  1.1 TiB  75 MiB   9.1 GiB       0.79
+TOTAL  1.1 TiB  1.1 TiB  75 MiB   9.1 GiB       0.79
+
+--- POOLS ---
+POOL                   ID  PGS  STORED   OBJECTS  USED     %USED  MAX AVAIL
+device_health_metrics   1    1      0 B        0      0 B      0    543 GiB
+ecpool                  4   16  1.1 MiB        1  2.2 MiB      0    651 GiB_
+----
+
+.Retrive file and compare with original
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *rados -p ecpool get mytestvi /tmp/vi*
+[root@ceph00 ]# *diff /usr/bin/vi /tmp/vi*
+----
+
+NOTE: The diff command produces no output indicating the files are identical.
+
+.Cleanup
+[source, shell, subs="quotes"]
+----
+[root@ceph00 ]# *ceph osd pool delete ecpool ecpool \
+                                       --yes-i-really-really-mean-it*
+_pool 'ecpool' removed_
+[root@ceph00 ]# *ceph osd erasure-code-profile rm myprofile*
+----
+
