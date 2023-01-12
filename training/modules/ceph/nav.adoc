@@ -9,6 +9,7 @@
 * xref:ceph_deployment_intro.adoc[Ceph Install Methods ]
 * xref:ceph_cephadm_intro.adoc[Cephadm Orchestrator]
 * xref:ceph_deploy_basic.adoc[Lab. Deploy Ceph with Cephadm]
+* xref:ceph-upgrades_cephadm.adoc[Lab. Upgrade Ceph with Cephadm]
 
 .Ceph RADOS Block Device
 * xref:cephrbd_intro.adoc[RADOS Block Device introduction]

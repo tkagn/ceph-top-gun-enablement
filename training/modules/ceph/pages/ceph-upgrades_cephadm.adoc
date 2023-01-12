@@ -1,0 +1,364 @@
+= Ceph Upgrades(cephadm) 
+
+== Introduction
+
+As a storage administrator, you can use the cephadm Orchestrator to upgrade
+Ceph Storage from 5.0 and higher
+
+The automated upgrade process follows Ceph best practices.
+
+. The upgrade order starts with Ceph Managers, Ceph Monitors, then other daemons.
+. Each daemon is restarted only after Ceph indicates that the cluster will remain available.
+. The storage cluster health status is likely to switch to HEALTH_WARNING during the upgrade. When the upgrade is complete, the health status should switch back to HEALTH_OK.
+
+Cephadm strictly enforces an order for the upgrade of daemons that is still present in staggered upgrade scenarios. The current upgrade order is:
+
+* Ceph Manager nodes
+* Ceph Monitor nodes
+* Ceph-crash daemons
+* Ceph OSD nodes
+* Ceph Metadata Server (MDS) nodes
+* Ceph Object Gateway (RGW) nodes
+* Ceph RBD-mirror node
+* CephFS-mirror node
+* Ceph iSCSI gateway node
+* Ceph NFS nodes
+
+[NOTE]
+----
+If you specify parameters that upgrade daemons out of order, the upgrade command blocks and notes which daemons you need to upgrade before you proceed.
+----
+
+
+== Minor version Upgrade 5.2 to 5.3
+
+Check current version, we are running upstream pacific version, downstream 5.2 Asyc release
+
+----
+# ceph versions
+{
+    "mon": {
+        "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 3
+    },
+    "mgr": {
+        "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 1
+    },
+    "osd": {
+        "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 3
+    },
+    "mds": {
+        "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 1
+    },
+    "rgw": {
+        "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 1
+    },
+    "overall": {
+        "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 9
+    }
+}
+----
+
+[TIP]
+====
+Check out the Upstream to Downstream version Matrix https://access.redhat.com/solutions/2045583[here]
+====
+
+Update the cephadm and cephadm-ansible packages
+
+----
+# dnf update cephadm cephadm-ansible -y 
+----
+
+Run the preflight playbook with the upgrade_ceph_packages parameter set to true on the bootstrapped host in the storage cluster
+
+----
+# ansible-playbook -i /usr/share/cephadm-ansible/inventory /usr/share/cephadm-ansible/cephadm-preflight.yml  --extra-vars "ceph_origin=rhcs upgrade_ceph_packages=true" --limit '!client'
+----
+
+Ensure all the hosts are online and that the storage cluster is healthy
+
+----
+# ceph -s
+  cluster:
+    id:     2fa6c3f2-91d4-11ed-802f-2cc26078e4ef
+    health: HEALTH_OK
+
+  services:
+    mon: 3 daemons, quorum ceph-node01,ceph-node02,ceph-node03 (age 19m)
+    mgr: ceph-node01.lhbakg(active, since 19m)
+    mds: 1/1 daemons up
+    osd: 3 osds: 3 up (since 19m), 3 in (since 14h)
+    rgw: 1 daemon active (1 hosts, 1 zones)
+
+  data:
+    volumes: 1/1 healthy
+    pools:   8 pools, 225 pgs
+    objects: 213 objects, 8.6 KiB
+    usage:   32 MiB used, 30 GiB / 30 GiB avail
+    pgs:     225 active+clean
+----
+
+Set the OSD noout, noscrub, and nodeep-scrub flags to prevent OSDs from getting marked out during upgrade and to avoid unnecessary load on the cluster
+
+----
+# ceph osd set noout
+noout is set
+# ceph osd set noscrub
+noscrub is set
+# ceph osd set nodeep-scrub
+nodeep-scrub is set
+----
+
+Check service versions and the available target containers, we can see that all
+of out container images need to be updated from `16.2.8-85.el8cp` to `16.2.10-94.el8cp` 
+
+----
+# ceph orch upgrade check registry.redhat.io/rhceph/rhceph-5-rhel8:latest
+{
+    "needs_update": {
+        "crash.ceph-node01": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "crash.ceph-node02": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "crash.ceph-node03": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "crash.proxy01": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "mds.cephfs.ceph-node03.rstcql": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "mgr.ceph-node01.lhbakg": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8:latest",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "mon.ceph-node01": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8:latest",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "mon.ceph-node02": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "mon.ceph-node03": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "osd.0": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "osd.1": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "osd.2": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        },
+        "rgw.objectgw.ceph-node02.kascxr": {
+            "current_id": "b2c997ff18982fb497d5c1f86df0c59ce2f1be15817d4f651320fb29006385e6",
+            "current_name": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:3075e8708792ebd527ca14849b6af4a11256a3f881ab09b837d7af0f8b2102ea",
+            "current_version": "16.2.8-85.el8cp"
+        }
+    },
+    "non_ceph_image_daemons": [
+        "node-exporter.ceph-node01",
+        "node-exporter.ceph-node02",
+        "node-exporter.ceph-node03",
+        "alertmanager.proxy01",
+        "grafana.proxy01",
+        "node-exporter.proxy01",
+        "prometheus.proxy01"
+    ],
+    "target_digest": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:04c39425bc9e05e667ebe23513847b905b5998994cc95572c6a4549b8826bd81",
+    "target_id": "34880245f74a1270bb43a8cd9a76f7799b1644a4784f1d7bcf7a144e8ad08320",
+    "target_name": "registry.redhat.io/rhceph/rhceph-5-rhel8:latest",
+    "target_version": "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)",
+    "up_to_date": []
+}
+----
+
+[TIP]
+====
+Since version 5.3 you can do staggered-upgrades where the admin has total
+control over the order and timing of the daemons, this can come in handy for
+critical production deployments, with a great number of OSDs.
+====
+
+Just to test the staggered-upgrades feature, we are going to update first the
+mon and mgrs services
+
+----
+# ceph orch upgrade start --image registry.redhat.io/rhceph/rhceph-5-rhel8:latest --daemon-types mgr,mon
+Error EINVAL: Need at least 2 running mgr daemons for upgrade
+# ceph -s | grep mgr
+    mgr: ceph-node01.lhbakg(active, since 30m)
+----
+
+cephadm will check that it can upgrade every component before starting without
+affecting the service, we can see that in this example it's complaning that it
+only has one manager so he can't failover the service during upgrade
+
+let's deploy a failover mgr daemon
+
+----
+# ceph orch apply mgr 'ceph-node01,ceph-node02'
+Scheduled mgr update...
+# ceph -s | grep mgr
+    mgr: ceph-node01.lhbakg(active, since 35m), standbys: ceph-node02.xbkpxz
+----
+
+Let's re-run the same update command as before:
+
+----
+# ceph orch upgrade start --image registry.redhat.io/rhceph/rhceph-5-rhel8:latest --daemon-types mgr,mon
+Initiating upgrade to registry.redhat.io/rhceph/rhceph-5-rhel8:latest
+----
+
+With `ceph -s` or `ceph progress` we can check the upgrade has started
+
+[TIP]
+====
+`ceph orch upgrade status` gives us a detailed view
+====
+
+----
+# ceph progress
+Upgrade to 16.2.10-94.el8cp (18s)
+    [............................]
+
+# ceph orch upgrade status
+{
+    "target_image": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:04c39425bc9e05e667ebe23513847b905b5998994cc95572c6a4549b8826bd81",
+    "in_progress": true,
+    "which": "Upgrading daemons of type(s) mgr,mon",
+    "services_complete": [
+        "mon",
+        "mgr"
+    ],
+    "progress": "5/5 daemons upgraded",
+    "message": "Pulling registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:04c39425bc9e05e667ebe23513847b905b5998994cc95572c6a4549b8826bd81 image on host proxy01"
+}
+----
+
+Once the upgrade finishes let's check our versions
+
+----
+# ceph orch upgrade status
+{
+    "target_image": null,
+    "in_progress": false,
+    "which": "<unknown>",
+    "services_complete": [],
+    "progress": null,
+    "message": ""
+}
+# ceph versions
+{
+    "mon": {
+        "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 3
+    },
+    "mgr": {
+        "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 2
+    },
+    "osd": {
+        "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 3
+    },
+    "mds": {
+        "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 1
+    },
+    "rgw": {
+        "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 1
+    },
+    "overall": {
+        "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 5,
+        "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 5
+    }
+}
+----
+
+We will now upgrade the rest of the components
+
+[TIP] 
+====
+You can also limit and filter the upgrade on certain hosts `# ceph orch upgrade
+start --image registry.redhat.io/rhceph/rhceph-5-rhel8:latest --daemon-types
+osd --hosts host02`
+====
+
+
+----
+# ceph orch upgrade start --image registry.redhat.io/rhceph/rhceph-5-rhel8:latest
+Initiating upgrade to registry.redhat.io/rhceph/rhceph-5-rhel8:latest
+# ceph orch upgrade status
+{
+    "target_image": "registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:04c39425bc9e05e667ebe23513847b905b5998994cc95572c6a4549b8826bd81",
+    "in_progress": true,
+    "which": "Upgrading all daemon types on all hosts",
+    "services_complete": [
+        "crash",
+        "mon",
+        "mgr"
+    ],
+    "progress": "10/21 daemons upgraded",
+    "message": "Currently upgrading osd daemons"
+}
+----
+
+Once it's done
+
+----
+# ceph versions
+{
+    "mon": {
+        "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 3
+    },
+    "mgr": {
+        "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 2
+    },
+    "osd": {
+        "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 3
+    },
+    "mds": {
+        "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 1
+    },
+    "rgw": {
+        "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 1
+    },
+    "overall": {
+        "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 10
+    }
+}
+----
+
+We can remove the flags and are ready to go.
+
+----
+# ceph osd unset noout
+noout is unset
+# ceph osd unset noscrub
+noscrub is unset
+# ceph osd unset nodeep-scrub
+nodeep-scrub is unset
+----
