@@ -1,5 +1,22 @@
 = Configuring your cluster Pools
 
+//++++
+//<link rel="stylesheet"  href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.1.0/css/font-awesome.min.css">
+//++++
+:icons: font
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+:source-highlighter: pygments
+:sectnums:
+:sectnumlevels: 6
+:toc: left
+:toclevels: 4
+
+
+== Introduction
+
 This chapter is here to provide you with the basic knowledge when it comes to configuring
 your Ceph cluster.
 
@@ -207,7 +224,7 @@ _[
 _pool 'radospool' removed_
 ----
 
-=== Erasure Coded pools
+== Erasure Coded pools
 
 Erasure coded pools use erasure coding instead of replication to protect object data.  The object is
 divided into a number of data chunks, and the data chunks are stored in separate OSDs. In addition,
