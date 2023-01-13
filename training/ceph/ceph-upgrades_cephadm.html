@@ -237,7 +237,7 @@
 <article class="doc">
 <h1 class="page">Ceph Upgrades(cephadm)</h1>
 <div class="sect1">
-<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>As a storage administrator, you can use the cephadm Orchestrator to upgrade
@@ -304,7 +304,7 @@ Ceph Storage from 5.0 and higher</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_lab_pre_req"><a class="anchor" href="#_lab_pre_req"></a>Lab pre-req</h2>
+<h2 id="_lab_pre_req"><a class="anchor" href="#_lab_pre_req"></a>2. Lab pre-req</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>You will need to have a running 5.2 cluster, if you use the latest image
@@ -320,7 +320,7 @@ tag you need to specify the <code>--image</code> parameter in the bootstrap comm
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>#ansible -i /usr/share/cephadm-ansible/inventory -a 'yum install cephadm-16.2.8-85.el8cp.noarch -y' all --limit '!workstation'
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">#ansible -i /usr/share/cephadm-ansible/inventory -a 'yum install cephadm-16.2.8-85.el8cp.noarch -y' all --limit '!workstation'
 
 #cephadm \
         --image registry.redhat.io/rhceph/rhceph-5-rhel8:5-287 \
@@ -329,20 +329,20 @@ tag you need to specify the <code>--image</code> parameter in the bootstrap comm
 	--dashboard-password-noupdate \
 	--ssh-user=root --ssh-private-key /root/.ssh/ceph --ssh-public-key /root/.ssh/ceph.pub \
 	--mon-ip 192.168.56.61 \
-	--apply-spec /root/cluster-spec.yaml</pre>
+	--apply-spec /root/cluster-spec.yaml</code></pre>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_minor_version_upgrade_5_2_to_5_3"><a class="anchor" href="#_minor_version_upgrade_5_2_to_5_3"></a>Minor version Upgrade 5.2 to 5.3</h2>
+<h2 id="_minor_version_upgrade_5_2_to_5_3"><a class="anchor" href="#_minor_version_upgrade_5_2_to_5_3"></a>3. Minor version Upgrade 5.2 to 5.3</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Check current version, we are running upstream pacific version, downstream 5.2 Asyc release</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph versions
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph versions
 {
     "mon": {
         "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 3
@@ -362,7 +362,7 @@ tag you need to specify the <code>--image</code> parameter in the bootstrap comm
     "overall": {
         "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 9
     }
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -384,7 +384,7 @@ tag you need to specify the <code>--image</code> parameter in the bootstrap comm
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># dnf update cephadm cephadm-ansible -y</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># dnf update cephadm cephadm-ansible -y</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -392,7 +392,7 @@ tag you need to specify the <code>--image</code> parameter in the bootstrap comm
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ansible-playbook -i /usr/share/cephadm-ansible/inventory /usr/share/cephadm-ansible/cephadm-preflight.yml  --extra-vars "ceph_origin=rhcs upgrade_ceph_packages=true" --limit '!client'</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ansible-playbook -i /usr/share/cephadm-ansible/inventory /usr/share/cephadm-ansible/cephadm-preflight.yml  --extra-vars "ceph_origin=rhcs upgrade_ceph_packages=true" --limit '!client'</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -400,7 +400,7 @@ tag you need to specify the <code>--image</code> parameter in the bootstrap comm
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph -s
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph -s
   cluster:
     id:     2fa6c3f2-91d4-11ed-802f-2cc26078e4ef
     health: HEALTH_OK
@@ -417,7 +417,7 @@ tag you need to specify the <code>--image</code> parameter in the bootstrap comm
     pools:   8 pools, 225 pgs
     objects: 213 objects, 8.6 KiB
     usage:   32 MiB used, 30 GiB / 30 GiB avail
-    pgs:     225 active+clean</pre>
+    pgs:     225 active+clean</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -425,12 +425,12 @@ tag you need to specify the <code>--image</code> parameter in the bootstrap comm
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph osd set noout
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph osd set noout
 noout is set
 # ceph osd set noscrub
 noscrub is set
 # ceph osd set nodeep-scrub
-nodeep-scrub is set</pre>
+nodeep-scrub is set</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -439,7 +439,7 @@ of out container images need to be updated from <code>16.2.8-85.el8cp</code> to 
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph orch upgrade check registry.redhat.io/rhceph/rhceph-5-rhel8:latest
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph orch upgrade check registry.redhat.io/rhceph/rhceph-5-rhel8:latest
 {
     "needs_update": {
         "crash.ceph-node01": {
@@ -522,7 +522,7 @@ of out container images need to be updated from <code>16.2.8-85.el8cp</code> to 
     "target_name": "registry.redhat.io/rhceph/rhceph-5-rhel8:latest",
     "target_version": "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)",
     "up_to_date": []
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -547,10 +547,10 @@ mon and mgrs services</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph orch upgrade start --image registry.redhat.io/rhceph/rhceph-5-rhel8:latest --daemon-types mgr,mon
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph orch upgrade start --image registry.redhat.io/rhceph/rhceph-5-rhel8:latest --daemon-types mgr,mon
 Error EINVAL: Need at least 2 running mgr daemons for upgrade
 # ceph -s | grep mgr
-    mgr: ceph-node01.lhbakg(active, since 30m)</pre>
+    mgr: ceph-node01.lhbakg(active, since 30m)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -563,10 +563,10 @@ only has one manager so he can&#8217;t failover the service during upgrade</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph orch apply mgr 'ceph-node01,ceph-node02'
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph orch apply mgr 'ceph-node01,ceph-node02'
 Scheduled mgr update...
 # ceph -s | grep mgr
-    mgr: ceph-node01.lhbakg(active, since 35m), standbys: ceph-node02.xbkpxz</pre>
+    mgr: ceph-node01.lhbakg(active, since 35m), standbys: ceph-node02.xbkpxz</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -574,8 +574,8 @@ Scheduled mgr update...
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph orch upgrade start --image registry.redhat.io/rhceph/rhceph-5-rhel8:latest --daemon-types mgr,mon
-Initiating upgrade to registry.redhat.io/rhceph/rhceph-5-rhel8:latest</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph orch upgrade start --image registry.redhat.io/rhceph/rhceph-5-rhel8:latest --daemon-types mgr,mon
+Initiating upgrade to registry.redhat.io/rhceph/rhceph-5-rhel8:latest</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -597,7 +597,7 @@ Initiating upgrade to registry.redhat.io/rhceph/rhceph-5-rhel8:latest</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph progress
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph progress
 Upgrade to 16.2.10-94.el8cp (18s)
     [............................]
 
@@ -612,7 +612,7 @@ Upgrade to 16.2.10-94.el8cp (18s)
     ],
     "progress": "5/5 daemons upgraded",
     "message": "Pulling registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:04c39425bc9e05e667ebe23513847b905b5998994cc95572c6a4549b8826bd81 image on host proxy01"
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -620,7 +620,7 @@ Upgrade to 16.2.10-94.el8cp (18s)
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph orch upgrade status
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph orch upgrade status
 {
     "target_image": null,
     "in_progress": false,
@@ -650,7 +650,7 @@ Upgrade to 16.2.10-94.el8cp (18s)
         "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 5,
         "ceph version 16.2.8-85.el8cp (0bdc6db9a80af40dd496b05674a938d406a9f6f5) pacific (stable)": 5
     }
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -674,7 +674,7 @@ osd --hosts host02</code></p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph orch upgrade start --image registry.redhat.io/rhceph/rhceph-5-rhel8:latest
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph orch upgrade start --image registry.redhat.io/rhceph/rhceph-5-rhel8:latest
 Initiating upgrade to registry.redhat.io/rhceph/rhceph-5-rhel8:latest
 # ceph orch upgrade status
 {
@@ -688,7 +688,7 @@ Initiating upgrade to registry.redhat.io/rhceph/rhceph-5-rhel8:latest
     ],
     "progress": "10/21 daemons upgraded",
     "message": "Currently upgrading osd daemons"
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -696,7 +696,7 @@ Initiating upgrade to registry.redhat.io/rhceph/rhceph-5-rhel8:latest
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph versions
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph versions
 {
     "mon": {
         "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 3
@@ -716,7 +716,7 @@ Initiating upgrade to registry.redhat.io/rhceph/rhceph-5-rhel8:latest
     "overall": {
         "ceph version 16.2.10-94.el8cp (48ce8ed67474ea50f10c019b9445be7f49749d23) pacific (stable)": 10
     }
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -724,12 +724,12 @@ Initiating upgrade to registry.redhat.io/rhceph/rhceph-5-rhel8:latest
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># ceph osd unset noout
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph osd unset noout
 noout is unset
 # ceph osd unset noscrub
 noscrub is unset
 # ceph osd unset nodeep-scrub
-nodeep-scrub is unset</pre>
+nodeep-scrub is unset</code></pre>
 </div>
 </div>
 </div>

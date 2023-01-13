@@ -236,7 +236,8 @@
 </aside>
 <article class="doc">
 <h1 class="page">Configuring your cluster Pools</h1>
-<div id="preamble">
+<div class="sect1">
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>This chapter is here to provide you with the basic knowledge when it comes to configuring
@@ -245,7 +246,7 @@ your Ceph cluster.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ceph_storage_pools"><a class="anchor" href="#_ceph_storage_pools"></a>Ceph storage pools</h2>
+<h2 id="_ceph_storage_pools"><a class="anchor" href="#_ceph_storage_pools"></a>2. Ceph storage pools</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Pools are logical partitions of the Ceph cluster which store objects. Pools have specific attributes:</p>
@@ -294,7 +295,7 @@ be assigned more than 200 <code>PGs</code>. If this boundary is crossed the pool
 </div>
 </div>
 <div class="sect1">
-<h2 id="_replicated_pools"><a class="anchor" href="#_replicated_pools"></a>Replicated pools</h2>
+<h2 id="_replicated_pools"><a class="anchor" href="#_replicated_pools"></a>3. Replicated pools</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The storage administrator can create a pool using the following command:<br>
@@ -348,7 +349,7 @@ for the most common use cases of a Ceph cluster:</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_exercise_replicated_pools"><a class="anchor" href="#_exercise_replicated_pools"></a>Exercise - Replicated pools</h2>
+<h2 id="_exercise_replicated_pools"><a class="anchor" href="#_exercise_replicated_pools"></a>4. Exercise - Replicated pools</h2>
 <div class="sectionbody">
 <div class="listingblock">
 <div class="title">Create a repluicated pool</div>
@@ -536,8 +537,11 @@ This command requires that you enter the name of the pool twice followed by the 
 <em>pool 'radospool' removed</em></code></pre>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_erasure_coded_pools"><a class="anchor" href="#_erasure_coded_pools"></a>Erasure Coded pools</h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_erasure_coded_pools"><a class="anchor" href="#_erasure_coded_pools"></a>5. Erasure Coded pools</h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Erasure coded pools use erasure coding instead of replication to protect object data.  The object is
 divided into a number of data chunks, and the data chunks are stored in separate OSDs. In addition,
@@ -573,9 +577,8 @@ All chunks, data or parity, are the same size.
 </div>
 </div>
 </div>
-</div>
 <div class="sect1">
-<h2 id="_exercise_erasure_coded_pools"><a class="anchor" href="#_exercise_erasure_coded_pools"></a>Exercise - Erasure coded pools</h2>
+<h2 id="_exercise_erasure_coded_pools"><a class="anchor" href="#_exercise_erasure_coded_pools"></a>6. Exercise - Erasure coded pools</h2>
 <div class="sectionbody">
 <div class="listingblock">
 <div class="title">Create an Erasure code profile</div>
