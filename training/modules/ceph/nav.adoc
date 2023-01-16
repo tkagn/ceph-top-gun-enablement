@@ -42,5 +42,8 @@
 .Ceph Troubleshooting 
 * xref:trouble-shooting-nearfull-osds.adoc[Troubleshooting nearfull OSDs]
 
+.Ceph Benchmarking
+* xref:ceph_performance_example.adoc[Setting the Baseline]
+
 .Ceph Stretched
 * xref:rhcs-stretched-deploy.adoc[Ceph Stretch Mode]
