@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Ceph Recovery from OSD Failure :: Ceph Top Gun Enablement</title>
+    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/ceph_recovery.html">
+    <meta name="generator" content="Antora 3.0.1">
+    <link rel="stylesheet" href="../../_/css/site.css">
+    <script>var uiRootPath = '../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">
+          <img src="../../_/img/header_logo_reverse.svg" height="48px" alt="Ceph">
+      </a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Get Help</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage" target="_blank">Ceph Documentation</a>
+            <a class="navbar-item" href="https://bugzilla.redhat.com/describecomponents.cgi?product=Red%20Hat%20OpenShift%20Container%20Storage" target="_blank">Browse Bugs</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Improve Guides</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/issues/new/choose" target="_blank">Open Issue</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">More Infos</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://www.redhat.com/en/blog/channel/red-hat-storage" target="_blank">Our Blog</a>
+            <a class="navbar-item" href="https://www.youtube.com/channel/UCoyG8VyvB-XUxQl1mD3T3Gw" target="_blank">Youtube</a>
+            <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">OCS Technology</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="training" data-version="master">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Ceph Top-Gun Enablement</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Lab Setup</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="opentlc_lab_env.html">Opentlc Lab Env</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_hardware.html">Ceph Hardware Recommendations</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Install Methods </a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deploy_basic.html">Deploy Ceph with Cephadm</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cli_intro.html">Ceph CLI basic commands</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_pools.html">Ceph storage pools config</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph-upgrades_cephadm.html">Upgrade Ceph with Cephadm</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph RADOS Block Device</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephrbd_intro.html">RADOS Block Device introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">CephFS Shared FileSystem</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephfs_intro.html">CephFS introduction &amp; Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephfs_advanced.html">CephFS Deep Dive</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph RadosGW</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_intro.html">RGW Introduction &amp; Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_arch_deep_dive.html">RGW Deep Dive</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_ha.html">RGW High Availability</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_ssl.html">RGW &amp; Ingress with SSL</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_users_quotas.html">RGW Users &amp; Quotas</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_auth.html">RGW Auth &amp; Authz</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_object_versioning.html">RGW S3 Object Versioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_placement_and_storage_classes.html">RGW Placement &amp; Storage Classes</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_life_cycle_management.html">RGW Life Cycle Management</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_bucket_policy.html">RGW S3 Bucket Policy</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_sts_introduction.html">RGW Secure Token Service</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_sts_bucket_role_policy.html">RGW Bucket vs Role Policy</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_opslog.html">RGW Opslog</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_bucket_notification.html">RGW bucket Notification</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Troubleshooting</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="trouble-shooting-nearfull-osds.html">Troubleshooting nearfull OSDs</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Benchmarking</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_performance_example.html">Setting the Baseline</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Stretched</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="rhcs-stretched-deploy.html">Ceph Stretch Mode</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Ceph Top-Gun Enablement</span>
+    <span class="version">master</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Ceph Top-Gun Enablement</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">master</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
+    <li><a href="ceph_recovery.html">Ceph Recovery from OSD Failure</a></li>
+  </ul>
+</nav>
+  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/ceph_recovery.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Ceph Recovery from OSD Failure</h1>
+<div class="sect1">
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>One of the most important features of Ceph is Self Healing and Automatic
+rebalancing, by design Ceph has a Peer-to-peer architecture that seamlessly handles failures and ensures data distribution throughout the cluster.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_detecting_osd_failures"><a class="anchor" href="#_detecting_osd_failures"></a>Detecting OSD Failures</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Each Ceph OSD Daemon checks the heartbeat of other Ceph OSD Daemons at random
+intervals(<code>osd_heartbeat_interval</code>) less than every 6 seconds, If a neighboring
+Ceph OSD Daemon doesn’t show a heartbeat within a 20 second grace period(<code>osd_heartbeat_grace</code>), the Ceph OSD Daemon may consider the neighboring Ceph OSD Daemon down and report it back to a Ceph Monitor</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>Setting low values for the <code>osd_heartbeat_grace</code> Ceph parameter  is not recommended as with really low values the chances to generate false alarms for our Ceph cluster increase dramatically.</p>
+</div>
+</div>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/ceph_osd_heartbeat.png" alt="OSD/MON Heartbeat">
+</div>
+</div>
+<div class="paragraph">
+<p>By default, two(<code>mon_osd_min_down_reporters</code>) Ceph OSD Daemons from different chrush subtrees(<code>mon_osd_reporter_subtree_level</code>) must report to the Ceph Monitors that another Ceph OSD Daemon is down before the Ceph Monitors acknowledge that the reported Ceph OSD Daemon is down</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/ceph_2osds_out.png" alt="OSD reporter">
+</div>
+</div>
+<div class="paragraph">
+<p>If an Ceph OSD Daemon doesn’t report to a Ceph Monitor, the Ceph Monitor will
+consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code>mon_osd_report_timeout</code>).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_when_osd_failure_happens"><a class="anchor" href="#_when_osd_failure_happens"></a>When OSD failure happens</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When a disk or storage node fails, Ceph self-healing process triggers (default
+600 seconds,<code>mon_osd_down_out_interval</code>) and Ceph begins to automatically recover the unavailable PGs from other copies on other OSDs in the cluster. As a result, a node failure has several effects:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Total cluster capacity is reduced by some fraction.</p>
+</li>
+<li>
+<p>Total cluster throughput is reduced by some fraction.</p>
+</li>
+<li>
+<p>The cluster enters an I/O-heavy recovery process, temporarily diverting an additional fraction of the available throughput.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The time required for the recovery process is directly proportional to how much data was on the failed node and how much throughput the rest of the cluster can sustain.</p>
+</div>
+<div class="paragraph">
+<p>Because of the TCO and the performance impact of using a replica 3 policy, many RHCS all-flash clusters are being configured with pools using replica 2,  with only 2 copies of the data, it’s vital to test and measure how much time our cluster takes to recover from failure.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ceph_recovery_configuration_options"><a class="anchor" href="#_ceph_recovery_configuration_options"></a>Ceph recovery configuration options</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ceph has several configuration options to control the recovery process. We can make the recovery process resource-intensive and get faster recovery times, or make it less resource intensive and increase the recovery time. Since we are running with replica 2 we want to recover as fast as possible but finding just the right balance by which the intense use of resources during recovery won’t severely affect the running production workloads.</p>
+</div>
+<div class="paragraph">
+<p>There are several parameters we can use to control the recovery process, we are going to briefly mention some of the most important parameters available, there are more knobs to control the recovery process.</p>
+</div>
+<div class="sect2">
+<h3 id="_priorities"><a class="anchor" href="#_priorities"></a>Priorities</h3>
+<div class="paragraph">
+<p>We can specify priorities for the client and recovery operations, by default the client has the maximum priority configured, and the recovery operations the least.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>osd_client_op_priority:</strong> This is the priority set for client operation</p>
+</li>
+<li>
+<p><strong>osd_recovery_op_priority:</strong> This is the priority set for the recovery operation</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>We have to find a balance between the recovery time and how much we can affect clients IO.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_controlling_the_recovery_operations"><a class="anchor" href="#_controlling_the_recovery_operations"></a>Controlling the  Recovery Operations.</h3>
+<div class="paragraph">
+<p><strong>Recovery</strong>, this is log-based recovery ,where we  compare the PG logs and move over the objects which have changed. There are several parameters that help us  control the impact the recovery operations will have in our client IOPs.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>osd_recovery_max_active:</strong> The number of active recovery requests per OSD at a given moment.</p>
+</li>
+<li>
+<p><strong>osd_recovery_threads:</strong> The number of threads needed for recovering data.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_controlling_the_backfill_recovery_operations"><a class="anchor" href="#_controlling_the_backfill_recovery_operations"></a>Controlling the Backfill Recovery Operations.</h3>
+<div class="paragraph">
+<p><strong>Backfill</strong>, requires us to incrementally move through the entire PG&#8217;s hash space and compare the source PG’s with the destination PG’s</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>osd_max_backfills:</strong> The maximum number of backfills allowed to or from a single OSD</p>
+</li>
+<li>
+<p><strong>osd_backfill_scan_min:</strong> The minimum number of objects per backfill scan</p>
+</li>
+<li>
+<p><strong>osd_backfill_scan_max:</strong> The maximum number of objects per backfill scan</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_delaying_the_recoverybackfill_operations"><a class="anchor" href="#_delaying_the_recoverybackfill_operations"></a>Delaying the recovery/backfill Operations.</h3>
+<div class="paragraph">
+<p>There is a parameter that introduces a sleep time between recovery operations, by default the recovery_sleep is 0 for ssds, but if we are running very sensitive workloads and we wan’t to severely reduce the impact on client IO we can use this parameter, it’s highly granular as we can configure sleep in decimals for example: 0.00001.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>osd_recovery_sleep_ssd":</strong> "0.000000"</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_ceph_configuration_parameters_related_to_error_detection"><a class="anchor" href="#_ceph_configuration_parameters_related_to_error_detection"></a>Ceph Configuration Parameters related to Error detection</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_how_to_prevent_flapping_osd_to_come_back_to_the_cluster"><a class="anchor" href="#_how_to_prevent_flapping_osd_to_come_back_to_the_cluster"></a>How to prevent flapping OSD to come back to the cluster</h3>
+<div class="paragraph">
+<p>Sometimes some of our OSDs may have problems and will flap in and out in the Ceph cluster. This is controlled by two parameters in Ceph:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>osd_max_markdown_count:</strong> Default value: 5.</p>
+</li>
+<li>
+<p><strong>osd_max_markdown_period:</strong> Default value: 600 seconds.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The OSD that is reported down from its peers to the Ceph monitor 5 times in 10 minutes will be immediately marked as out to prevent flapping OSD. This will immediately trigger data rebalance in our Ceph cluster.</p>
+</div>
+<div class="paragraph">
+<p>We can control this behaviour setting the parameters osd_max_markdown_count and osd_max_markdown_period appropriately.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Global parameters:</p>
+</li>
+</ul>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">Parameter</th>
+<th class="tableblock halign-center valign-top">Description</th>
+<th class="tableblock halign-center valign-top">Default value</th>
+<th class="tableblock halign-center valign-top">Tuned value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">osd_heartbeat_grace</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">The elapsed time when a Ceph OSD Daemon has not
+shown a heartbeat that the Ceph Storage Cluster considers it down</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">20
+seconds</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">1/2/5/10/15 seconds</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">osd_heartbeat_interval</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">How often an Ceph OSD Daemon pings its peers
+(in seconds)</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">6 seconds</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">1 second</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">mon_osd_adjust_heartbeat_grace</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">If set to true, Ceph will scale
+parameter <code>osd_heartbeat_grace</code> based on laggy estimations</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">true</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">false</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">osd_mon_report_interval</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">The number of seconds a Ceph OSD Daemon may
+wait from startup or another reportable event before reporting to a Ceph
+Monitor</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">5 seconds</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">1 second</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">mon_client_ping_interval</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">The client will ping the monitor every N
+seconds</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">10 seconds</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">1 second</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">mon_client_ping_timeout</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">Timeout for monitor-client ping interaction</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">30 seconds</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">3 seconds</p></td>
+</tr>
+</tbody>
+</table>
+<div class="ulist">
+<ul>
+<li>
+<p>Ceph Monitor parameters:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>When Monitor and OSDs are colocated in the same hosts, we have
+observed that these parameters help to reduce I/O freeze upon unexpected
+failure in one of the OSD nodes.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">Parameter</th>
+<th class="tableblock halign-center valign-top">Description</th>
+<th class="tableblock halign-center valign-top">Default value</th>
+<th class="tableblock halign-center valign-top">Tuned value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">mon_election_timeout</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">On election proposer, maximum waiting time for
+all ACKs in seconds</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">5 seconds</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">1 second</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">mon_lease_ack_timeout_factor</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">The monitor leader will wait <code>mon_lease</code>
+* <code>mon_lease_ack_timeout_factor</code> for the providers to acknowledge the
+lease extension</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">2.0</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">1.001</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">mon_accept_timeout_factor</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">The Leader will wait <code>mon_lease</code> *
+<code>mon_accept_timeout_factor</code> for the requester(s) to accept a Paxos
+update. It is also used during the Paxos recovery phase for similar
+purposes</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">2.0</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">1.001</p></td>
+</tr>
+</tbody>
+</table>
+<div class="ulist">
+<ul>
+<li>
+<p>Ceph OSD parameters:</p>
+</li>
+</ul>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-center valign-top">Parameter</th>
+<th class="tableblock halign-center valign-top">Description</th>
+<th class="tableblock halign-center valign-top">Default value</th>
+<th class="tableblock halign-center valign-top">Tuned value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-center valign-top"><p class="tableblock">osd_client_watch_timeout</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">If the client loses its connection to the
+primary OSD for a watched object, the watch will be removed after a
+timeout configured with <code>osd_client_watch_timeout</code>. Watches are
+automatically reestablished when a new connection is made, or a
+placement group switches OSDs</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">30 seconds</p></td>
+<td class="tableblock halign-center valign-top"><p class="tableblock">10 seconds</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><strong>WARNING:</strong> Modifying the parameters described above can help to minimize
+the I/O pause upon unexpected failure in one of the OSD nodes but not
+completely resolve it. Also, setting these parameters with less than
+default values will generate false alarms for Ceph clusters if there is
+a situation like high load on nodes, network congestion is high or the
+network quality is bad. Therefore these parameter changes should be
+tested in a lab environment before putting into production.</p>
+</div>
+<div class="paragraph">
+<p><strong>NOTE:</strong> Tuning the parameters described above might increase both Ceph
+resource consumption and Ceph network traffic.</p>
+</div>
+<div class="paragraph">
+<p><strong>WARNING:</strong> Changing default OSD heartbeat parameters is not supported. A
+Support Exception (through a support case) is needed in order to change
+these parameters in Ceph.</p>
+</div>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
+      <img src="../../_/img/header_logo.svg" alt="Ceph">
+  </a>
+</footer>
+<script id="site-script" src="../../_/js/site.js" data-ui-root-path="../../_"></script>
+<script async src="../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
