@@ -98,10 +98,13 @@
     <a class="nav-link" href="ceph_pools.html">Ceph storage pools config</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="ceph-upgrades_cephadm.html">Upgrade Ceph with Cephadm</a>
+    <a class="nav-link" href="ceph_bluestore.html">OSD Bluestore</a>
   </li>
   <li class="nav-item is-current-page" data-depth="1">
     <a class="nav-link" href="ceph_recovery.html">Ceph OSD Failure/Recovery</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph-upgrades_cephadm.html">Upgrade Ceph with Cephadm</a>
   </li>
 </ul>
   </li>
@@ -252,7 +255,7 @@
 <article class="doc">
 <h1 class="page">Ceph Recovery from OSD Failure</h1>
 <div class="sect1">
-<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>One of the most important features of Ceph is Self Healing and Automatic
@@ -261,19 +264,26 @@ rebalancing, by design Ceph has a Peer-to-peer architecture that seamlessly hand
 </div>
 </div>
 <div class="sect1">
-<h2 id="_detecting_osd_failures"><a class="anchor" href="#_detecting_osd_failures"></a>Detecting OSD Failures</h2>
+<h2 id="_detecting_osd_failures"><a class="anchor" href="#_detecting_osd_failures"></a>2. Detecting OSD Failures</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Each Ceph OSD Daemon checks the heartbeat of other Ceph OSD Daemons at random
 intervals(<code>osd_heartbeat_interval</code>) less than every 6 seconds, If a neighboring
 Ceph OSD Daemon doesn’t show a heartbeat within a 20 second grace period(<code>osd_heartbeat_grace</code>), the Ceph OSD Daemon may consider the neighboring Ceph OSD Daemon down and report it back to a Ceph Monitor</p>
 </div>
-<div class="exampleblock">
-<div class="content">
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
 <div class="paragraph">
 <p>Setting low values for the <code>osd_heartbeat_grace</code> Ceph parameter  is not recommended as with really low values the chances to generate false alarms for our Ceph cluster increase dramatically.</p>
 </div>
-</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="imageblock">
 <div class="content">
@@ -295,10 +305,11 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code
 </div>
 </div>
 <div class="sect1">
-<h2 id="_when_osd_failure_happens"><a class="anchor" href="#_when_osd_failure_happens"></a>When OSD failure happens</h2>
+<h2 id="_when_osd_failure_happens"><a class="anchor" href="#_when_osd_failure_happens"></a>3. When OSD failure happens</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When a disk or storage node fails, Ceph self-healing process triggers (default
+<p>When a disk or storage node fails, the OSD&#8217;s are marked out of the cluster and
+the self-healing process triggers (default
 600 seconds,<code>mon_osd_down_out_interval</code>) and Ceph begins to automatically recover the unavailable PGs from other copies on other OSDs in the cluster. As a result, a node failure has several effects:</p>
 </div>
 <div class="ulist">
@@ -323,7 +334,7 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ceph_recovery_configuration_options"><a class="anchor" href="#_ceph_recovery_configuration_options"></a>Ceph recovery configuration options</h2>
+<h2 id="_ceph_recovery_configuration_options"><a class="anchor" href="#_ceph_recovery_configuration_options"></a>4. Ceph recovery configuration options</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Ceph has several configuration options to control the recovery process. We can make the recovery process resource-intensive and get faster recovery times, or make it less resource intensive and increase the recovery time. Since we are running with replica 2 we want to recover as fast as possible but finding just the right balance by which the intense use of resources during recovery won’t severely affect the running production workloads.</p>
@@ -332,7 +343,7 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code
 <p>There are several parameters we can use to control the recovery process, we are going to briefly mention some of the most important parameters available, there are more knobs to control the recovery process.</p>
 </div>
 <div class="sect2">
-<h3 id="_priorities"><a class="anchor" href="#_priorities"></a>Priorities</h3>
+<h3 id="_priorities"><a class="anchor" href="#_priorities"></a>4.1. Priorities</h3>
 <div class="paragraph">
 <p>We can specify priorities for the client and recovery operations, by default the client has the maximum priority configured, and the recovery operations the least.</p>
 </div>
@@ -351,7 +362,7 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code
 </div>
 </div>
 <div class="sect2">
-<h3 id="_controlling_the_recovery_operations"><a class="anchor" href="#_controlling_the_recovery_operations"></a>Controlling the  Recovery Operations.</h3>
+<h3 id="_controlling_the_recovery_operations"><a class="anchor" href="#_controlling_the_recovery_operations"></a>4.2. Controlling the  Recovery Operations.</h3>
 <div class="paragraph">
 <p><strong>Recovery</strong>, this is log-based recovery ,where we  compare the PG logs and move over the objects which have changed. There are several parameters that help us  control the impact the recovery operations will have in our client IOPs.</p>
 </div>
@@ -367,7 +378,7 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code
 </div>
 </div>
 <div class="sect2">
-<h3 id="_controlling_the_backfill_recovery_operations"><a class="anchor" href="#_controlling_the_backfill_recovery_operations"></a>Controlling the Backfill Recovery Operations.</h3>
+<h3 id="_controlling_the_backfill_recovery_operations"><a class="anchor" href="#_controlling_the_backfill_recovery_operations"></a>4.3. Controlling the Backfill Recovery Operations.</h3>
 <div class="paragraph">
 <p><strong>Backfill</strong>, requires us to incrementally move through the entire PG&#8217;s hash space and compare the source PG’s with the destination PG’s</p>
 </div>
@@ -386,7 +397,7 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code
 </div>
 </div>
 <div class="sect2">
-<h3 id="_delaying_the_recoverybackfill_operations"><a class="anchor" href="#_delaying_the_recoverybackfill_operations"></a>Delaying the recovery/backfill Operations.</h3>
+<h3 id="_delaying_the_recoverybackfill_operations"><a class="anchor" href="#_delaying_the_recoverybackfill_operations"></a>4.4. Delaying the recovery/backfill Operations.</h3>
 <div class="paragraph">
 <p>There is a parameter that introduces a sleep time between recovery operations, by default the recovery_sleep is 0 for ssds, but if we are running very sensitive workloads and we wan’t to severely reduce the impact on client IO we can use this parameter, it’s highly granular as we can configure sleep in decimals for example: 0.00001.</p>
 </div>
@@ -401,28 +412,24 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ceph_configuration_parameters_related_to_error_detection"><a class="anchor" href="#_ceph_configuration_parameters_related_to_error_detection"></a>Ceph Configuration Parameters related to Error detection</h2>
+<h2 id="_small_ceph_cluster_reduce_io_freezeosd_failure_detection"><a class="anchor" href="#_small_ceph_cluster_reduce_io_freezeosd_failure_detection"></a>5. Small Ceph Cluster. Reduce I/O Freeze(OSD Failure Detection)</h2>
 <div class="sectionbody">
-<div class="sect2">
-<h3 id="_how_to_prevent_flapping_osd_to_come_back_to_the_cluster"><a class="anchor" href="#_how_to_prevent_flapping_osd_to_come_back_to_the_cluster"></a>How to prevent flapping OSD to come back to the cluster</h3>
 <div class="paragraph">
-<p>Sometimes some of our OSDs may have problems and will flap in and out in the Ceph cluster. This is controlled by two parameters in Ceph:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>osd_max_markdown_count:</strong> Default value: 5.</p>
-</li>
-<li>
-<p><strong>osd_max_markdown_period:</strong> Default value: 600 seconds.</p>
-</li>
-</ul>
+<p>One of the main things we seen when executing HA tests in Small clusters(3
+node) Like ODF clusters, is that upon unexpected failure in one of our OSD
+nodes (such as power outage or network partition) we get I/O interruption for
+20-25 seconds.</p>
 </div>
 <div class="paragraph">
-<p>The OSD that is reported down from its peers to the Ceph monitor 5 times in 10 minutes will be immediately marked as out to prevent flapping OSD. This will immediately trigger data rebalance in our Ceph cluster.</p>
+<p>With 3 Ceph(ODF) nodes in our cluster we get:
+* 100% of write operations affected (with replica 3 pools):
+  * This is because all write operations hit all the OSD nodes and the write operation needs to be acknowledged by all OSD nodes before acknowledging the write operation to the client.
+* 33% of read operations affected:
+  * If the block/s for the file we are reading are hosted on the primary OSDs for the node that is suffering the outage, we will have a 20-25 seconds read pause. If not, we will not notice any downtime.</p>
 </div>
 <div class="paragraph">
-<p>We can control this behaviour setting the parameters osd_max_markdown_count and osd_max_markdown_period appropriately.</p>
+<p>This is  expected as OSD detection of unexpected failure is controlled by some specific parameters in
+our Ceph cluster. By default we have the following configuration:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -602,6 +609,27 @@ resource consumption and Ceph network traffic.</p>
 <p><strong>WARNING:</strong> Changing default OSD heartbeat parameters is not supported. A
 Support Exception (through a support case) is needed in order to change
 these parameters in Ceph.</p>
+</div>
+<div class="sect2">
+<h3 id="_how_to_prevent_flapping_osd_to_come_back_to_the_cluster"><a class="anchor" href="#_how_to_prevent_flapping_osd_to_come_back_to_the_cluster"></a>5.1. How to prevent flapping OSD to come back to the cluster</h3>
+<div class="paragraph">
+<p>Sometimes some of our OSDs may have problems and will flap in and out in the Ceph cluster. This is controlled by two parameters in Ceph:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>osd_max_markdown_count:</strong> Default value: 5.</p>
+</li>
+<li>
+<p><strong>osd_max_markdown_period:</strong> Default value: 600 seconds.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The OSD that is reported down from its peers to the Ceph monitor 5 times in 10 minutes will be immediately marked as out to prevent flapping OSD. This will immediately trigger data rebalance in our Ceph cluster.</p>
+</div>
+<div class="paragraph">
+<p>We can control this behaviour setting the parameters osd_max_markdown_count and osd_max_markdown_period appropriately.</p>
 </div>
 </div>
 </div>
