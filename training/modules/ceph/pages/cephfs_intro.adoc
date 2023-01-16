@@ -342,6 +342,13 @@ When using the FUSE client as a non-root user, add user_allow_other in the /etc/
 fuse.conf configuration file.
 ====
 
+[WARNING]
+====
+A host that runs OSDs must not mount Ceph RBD images or CephFS file systems
+by using the kernel-based client. Mounted resources can become unresponsive due
+to memory deadlocks or blocked I/O that is pending on stale sessions.
+====
+
 === Kernel Client
 
 Using the same user with id 0, we can go straigth ahead and mount our Cephfs FS

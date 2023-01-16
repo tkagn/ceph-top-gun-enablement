@@ -26,7 +26,7 @@ Each Ceph OSD Daemon checks the heartbeat of other Ceph OSD Daemons at random
 intervals(`osd_heartbeat_interval`) less than every 6 seconds, If a neighboring
 Ceph OSD Daemon doesn’t show a heartbeat within a 20 second grace period(`osd_heartbeat_grace`), the Ceph OSD Daemon may consider the neighboring Ceph OSD Daemon down and report it back to a Ceph Monitor
 
-[WARN]
+[WARNING]
 ====
 Setting low values for the `osd_heartbeat_grace` Ceph parameter  is not recommended as with really low values the chances to generate false alarms for our Ceph cluster increase dramatically.
 ====
@@ -42,7 +42,8 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(`mon_
 
 == When OSD failure happens
 
-When a disk or storage node fails, Ceph self-healing process triggers (default
+When a disk or storage node fails, the OSD's are marked out of the cluster and
+the self-healing process triggers (default
 600 seconds,`mon_osd_down_out_interval`) and Ceph begins to automatically recover the unavailable PGs from other copies on other OSDs in the cluster. As a result, a node failure has several effects:
 
 • Total cluster capacity is reduced by some fraction.

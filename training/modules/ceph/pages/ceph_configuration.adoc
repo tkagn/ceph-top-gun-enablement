@@ -1,0 +1,37 @@
+= Ceph Confguration Parameters
+
+Every Ceph daemon, process, and library accesses its configuration from one of these sources:
+* The compiled-in default value
+* The centralized configuration database
+* Configuration file that is stored on the local host
+
+== Ceph Configuration Sections
+
+Ceph organizes configuration settings into groups, whether stored in the configuration file or in
+the configuration database, using sections called for the daemons or clients to which they apply.
+
+* The [global] section stores general configuration that is common to all daemons or any
+process that reads the configuration, including clients. You can override [global] parameters
+by creating called sections for individual daemons or clients.
+* The [mon] section stores configuration for the Monitors (MON).
+* The [osd] section stores configuration for the OSD daemons.
+* The [mgr] section stores configuration for the Managers (MGR).
+* The [mds] section stores configuration for the Metadata Servers (MDS).
+* The [client] section stores configuration that applies to all the Ceph clients.
+
+
+== Using the Ceph centralized configuration database
+
+The MON cluster manages and stores the centralized configuration database on the MON nodes.
+You can either change a setting temporarily, until the daemons restart, or configure a setting
+permanently and store it in the database. You can change most configuration settings while the
+cluster is running.
+
+Use ceph config commands to query the database and view configuration information.
+* ceph config ls, to list all possible configuration settings.
+* ceph config help setting, for help with a particular configuration setting.
+* ceph config dump, to show the cluster configuration database settings.
+* ceph config show $type.$id, to show the database settings for a specific daemon. Use
+show-with-defaults to include default settings.
+* ceph config get $type.$id, to get a specific configuration setting.
+* ceph config set $type.$id, to set a specific configuration setting.
