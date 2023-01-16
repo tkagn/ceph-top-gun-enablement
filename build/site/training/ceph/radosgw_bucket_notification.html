@@ -191,6 +191,15 @@
   </li>
   <li class="nav-item" data-depth="0">
     <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Benchmarking</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_performance_example.html">Setting the Baseline</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
     <span class="nav-text">Ceph Stretched</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
@@ -240,7 +249,7 @@
 <article class="doc">
 <h1 class="page">RGW Bucket Notifications</h1>
 <div class="sect1">
-<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>1. Introduction</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Ceph is a suitable SDS solution for Big Data and Machine Learning/AI data scale. One of the new features, “Bucket Notifications”, provides Amazon SNS-SQS relationship between RGW and MQ targets and provides the ability of getting a notification each time an object is created/removed. In that way, we could define a topic in which RGW will send notifications to (AKA SNS topic), and a queue waiting for notifications to come (AKA SQS). The supported target endpoints are RabbitMQ (AMQP), Kafka, and HTTP.</p>
@@ -266,7 +275,7 @@ To enable bucket notifications API, the rgw_enable_apis configuration parameter 
 </div>
 </div>
 <div class="sect1">
-<h2 id="_lab_configure_bucket_notifications_with_kafka"><a class="anchor" href="#_lab_configure_bucket_notifications_with_kafka"></a>Lab. Configure Bucket Notifications with Kafka</h2>
+<h2 id="_lab_configure_bucket_notifications_with_kafka"><a class="anchor" href="#_lab_configure_bucket_notifications_with_kafka"></a>2. Lab. Configure Bucket Notifications with Kafka</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Our <code>workstation</code> server is running a single node kafka instance that we can use
@@ -275,8 +284,8 @@ for this lab. Let&#8217;s check that the kafka services are runing on the
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># systemctl status kafka.service
-# systemctl status zookeeper.service</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># systemctl status kafka.service
+# systemctl status zookeeper.service</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -284,8 +293,8 @@ for this lab. Let&#8217;s check that the kafka services are runing on the
 </div>
 <div class="listingblock">
 <div class="content">
-<pre> netstat -natlop | grep 9092
-tcp6       0      0 :::9092                 :::*                    LISTEN      37321/java           off (0.00/0/0)</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"> netstat -natlop | grep 9092
+tcp6       0      0 :::9092                 :::*                    LISTEN      37321/java           off (0.00/0/0)</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -293,10 +302,10 @@ tcp6       0      0 :::9092                 :::*                    LISTEN      
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># /opt/kafka/bin/kafka-topics.sh --create --bootstrap-server workstation:9092 --topic storage
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># /opt/kafka/bin/kafka-topics.sh --create --bootstrap-server workstation:9092 --topic storage
 # /opt/kafka/bin/kafka-topics.sh --describe --bootstrap-server workstation:9092  --topic storage
 Topic: storage	TopicId: k1FR5KvXQDm3AuF1sHKkIA	PartitionCount: 1	ReplicationFactor: 1	Configs: segment.bytes=1073741824
-	Topic: storage	Partition: 0	Leader: 1	Replicas: 1	Isr: 1</pre>
+	Topic: storage	Partition: 0	Leader: 1	Replicas: 1	Isr: 1</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -305,8 +314,8 @@ credentials to configure notifications on the bucket</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># radosgw-admin user create --uid='user1' --display-name='First User' --access-key='S3user1' --secret-key='S3user1key'
-# aws --endpoint http://ceph-node02:8080 s3 mb s3://demobucket --region default</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># radosgw-admin user create --uid='user1' --display-name='First User' --access-key='S3user1' --secret-key='S3user1key'
+# aws --endpoint http://ceph-node02:8080 s3 mb s3://demobucket --region default</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -316,12 +325,12 @@ Shon Paz, that makes the configuration of topics in RGW versy simple, from the
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># podman run shonpaz123/notify --help
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># podman run shonpaz123/notify --help
 usage: notify.py [-h] -e ENDPOINT_URL -a ACCESS_KEY -s SECRET_KEY -b
                  BUCKET_NAME [-ke KAFKA_ENDPOINT] [-ae AMQP_ENDPOINT]
                  [-he HTTP_ENDPOINT] -t TOPIC [-f FILTER] [-o OPAQUE]
                  [-x EXCHANGE] [-n NOTIFICATION]
-# podman run shonpaz123/notify -a S3user1 -s S3user1key -b demobucket -ke workstation.example.com:9092 -t storage -e http://ceph-mon02:8080</pre>
+# podman run shonpaz123/notify -a S3user1 -s S3user1key -b demobucket -ke workstation.example.com:9092 -t storage -e http://ceph-mon02:8080</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -329,7 +338,7 @@ usage: notify.py [-h] -e ENDPOINT_URL -a ACCESS_KEY -s SECRET_KEY -b
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># radosgw-admin topic list
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># radosgw-admin topic list
 {
     "topics": [
         {
@@ -369,7 +378,7 @@ usage: notify.py [-h] -e ENDPOINT_URL -a ACCESS_KEY -s SECRET_KEY -b
             "subs": []
         }
     ]
-}</pre>
+}</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -380,7 +389,7 @@ bucket notifications for the S3 actions that take place on the bucket, from the
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server workstation:9092 --topic storage --from-beginning</pre>
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server workstation:9092 --topic storage --from-beginning</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -388,10 +397,10 @@ bucket notifications for the S3 actions that take place on the bucket, from the
 </div>
 <div class="listingblock">
 <div class="content">
-<pre># aws --endpoint http://ceph-node02:8080 s3 cp /etc/hosts s3://demobucket/host1 --region default
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># aws --endpoint http://ceph-node02:8080 s3 cp /etc/hosts s3://demobucket/host1 --region default
 upload: ../../../etc/hosts to s3://demobucket/host1
 # aws --endpoint http://ceph-node02:8080 s3 rm s3://demobucket/host1
-delete: s3://demobucket/host1</pre>
+delete: s3://demobucket/host1</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -399,10 +408,10 @@ delete: s3://demobucket/host1</pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>#/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server workstation:9092 --topic storage --from-beginning
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">#/opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server workstation:9092 --topic storage --from-beginning
 
 {"Records":[{"eventVersion":"2.2","eventSource":"ceph:s3","awsRegion":"default","eventTime":"2023-01-13T12:59:25.628370Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"user1"},"requestParameters":{"sourceIPAddress":""},"responseElements":{"x-amz-request-id":"624eb1a9-ead9-40f2-a057-5c1ee984b480.34108.15857281513954931534","x-amz-id-2":"853c-default-default"},"s3":{"s3SchemaVersion":"1.0","configurationId":"configuration","bucket":{"name":"demobucket","ownerIdentity":{"principalId":"user1"},"arn":"arn:aws:s3:::demobucket","id":"624eb1a9-ead9-40f2-a057-5c1ee984b480.34117.1"},"object":{"key":"host1","size":1330,"eTag":"b7828f6b873e43d1bacec3670a9f4510","versionId":"","sequencer":"AD55C163D1943926","metadata":[{"key":"x-amz-content-sha256","val":"1ef29c6abb4b7bc3cc04fb804b1850aecf84dc87493330b66c31bef5209680f3"},{"key":"x-amz-date","val":"20230113T125925Z"}],"tags":[]}},"eventId":"1673614765.641307.b7828f6b873e43d1bacec3670a9f4510","opaqueData":""}]}
-{"Records":[{"eventVersion":"2.2","eventSource":"ceph:s3","awsRegion":"default","eventTime":"2023-01-13T13:00:22.848461Z","eventName":"ObjectRemoved:Delete","userIdentity":{"principalId":"user1"},"requestParameters":{"sourceIPAddress":""},"responseElements":{"x-amz-request-id":"624eb1a9-ead9-40f2-a057-5c1ee984b480.34108.15831645961373230453","x-amz-id-2":"853c-default-default"},"s3":{"s3SchemaVersion":"1.0","configurationId":"configuration","bucket":{"name":"demobucket","ownerIdentity":{"principalId":"user1"},"arn":"arn:aws:s3:::demobucket","id":"624eb1a9-ead9-40f2-a057-5c1ee984b480.34117.1"},"object":{"key":"host1","size":1330,"eTag":"b7828f6b873e43d1bacec3670a9f4510","versionId":"","sequencer":"E655C163DA949232","metadata":[{"key":"x-amz-content-sha256","val":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},{"key":"x-amz-date","val":"20230113T130022Z"}],"tags":[]}},"eventId":"1673614822.848467.b7828f6b873e43d1bacec3670a9f4510","opaqueData":""}]}</pre>
+{"Records":[{"eventVersion":"2.2","eventSource":"ceph:s3","awsRegion":"default","eventTime":"2023-01-13T13:00:22.848461Z","eventName":"ObjectRemoved:Delete","userIdentity":{"principalId":"user1"},"requestParameters":{"sourceIPAddress":""},"responseElements":{"x-amz-request-id":"624eb1a9-ead9-40f2-a057-5c1ee984b480.34108.15831645961373230453","x-amz-id-2":"853c-default-default"},"s3":{"s3SchemaVersion":"1.0","configurationId":"configuration","bucket":{"name":"demobucket","ownerIdentity":{"principalId":"user1"},"arn":"arn:aws:s3:::demobucket","id":"624eb1a9-ead9-40f2-a057-5c1ee984b480.34117.1"},"object":{"key":"host1","size":1330,"eTag":"b7828f6b873e43d1bacec3670a9f4510","versionId":"","sequencer":"E655C163DA949232","metadata":[{"key":"x-amz-content-sha256","val":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},{"key":"x-amz-date","val":"20230113T130022Z"}],"tags":[]}},"eventId":"1673614822.848467.b7828f6b873e43d1bacec3670a9f4510","opaqueData":""}]}</code></pre>
 </div>
 </div>
 </div>
