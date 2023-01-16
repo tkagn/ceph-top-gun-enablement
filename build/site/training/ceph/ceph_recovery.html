@@ -100,6 +100,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="ceph-upgrades_cephadm.html">Upgrade Ceph with Cephadm</a>
   </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="ceph_recovery.html">Ceph OSD Failure/Recovery</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -194,7 +197,7 @@
     <span class="nav-text">Ceph Benchmarking</span>
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="ceph_performance_example.html">Setting the Baseline</a>
+    <a class="nav-link" href="ceph_performance_example.html">Setting the Inital Baseline</a>
   </li>
 </ul>
   </li>
@@ -236,7 +239,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
-    <li><a href="ceph_recovery.html">Ceph Recovery from OSD Failure</a></li>
+    <li>Core Ceph</li>
+    <li><a href="ceph_recovery.html">Ceph OSD Failure/Recovery</a></li>
   </ul>
 </nav>
   <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/ceph_recovery.adoc">Edit this Page</a></div>
@@ -439,7 +443,7 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code
 <th class="tableblock halign-center valign-top">Parameter</th>
 <th class="tableblock halign-center valign-top">Description</th>
 <th class="tableblock halign-center valign-top">Default value</th>
-<th class="tableblock halign-center valign-top">Tuned value</th>
+<th class="tableblock halign-center valign-top"></th>
 </tr>
 </thead>
 <tbody>
@@ -449,21 +453,21 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code
 shown a heartbeat that the Ceph Storage Cluster considers it down</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">20
 seconds</p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">1/2/5/10/15 seconds</p></td>
+<td class="tableblock halign-center valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top"><p class="tableblock">osd_heartbeat_interval</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">How often an Ceph OSD Daemon pings its peers
 (in seconds)</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">6 seconds</p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">1 second</p></td>
+<td class="tableblock halign-center valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top"><p class="tableblock">mon_osd_adjust_heartbeat_grace</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">If set to true, Ceph will scale
 parameter <code>osd_heartbeat_grace</code> based on laggy estimations</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">true</p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">false</p></td>
+<td class="tableblock halign-center valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top"><p class="tableblock">osd_mon_report_interval</p></td>
@@ -471,20 +475,20 @@ parameter <code>osd_heartbeat_grace</code> based on laggy estimations</p></td>
 wait from startup or another reportable event before reporting to a Ceph
 Monitor</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">5 seconds</p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">1 second</p></td>
+<td class="tableblock halign-center valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top"><p class="tableblock">mon_client_ping_interval</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">The client will ping the monitor every N
 seconds</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">10 seconds</p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">1 second</p></td>
+<td class="tableblock halign-center valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top"><p class="tableblock">mon_client_ping_timeout</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">Timeout for monitor-client ping interaction</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">30 seconds</p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">3 seconds</p></td>
+<td class="tableblock halign-center valign-top"></td>
 </tr>
 </tbody>
 </table>
@@ -516,7 +520,7 @@ failure in one of the OSD nodes.</p>
 <th class="tableblock halign-center valign-top">Parameter</th>
 <th class="tableblock halign-center valign-top">Description</th>
 <th class="tableblock halign-center valign-top">Default value</th>
-<th class="tableblock halign-center valign-top">Tuned value</th>
+<th class="tableblock halign-center valign-top"></th>
 </tr>
 </thead>
 <tbody>
@@ -525,7 +529,7 @@ failure in one of the OSD nodes.</p>
 <td class="tableblock halign-center valign-top"><p class="tableblock">On election proposer, maximum waiting time for
 all ACKs in seconds</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">5 seconds</p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">1 second</p></td>
+<td class="tableblock halign-center valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top"><p class="tableblock">mon_lease_ack_timeout_factor</p></td>
@@ -533,7 +537,7 @@ all ACKs in seconds</p></td>
 * <code>mon_lease_ack_timeout_factor</code> for the providers to acknowledge the
 lease extension</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">2.0</p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">1.001</p></td>
+<td class="tableblock halign-center valign-top"></td>
 </tr>
 <tr>
 <td class="tableblock halign-center valign-top"><p class="tableblock">mon_accept_timeout_factor</p></td>
@@ -542,7 +546,7 @@ lease extension</p></td>
 update. It is also used during the Paxos recovery phase for similar
 purposes</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">2.0</p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">1.001</p></td>
+<td class="tableblock halign-center valign-top"></td>
 </tr>
 </tbody>
 </table>
@@ -565,7 +569,7 @@ purposes</p></td>
 <th class="tableblock halign-center valign-top">Parameter</th>
 <th class="tableblock halign-center valign-top">Description</th>
 <th class="tableblock halign-center valign-top">Default value</th>
-<th class="tableblock halign-center valign-top">Tuned value</th>
+<th class="tableblock halign-center valign-top"></th>
 </tr>
 </thead>
 <tbody>
@@ -577,7 +581,7 @@ timeout configured with <code>osd_client_watch_timeout</code>. Watches are
 automatically reestablished when a new connection is made, or a
 placement group switches OSDs</p></td>
 <td class="tableblock halign-center valign-top"><p class="tableblock">30 seconds</p></td>
-<td class="tableblock halign-center valign-top"><p class="tableblock">10 seconds</p></td>
+<td class="tableblock halign-center valign-top"></td>
 </tr>
 </tbody>
 </table>

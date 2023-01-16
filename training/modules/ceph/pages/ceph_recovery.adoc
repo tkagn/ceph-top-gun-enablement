@@ -1,5 +1,19 @@
 = Ceph Recovery from OSD Failure
 
+//++++
+//<link rel="stylesheet"  href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.1.0/css/font-awesome.min.css">
+//++++
+:icons: font
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+:source-highlighter: pygments
+:sectnums:
+:sectnumlevels: 6
+:toc: left
+:toclevels: 4
+
 
 == Introduction
 
@@ -75,43 +89,46 @@ There is a parameter that introduces a sleep time between recovery operations, b
 
 * *osd_recovery_sleep_ssd":* "0.000000"
 
-== Ceph Configuration Parameters related to Error detection
+== Small Ceph Cluster. Reduce I/O Freeze(OSD Failure Detection)
 
-=== How to prevent flapping OSD to come back to the cluster
+One of the main things we seen when executing HA tests in Small clusters(3
+node) Like ODF clusters, is that upon unexpected failure in one of our OSD
+nodes (such as power outage or network partition) we get I/O interruption for
+20-25 seconds.
 
-Sometimes some of our OSDs may have problems and will flap in and out in the Ceph cluster. This is controlled by two parameters in Ceph:
+With 3 Ceph(ODF) nodes in our cluster we get:
+* 100% of write operations affected (with replica 3 pools):
+  * This is because all write operations hit all the OSD nodes and the write operation needs to be acknowledged by all OSD nodes before acknowledging the write operation to the client.
+* 33% of read operations affected:
+  * If the block/s for the file we are reading are hosted on the primary OSDs for the node that is suffering the outage, we will have a 20-25 seconds read pause. If not, we will not notice any downtime.
 
-* *osd_max_markdown_count:* Default value: 5.
-* *osd_max_markdown_period:* Default value: 600 seconds.
-
-The OSD that is reported down from its peers to the Ceph monitor 5 times in 10 minutes will be immediately marked as out to prevent flapping OSD. This will immediately trigger data rebalance in our Ceph cluster.
-
-We can control this behaviour setting the parameters osd_max_markdown_count and osd_max_markdown_period appropriately.
+This is  expected as OSD detection of unexpected failure is controlled by some specific parameters in
+our Ceph cluster. By default we have the following configuration:
 
 * Global parameters:
 
 [cols="^,^,^,^",options="header",]
 |===
-|Parameter |Description |Default value |Tuned value
+|Parameter |Description |Default value|
 |osd_heartbeat_grace |The elapsed time when a Ceph OSD Daemon has not
 shown a heartbeat that the Ceph Storage Cluster considers it down |20
-seconds |1/2/5/10/15 seconds
+seconds|
 
 |osd_heartbeat_interval |How often an Ceph OSD Daemon pings its peers
-(in seconds) |6 seconds |1 second
+(in seconds) |6 seconds |
 
 |mon_osd_adjust_heartbeat_grace |If set to true, Ceph will scale
-parameter `osd_heartbeat_grace` based on laggy estimations |true |false
+parameter `osd_heartbeat_grace` based on laggy estimations |true |
 
 |osd_mon_report_interval |The number of seconds a Ceph OSD Daemon may
 wait from startup or another reportable event before reporting to a Ceph
-Monitor |5 seconds |1 second
+Monitor |5 seconds |
 
 |mon_client_ping_interval |The client will ping the monitor every N
-seconds |10 seconds |1 second
+seconds |10 seconds |
 
 |mon_client_ping_timeout |Timeout for monitor-client ping interaction
-|30 seconds |3 seconds
+|30 seconds |
 |===
 
 * Ceph Monitor parameters:
@@ -121,30 +138,30 @@ failure in one of the OSD nodes.
 
 [cols="^,^,^,^",options="header",]
 |===
-|Parameter |Description |Default value |Tuned value
+|Parameter |Description |Default value |
 |mon_election_timeout |On election proposer, maximum waiting time for
-all ACKs in seconds |5 seconds |1 second
+all ACKs in seconds |5 seconds |
 
 |mon_lease_ack_timeout_factor |The monitor leader will wait `mon_lease`
 * `mon_lease_ack_timeout_factor` for the providers to acknowledge the
-lease extension |2.0 |1.001
+lease extension |2.0 |
 
 |mon_accept_timeout_factor |The Leader will wait `mon_lease` *
 `mon_accept_timeout_factor` for the requester(s) to accept a Paxos
 update. It is also used during the Paxos recovery phase for similar
-purposes |2.0 |1.001
+purposes |2.0 |
 |===
 
 * Ceph OSD parameters:
 
 [cols="^,^,^,^",options="header",]
 |===
-|Parameter |Description |Default value |Tuned value
+|Parameter |Description |Default value | 
 |osd_client_watch_timeout |If the client loses its connection to the
 primary OSD for a watched object, the watch will be removed after a
 timeout configured with `osd_client_watch_timeout`. Watches are
 automatically reestablished when a new connection is made, or a
-placement group switches OSDs |30 seconds |10 seconds
+placement group switches OSDs |30 seconds |
 |===
 
 *WARNING:* Modifying the parameters described above can help to minimize
@@ -161,4 +178,15 @@ resource consumption and Ceph network traffic.
 *WARNING:* Changing default OSD heartbeat parameters is not supported. A
 Support Exception (through a support case) is needed in order to change
 these parameters in Ceph.
+
+=== How to prevent flapping OSD to come back to the cluster
+
+Sometimes some of our OSDs may have problems and will flap in and out in the Ceph cluster. This is controlled by two parameters in Ceph:
+
+* *osd_max_markdown_count:* Default value: 5.
+* *osd_max_markdown_period:* Default value: 600 seconds.
+
+The OSD that is reported down from its peers to the Ceph monitor 5 times in 10 minutes will be immediately marked as out to prevent flapping OSD. This will immediately trigger data rebalance in our Ceph cluster.
+
+We can control this behaviour setting the parameters osd_max_markdown_count and osd_max_markdown_period appropriately.
 

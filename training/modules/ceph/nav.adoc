@@ -12,6 +12,7 @@
 * xref:ceph_cli_intro.adoc[Ceph CLI basic commands]
 * xref:ceph_pools.adoc[Ceph storage pools config]
 * xref:ceph-upgrades_cephadm.adoc[Upgrade Ceph with Cephadm]
+* xref:ceph_recovery.adoc[Ceph OSD Failure/Recovery]
 
 .Ceph RADOS Block Device
 * xref:cephrbd_intro.adoc[RADOS Block Device introduction]
@@ -43,7 +44,7 @@
 * xref:trouble-shooting-nearfull-osds.adoc[Troubleshooting nearfull OSDs]
 
 .Ceph Benchmarking
-* xref:ceph_performance_example.adoc[Setting the Baseline]
+* xref:ceph_performance_example.adoc[Setting the Inital Baseline]
 
 .Ceph Stretched
 * xref:rhcs-stretched-deploy.adoc[Ceph Stretch Mode]
