@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Ceph CLI Introduction :: Ceph Top Gun Enablement</title>
-    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/ceph_cli_intro.html">
+    <title>Ceph Confguration Parameters :: Ceph Top Gun Enablement</title>
+    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/ceph_configuration.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
     <script>var uiRootPath = '../../_'</script>
@@ -91,7 +91,7 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="ceph_deploy_basic.html">Deploy Ceph with Cephadm</a>
   </li>
-  <li class="nav-item is-current-page" data-depth="1">
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="ceph_cli_intro.html">Ceph CLI basic commands</a>
   </li>
   <li class="nav-item" data-depth="1">
@@ -242,154 +242,78 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
-    <li>Core Ceph</li>
-    <li><a href="ceph_cli_intro.html">Ceph CLI basic commands</a></li>
+    <li><a href="ceph_configuration.html">Ceph Confguration Parameters</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/ceph_cli_intro.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/ceph_configuration.adoc">Edit this Page</a></div>
 </div>
   <div class="content">
 <aside class="toc sidebar" data-title="Contents" data-levels="2">
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Ceph CLI Introduction</h1>
-<div class="sect1">
-<h2 id="_practice_basic_commands"><a class="anchor" href="#_practice_basic_commands"></a>1. Practice basic commands</h2>
+<h1 class="page">Ceph Confguration Parameters</h1>
+<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>This chapter will walk you through some basic commands.</p>
-</div>
-<div class="listingblock">
-<div class="title">Check the cluster status</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">[root@ceph00 ceph-ansible]# <strong>ceph -s</strong>
-  <em>cluster:
-    id:     b1929555-282d-4615-a3d1-43ebf3444502
-    health: HEALTH_OK
-
-  services:
-    mon: 3 daemons, quorum ceph-node01,ceph-node02,ceph-node03 (age 3m)
-    mgr: ceph-node01(active, since 21m), standbys: ceph-node02
-    osd: 9 osds: 9 up (since 23m), 9 in (since 23m)
-
-  data:
-    pools:   1 pools, 1 pgs
-    objects: 0 objects, 0 B
-    usage:   9.0 GiB used, 1.1 TiB / 1.1 TiB avail
-    pgs:     1 active+clean</em></code></pre>
+<p>Every Ceph daemon, process, and library accesses its configuration from one of these sources:
+* The compiled-in default value
+* The centralized configuration database
+* Configuration file that is stored on the local host</p>
 </div>
 </div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-You can monitor the flow of events in a cluster using the <code>ceph -w</code> command.
-This command does not return and must be interrupted by a <span class="keyseq"><kbd>CTRL</kbd>+<kbd>C</kbd></span>.
-</td>
-</tr>
-</table>
 </div>
-<div class="listingblock">
-<div class="title">Check the cluster general status</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">[root@ceph00 ceph-ansible]# <strong>ceph health</strong>
-<em>HEALTH_OK</em></code></pre>
+<div class="sect1">
+<h2 id="_ceph_configuration_sections"><a class="anchor" href="#_ceph_configuration_sections"></a>Ceph Configuration Sections</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Ceph organizes configuration settings into groups, whether stored in the configuration file or in
+the configuration database, using sections called for the daemons or clients to which they apply.</p>
 </div>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-If the status is not <code>HEALTH_OK</code> you can display additional information
-for each specific condition present in the cluster by adding <code>detail</code> at the
-end of the <code>ceph health</code> command.
-</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="title">Display storage space information</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">[root@ceph00 ceph-ansible]# <strong>ceph df</strong>
-<em>--- RAW STORAGE ---
-CLASS  SIZE     AVAIL    USED    RAW USED  %RAW USED
-hdd    1.1 TiB  1.1 TiB  46 MiB   9.0 GiB       0.79
-TOTAL  1.1 TiB  1.1 TiB  46 MiB   9.0 GiB       0.79
-
---- POOLS ---
-POOL                   ID  PGS  STORED  OBJECTS  USED  %USED  MAX AVAIL
-device_health_metrics   1    1     0 B        0   0 B      0    543 GiB</em></code></pre>
+<div class="ulist">
+<ul>
+<li>
+<p>The [global] section stores general configuration that is common to all daemons or any
+process that reads the configuration, including clients. You can override [global] parameters
+by creating called sections for individual daemons or clients.</p>
+</li>
+<li>
+<p>The [mon] section stores configuration for the Monitors (MON).</p>
+</li>
+<li>
+<p>The [osd] section stores configuration for the OSD daemons.</p>
+</li>
+<li>
+<p>The [mgr] section stores configuration for the Managers (MGR).</p>
+</li>
+<li>
+<p>The [mds] section stores configuration for the Metadata Servers (MDS).</p>
+</li>
+<li>
+<p>The [client] section stores configuration that applies to all the Ceph clients.</p>
+</li>
+</ul>
 </div>
 </div>
-<div class="listingblock">
-<div class="title">Display Monitor map</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">[root@ceph00 ceph-ansible]# <strong>ceph mon dump</strong>
-<em>dumped monmap epoch 1
-epoch 1
-fsid b1929555-282d-4615-a3d1-43ebf3444502
-last_changed 2022-07-05T17:18:05.978420-0700
-created 2022-07-05T17:18:05.978420-0700
-min_mon_release 15 (octopus)
-0: [v2:10.0.1.201:3300/0,v1:10.0.1.201:6789/0] mon.ceph-node01
-1: [v2:10.0.1.202:3300/0,v1:10.0.1.202:6789/0] mon.ceph-node02
-2: [v2:10.0.1.203:3300/0,v1:10.0.1.203:6789/0] mon.ceph-node03</em></code></pre>
 </div>
+<div class="sect1">
+<h2 id="_using_the_ceph_centralized_configuration_database"><a class="anchor" href="#_using_the_ceph_centralized_configuration_database"></a>Using the Ceph centralized configuration database</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The MON cluster manages and stores the centralized configuration database on the MON nodes.
+You can either change a setting temporarily, until the daemons restart, or configure a setting
+permanently and store it in the database. You can change most configuration settings while the
+cluster is running.</p>
 </div>
-<div class="listingblock">
-<div class="title">Display the OSD tree</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">[root@ceph00 ceph-ansible]# <strong>ceph osd tree</strong>
-<em>ID  CLASS  WEIGHT   TYPE NAME        STATUS  REWEIGHT  PRI-AFF
--1         1.12500  root default
--3         0.37500      host ceph-node01
- 0    hdd  0.12500          osd.0        up   1.00000  1.00000
- 2    hdd  0.12500          osd.2        up   1.00000  1.00000
--5         0.37500      host ceph-node02
- 3    hdd  0.12500          osd.3        up   1.00000  1.00000
- 5    hdd  0.12500          osd.5        up   1.00000  1.00000
--7         0.37500      host ceph-node03
- 6    hdd  0.12500          osd.6        up   1.00000  1.00000
- 8    hdd  0.12500          osd.8        up   1.00000  1.00000</em></code></pre>
-</div>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-The perfectly ordered OSDs is the result of the <code>serial: 1</code> option we added
-into the <code>site.yml</code> file.
-</td>
-</tr>
-</table>
-</div>
-<div class="listingblock">
-<div class="title">Display the OSD usage and PG assignment</div>
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">[root@ceph00 ceph-ansible]# <strong>ceph osd df</strong>
-<em>ID  CLASS  WEIGHT   REWEIGHT  SIZE     RAW USE  DATA     OMAP  META   AVAIL    %USE  VAR   PGS  STATUS
- 0    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
- 1    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
- 2    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
- 3    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    1      up
- 4    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
- 5    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
- 6    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
- 7    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    1      up
- 8    hdd  0.12500   1.00000  128 GiB  1.0 GiB  5.4 MiB   0 B  1 GiB  127 GiB  0.79  1.00    0      up
-                       TOTAL  1.1 TiB  9.0 GiB   48 MiB   0 B  9 GiB  1.1 TiB  0.79
-MIN/MAX VAR: 1.00/1.00  STDDEV: 0</em></code></pre>
-</div>
+<div class="paragraph">
+<p>Use ceph config commands to query the database and view configuration information.
+* ceph config ls, to list all possible configuration settings.
+* ceph config help setting, for help with a particular configuration setting.
+* ceph config dump, to show the cluster configuration database settings.
+* ceph config show $type.$id, to show the database settings for a specific daemon. Use
+show-with-defaults to include default settings.
+* ceph config get $type.$id, to get a specific configuration setting.
+* ceph config set $type.$id, to set a specific configuration setting.</p>
 </div>
 </div>
 </div>

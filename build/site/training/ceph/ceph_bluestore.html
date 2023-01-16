@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Bluestore :: Ceph Top Gun Enablement</title>
+    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/ceph_bluestore.html">
+    <meta name="generator" content="Antora 3.0.1">
+    <link rel="stylesheet" href="../../_/css/site.css">
+    <script>var uiRootPath = '../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">
+          <img src="../../_/img/header_logo_reverse.svg" height="48px" alt="Ceph">
+      </a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Get Help</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage" target="_blank">Ceph Documentation</a>
+            <a class="navbar-item" href="https://bugzilla.redhat.com/describecomponents.cgi?product=Red%20Hat%20OpenShift%20Container%20Storage" target="_blank">Browse Bugs</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">Improve Guides</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/issues/new/choose" target="_blank">Open Issue</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#">More Infos</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://www.redhat.com/en/blog/channel/red-hat-storage" target="_blank">Our Blog</a>
+            <a class="navbar-item" href="https://www.youtube.com/channel/UCoyG8VyvB-XUxQl1mD3T3Gw" target="_blank">Youtube</a>
+            <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">OCS Technology</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="training" data-version="master">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">Ceph Top-Gun Enablement</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Lab Setup</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="opentlc_lab_env.html">Opentlc Lab Env</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Core Ceph</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_introduction.html">Ceph Introduction</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_architecture.html">Ceph Architecture</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cluster_partitioning.html">Ceph Cluster Partitioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_hardware.html">Ceph Hardware Recommendations</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deployment_intro.html">Ceph Install Methods </a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cephadm_intro.html">Cephadm Orchestrator</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_deploy_basic.html">Deploy Ceph with Cephadm</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_cli_intro.html">Ceph CLI basic commands</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_pools.html">Ceph storage pools config</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="ceph_bluestore.html">OSD Bluestore</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_recovery.html">Ceph OSD Failure/Recovery</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph-upgrades_cephadm.html">Upgrade Ceph with Cephadm</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph RADOS Block Device</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephrbd_intro.html">RADOS Block Device introduction</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">CephFS Shared FileSystem</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephfs_intro.html">CephFS introduction &amp; Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="cephfs_advanced.html">CephFS Deep Dive</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph RadosGW</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_intro.html">RGW Introduction &amp; Deployment</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_arch_deep_dive.html">RGW Deep Dive</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_ha.html">RGW High Availability</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_ssl.html">RGW &amp; Ingress with SSL</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_users_quotas.html">RGW Users &amp; Quotas</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_auth.html">RGW Auth &amp; Authz</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_object_versioning.html">RGW S3 Object Versioning</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_placement_and_storage_classes.html">RGW Placement &amp; Storage Classes</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_life_cycle_management.html">RGW Life Cycle Management</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_bucket_policy.html">RGW S3 Bucket Policy</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_sts_introduction.html">RGW Secure Token Service</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_sts_bucket_role_policy.html">RGW Bucket vs Role Policy</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_multisite.html">RGW Multisite Replication</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_cloudsync.html">RGW Object Cloud Transition</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_presignedurl.html">RGW presigned URL</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_opslog.html">RGW Opslog</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="radosgw_bucket_notification.html">RGW bucket Notification</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Troubleshooting</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="trouble-shooting-nearfull-osds.html">Troubleshooting nearfull OSDs</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Benchmarking</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph_performance_example.html">Setting the Inital Baseline</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+    <button class="nav-item-toggle"></button>
+    <span class="nav-text">Ceph Stretched</span>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="rhcs-stretched-deploy.html">Ceph Stretch Mode</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">Ceph Top-Gun Enablement</span>
+    <span class="version">master</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">Ceph Top-Gun Enablement</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">master</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
+    <li>Core Ceph</li>
+    <li><a href="ceph_bluestore.html">OSD Bluestore</a></li>
+  </ul>
+</nav>
+  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/ceph_bluestore.adoc">Edit this Page</a></div>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Bluestore</h1>
+<div class="sect1">
+<h2 id="_introduction"><a class="anchor" href="#_introduction"></a>Introduction</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>BlueStore is a new backend object store for the Ceph OSD daemons. The original object store, FileStore, requires a file system on top of raw block devices. Objects are then written to the file system. Unlike the original FileStore back end, BlueStore stores object directly on the block devices without any file system interface, which improves the performance of the cluster.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Filestore has been Deprecated.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bluestore_architecture"><a class="anchor" href="#_bluestore_architecture"></a>Bluestore Architecture</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Data is directly written to the raw block device and all metadata operations are managed by RocksDB. The device containing the OSD is divided between RocksDB metadata and the actual user data stored in the cluster.  User data objects are stored as blobs directly on the raw block device, once the data has been written to the block device, RocksDB metadata gets updated with the required details about the new data blobs.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/filestore-vs-bluestore-2.png" alt="Filestore vs Bluestore">
+</div>
+</div>
+<div class="paragraph">
+<p>RocksDB is an embedded high-performance key-value store that excels with flash-storage, RocksDB can’t directly write to the raw disk device, it needs and underlying filesystem to store it’s persistent data, this is where BlueFS comes in, BlueFS is a Filesystem developed with the minimal feature set needed by RocksDB to store its sst files.</p>
+</div>
+<div class="paragraph">
+<p>RocksDB uses WAL as a transaction log on persistent storage, unlike Filestore where all the writes went first to the journal, in bluestore we have two different datapaths for writes, one were data is written directly to the block device and the other were we use deferred writes, with deferred writes data gets written to the WAL device and later asynchronously flushed to disk.</p>
+</div>
+<div class="paragraph">
+<p>A new feature of BlueStore is that it enables compression of data at the lowest level, if compression is enabled data blobs allocated on the raw device will be compressed. This means that any data written into RH Ceph Storage, no matter the client used(rbd,rados, etc), can benefit from this feature.</p>
+</div>
+<div class="paragraph">
+<p>An additional benefit of BlueStore is that it stores data and meta-data in the cluster with checksums for increased integrity. Whenever data is read from persistent storage its checksum is verified</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bluestore_improvements"><a class="anchor" href="#_bluestore_improvements"></a>Bluestore improvements</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Direct management of storage devices
+BlueStore consumes raw block devices or partitions. This avoids any intervening layers of abstraction, such as local file systems like XFS, that might limit performance or add complexity.</p>
+</li>
+<li>
+<p>Metadata management with RocksDB
+BlueStore uses the RocksDB’ key-value database to manage internal metadata, such as the mapping from object names to block locations on a disk.</p>
+</li>
+<li>
+<p>Full data and metadata checksumming
+By default all data and metadata written to BlueStore is protected by one or more checksums. No data or metadata are read from disk or returned to the user without verification.
+Efficient copy-on-write</p>
+</li>
+<li>
+<p>The Ceph Block Device and Ceph File System snapshots rely on a copy-on-write clone mechanism that is implemented efficiently in BlueStore. This results in efficient I/O both for regular snapshots and for erasure coded pools which rely on cloning to implement efficient two-phase commits.
+No large double-writes</p>
+</li>
+<li>
+<p>BlueStore first writes any new data to unallocated space on a block device, and then commits a RocksDB transaction that updates the object metadata to reference the new region of the disk. Only when the write operation is below a configurable size threshold, it falls back to a write-ahead journaling scheme, similar to how FileStore operates.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bluestore_layout"><a class="anchor" href="#_bluestore_layout"></a>Bluestore Layout</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Bluestore has a number of possible storage layout configurations:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The main device that stores the object data.</p>
+</li>
+<li>
+<p>An optional RocksDB device that stores the metadata</p>
+<div class="ulist">
+<ul>
+<li>
+<p>A DB device (identified as block.db in the data directory) can be used for storing BlueStore’s internal metadata. BlueStore (or rather, the embedded RocksDB) will put as much metadata as it can on the DB device to improve performance. If the DB device fills up, metadata will spill back onto the primary device (where it would have been otherwise). Again, it is only helpful to provision a DB device if it is faster than the primary device.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>An optional WAL device that stores the transaction logs.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>A write-ahead log (WAL) device (identified as block.wal in the data directory) can be used for BlueStore’s internal journal or write-ahead log. It is only useful to use a WAL device if the device is faster than the primary device (e.g., when it is on an SSD and the primary device is an HDD).</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For example you could configure the main device on the an HDD drive , this is
+where the user data will be stored. We then configured the WAL and RocksDB
+devices on a faster Flash NVMe drive, having WAL and RocksDB on a high performing drive will give us more IOPS with lower latency.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bluestore_spill_over"><a class="anchor" href="#_bluestore_spill_over"></a>Bluestore Spill Over</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Spill Over happens when RocksDB starts using the <code>slow</code> block device affecting
+performance.</p>
+</div>
+<div class="paragraph">
+<p>BlueFS wraps RocksDB understanding of filesystem and transforms into structure well suited for block devices.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>db is allocated from device options.bluestore_block_db_path, (informal block.db)</p>
+</li>
+<li>
+<p>db.slow is allocated from device options.bluestore_block_path, (informal block)</p>
+</li>
+<li>
+<p>db.wal is allocated from device options.bluestore_wal_path, (informal block.wal)</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>During processing, RocksDB has a temporary higher demand for space. It asks to create a file on "/db/xxxx" but exhausts space on block.db and starts consuming block space. This redirection of allocation is done internally in BlueFS and RocksDB is unaware that relocation occurred. This means that file with name "/db/xxxxx" is located on slow block device, so RocksDB still thinks it is fast. After the peak is gone, data allocated on block remains there, with a lot of space free on block.db.</p>
+</div>
+<div class="paragraph">
+<p><strong>How to check?</strong></p>
+</div>
+<div class="paragraph">
+<p>If you have spillover you can expect the "slow_bytes" values to be &gt; 0.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph daemon osd.0 perf dump bluefs | grep -E "db_|slow_"
+         "db_total_bytes": 21470642176,
+         "db_used_bytes": 179699712,
+         "slow_total_bytes": 0,
+         "slow_used_bytes": 0,</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bluestore_deployment_strategy"><a class="anchor" href="#_bluestore_deployment_strategy"></a>Bluestore deployment Strategy</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If all devices are the same type, for example all rotational drives, and there are no fast devices to use for metadata, it makes sense to specify the block device only and to not separate block.db or block.wal.</p>
+</div>
+<div class="paragraph">
+<p>If you have a mix of fast and slow devices (SSD / NVMe and rotational), it is recommended to place block.db on the faster device while block (data) lives on the slower (spinning drive).</p>
+</div>
+<div class="paragraph">
+<p>When using a mixed spinning and solid drive setup it is important to make a large enough block.db logical volume for BlueStore. Generally, block.db should have as large as possible logical volumes.</p>
+</div>
+<div class="paragraph">
+<p>The general recommendation is to have block.db size in between 1% to 4% of block size. For RGW workloads, it is recommended that the block.db size isn’t smaller than 4% of block, because RGW heavily uses it to store metadata (omap keys). For example, if the block size is 1TB, then block.db shouldn’t be less than 40GB. For RBD workloads, 1% to 2% of block size is usually enough.</p>
+</div>
+<div class="paragraph">
+<p>You can check detailed information on the OSD layout with the <code>ceph osd metadata command</code></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph osd metadata osd.0</pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>In older releases, internal level sizes mean that the DB can fully utilize only
+specific partition / LV sizes that correspond to sums of L0, L0+L1, L1+L2, etc.
+sizes, which with default settings means roughly 3 GB, 30 GB, 300 GB, and so
+forth. Most deployments will not substantially benefit from sizing to
+accommodate L3 and higher.</p>
+</div>
+<div class="paragraph">
+<p>Improvements in the latest releases beginning with Nautilus 14.2.12 and Octopus 15.2.6 enable better utilization of arbitrary DB device sizes, and the Pacific release brings experimental dynamic level support.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bluestore_cache"><a class="anchor" href="#_bluestore_cache"></a>Bluestore Cache</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The BlueStore cache is a collection of buffers that, depending on configuration, can be populated with data as the OSD daemon does reading from or writing to the disk.</p>
+</div>
+<div class="sect2">
+<h3 id="_bluestore_automatic_cache_sizing"><a class="anchor" href="#_bluestore_automatic_cache_sizing"></a>Bluestore Automatic Cache Sizing</h3>
+<div class="paragraph">
+<p>BlueStore can be configured to automatically resize its caches when TCMalloc is configured as the memory allocator and the bluestore_cache_autotune setting is enabled. This option is currently enabled by default. BlueStore will attempt to keep OSD heap memory usage under a designated target size via the osd_memory_target configuration option. This is a best effort algorithm and caches will not shrink smaller than the amount specified by osd_memory_cache_min.</p>
+</div>
+<div class="paragraph">
+<p>Automatic Cache sized works great with most workloads, as such we recommend to
+using it.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bluestore_manual_cache_sizing"><a class="anchor" href="#_bluestore_manual_cache_sizing"></a>Bluestore Manual Cache Sizing</h3>
+<div class="paragraph">
+<p>When bluestore_cache_autotune is disabled and bluestore_cache_size_ssd parameter is set, BlueStore cache gets subdivided into 3 different caches:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>cache_meta:</strong> used for BlueStore Onode and associated data.</p>
+</li>
+<li>
+<p><strong>cache_kv:</strong> used for RocksDB block cache including indexes/bloom-filters</p>
+</li>
+<li>
+<p><strong>data cache:</strong> used for BlueStore cache for data buffers.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The amount of space that goes to each cache is configurable using ratios, just
+an example</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>bluestore_cache_autotune = 0
+bluestore_cache_kv_ratio = 0.2
+bluestore_cache_meta_ratio = 0.8</pre>
+</div>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+you can check per OSD memory usage details with the following command <code>ceph daemon osd.$OSD_ID dump_mempools"</code>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_the_importance_of_the_bluestore_onode_cache"><a class="anchor" href="#_the_importance_of_the_bluestore_onode_cache"></a>The importance of the Bluestore Onode Cache.</h3>
+<div class="paragraph">
+<p>With all NVMe deployments, and specially with RBD workloads the size of the
+bluestore cache can have a huge impact on performance. Onode caching in bluestore is hierarchical.  If a onode is not cached, it will be read from the DB disk, populated into the KV cache, and finally populated into the bluestore onode cache, as you can imagine having a direct hit in the Onode cache is much faster than reading from disk or from the KV cache.</p>
+</div>
+<div class="paragraph">
+<p>When all onodes in a data set fit into bluestore&#8217;s block cache, the onodes are never read from disk and thus onodes never have to be populated into the KV cache at all.  This is the optimal scenario for RBD. On the other hand, a worst case scenario is were you end up needing to read onodes from disk, you&#8217;ll end up populating both the rocksdb KV cache and the bluestore onode cache with fresh data and force out older onodes, which may be read back in again from disk later.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_bluestore_database_sharding"><a class="anchor" href="#_bluestore_database_sharding"></a>Bluestore Database Sharding</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>BlueStore can divide this data into multiple RocksDB column families. When keys have similar access frequency, modification frequency and lifetime, BlueStore benefits from better caching and more precise compaction. This improves performance, and also requires less disk space during compaction, since each column family is smaller and can compact independent of others.</p>
+</div>
+<div class="paragraph">
+<p>OSDs deployed in Pacific or later use RocksDB sharding by default. If Ceph is upgraded to Pacific from a previous version, sharding is off.</p>
+</div>
+<div class="paragraph">
+<p>To check if sharding is enabled on your cluster</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre># ceph config get osd.1 bluestore_rocksdb_cf
+true
+# ceph config get osd.0 bluestore_rocksdb_cfs
+m(3) p(3,0-12) O(3,0-13)=block_cache={type=binned_lru} L P</pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_minimum_allocation_size"><a class="anchor" href="#_minimum_allocation_size"></a>Minimum Allocation Size.</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>There is a configured minimum amount of storage that BlueStore will allocate on an OSD. In practice, this is the least amount of capacity that a RADOS object can consume. The value of bluestore_min_alloc_size is derived from the value of bluestore_min_alloc_size_hdd or bluestore_min_alloc_size_ssd depending on the OSD’s rotational attribute.</p>
+</div>
+<div class="paragraph">
+<p>Through the Mimic release, the default values were 64KB and 16KB for rotational (HDD) and non-rotational (SSD) media respectively. Octopus changed the default for SSD (non-rotational) media to 4KB, and Pacific changed the default for HDD (rotational) media to 4KB as well.</p>
+</div>
+<div class="paragraph">
+<p>For example, when an RGW client stores a 1KB S3 object, it is written to a single RADOS object. With the default min_alloc_size value, 4KB of underlying drive space is allocated. This means that roughly (4KB - 1KB) == 3KB is allocated but never used, which corresponds to 300% overhead or 25% efficiency</p>
+</div>
+<div class="paragraph">
+<p>This happens for each replica. So when using the default three copies of data (3R), a 1KB S3 object actually consumes roughly 9KB of storage device capacity. If erasure coding (EC) is used instead of replication, the amplification may be even higher: for a k=4,m=2 pool, our 1KB S3 object will allocate (6 * 4KB) = 24KB of device capacity.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Note that this BlueStore attribute takes effect only at OSD creation; if changed later, a given OSD’s behavior will not change unless / until it is destroyed and redeployed with the appropriate option value(s). Upgrading to a later Ceph release will not change the value used by OSDs deployed under older releases or with other settings.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <a class="navbar-item" href="https://www.redhat.com/en/technologies/cloud-computing/openshift-container-storage" target="_blank">
+      <img src="../../_/img/header_logo.svg" alt="Ceph">
+  </a>
+</footer>
+<script id="site-script" src="../../_/js/site.js" data-ui-root-path="../../_"></script>
+<script async src="../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

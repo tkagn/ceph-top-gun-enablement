@@ -98,10 +98,13 @@
     <a class="nav-link" href="ceph_pools.html">Ceph storage pools config</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="ceph-upgrades_cephadm.html">Upgrade Ceph with Cephadm</a>
+    <a class="nav-link" href="ceph_bluestore.html">OSD Bluestore</a>
   </li>
   <li class="nav-item is-current-page" data-depth="1">
     <a class="nav-link" href="ceph_recovery.html">Ceph OSD Failure/Recovery</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="ceph-upgrades_cephadm.html">Upgrade Ceph with Cephadm</a>
   </li>
 </ul>
   </li>
@@ -305,7 +308,8 @@ consider the Ceph OSD Daemon down after the mon osd report timeout elapses(<code
 <h2 id="_when_osd_failure_happens"><a class="anchor" href="#_when_osd_failure_happens"></a>3. When OSD failure happens</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>When a disk or storage node fails, Ceph self-healing process triggers (default
+<p>When a disk or storage node fails, the OSD&#8217;s are marked out of the cluster and
+the self-healing process triggers (default
 600 seconds,<code>mon_osd_down_out_interval</code>) and Ceph begins to automatically recover the unavailable PGs from other copies on other OSDs in the cluster. As a result, a node failure has several effects:</p>
 </div>
 <div class="ulist">
