@@ -60,6 +60,19 @@ Ceph has several configuration options to control the recovery process. We can m
 
 There are several parameters we can use to control the recovery process, we are going to briefly mention some of the most important parameters available, there are more knobs to control the recovery process.
 
+
+=== Recovery and Backfill
+
+Within Ceph, there are two methods of synchronizing data among OSDs within the cluster, recovery and backfill. While both of these methods achieve the same end goal, there are slight differences in these two processes as outlined below.
+
+* Ceph OSD processes maintain a log per Placement Group ( PG ) called pglog, which includes details on the last 3,000 to 10,000 changes in that PG.
+** The quantity of log entries is adjustable using osd_min_pg_log_entries and osd_max_pg_log_entries parameters.
+*** The max entry is the number of entries to keep when the PG is not active+clean.
+*** The min entry is the number of entries to keep when the PG is active+clean.
+
+If An OSD was down but is now up and fewer than the available pglog updates
+have occurred to a given PG on that OSD then recovery is used for that PG, Else backfill is used for that PG.
+
 === Priorities
 
 We can specify priorities for the client and recovery operations, by default the client has the maximum priority configured, and the recovery operations the least.
@@ -89,6 +102,38 @@ We have to find a balance between the recovery time and how much we can affect c
 There is a parameter that introduces a sleep time between recovery operations, by default the recovery_sleep is 0 for ssds, but if we are running very sensitive workloads and we wan’t to severely reduce the impact on client IO we can use this parameter, it’s highly granular as we can configure sleep in decimals for example: 0.00001.
 
 * *osd_recovery_sleep_ssd":* "0.000000"
+
+=== Prevent Recovery or Backfill from hapenning
+
+We have nobackfill and norecover flags.
+
+----
+# ceph osd set nobackfill
+# ceph osd set norecover
+----
+
+If you want to re-enable backfill and recovery, you can unset the flags.
+
+----
+# ceph osd unset nobackfill
+# ceph osd unset norecover
+----
+
+== OSD Peering
+
+Once an OSD is up again, it will peer with other OSDs to get up to date on the
+state of the PGs.
+
+* peering is the process by which OSDs compare PG states to determine the proper current state of a PG.
+* peering also makes note of which OSDs have the most recent data and metadata for various objects within the PG.
+* peering occurs when an OSD is brought up (either a new OSD, or a previously down OSD) or down.
+* Data access is blocked for the entire PG while peering is ongoing
+* This prevents changes requested by client IO from invalidating the peering process.
+* Once peering is complete, the PG will enter either backfill_wait or recovery_wait state.
+* The PG should move from the wait state to backfilling or recovering as slots for these operations become available on the target OSD.
+
+NOTE: Agreeing on the state does not mean that they all have the latest contents. This is what backfill and recovery accomplish.
+
 
 == Small Ceph Cluster. Reduce I/O Freeze(OSD Failure Detection)
 
