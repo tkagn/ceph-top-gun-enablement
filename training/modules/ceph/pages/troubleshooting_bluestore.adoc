@@ -1,0 +1,166 @@
+= Internal bluestore tools in Ceph containers
+
+//++++
+//<link rel="stylesheet"  href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/3.1.0/css/font-awesome.min.css">
+//++++
+:icons: font
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+:source-highlighter: pygments
+:sectnums:
+:sectnumlevels: 6
+:toc: left
+:toclevels: 4
+
+
+When troubleshooting Ceph, sometimes we need to use some tools such as
+`ceph-objectstore-tool` or `ceph-bluestore-tool`. When working in
+containerized environments this is more complicated as there are a set
+of internal scripts inside the container that automatically start the
+OSD service and the OSD is automatically included in the cluster upon
+start.
+
+== Accessing Bluestore LAB.
+
+*1. Set `noout` flag on Ceph cluster*
+
+....
+$  ceph osd set noout
+noout is set
+....
+
+*2. Login to the node hosting the OSD container*
+
+In our case we are going to act in the node `ceph-node01` and the `osd.0`:
+
+....
+# ceph osd tree
+ID  CLASS  WEIGHT   TYPE NAME                 STATUS  REWEIGHT  PRI-AFF
+-1         0.04887  root default
+-3         0.04887      datacenter DC1
+-2         0.02928          host ceph-node01
+ 0    hdd  0.00980              osd.0             up   1.00000  1.00000
+-4         0.00980          host ceph-node02
+ 1    hdd  0.00980              osd.1             up   1.00000  1.00000
+-5         0.00980          host ceph-node03
+ 2    hdd  0.00980              osd.2             up   1.00000  1.00000
+....
+
+*3. Delete the symbolic link for OSD 3, and copy the OSD service template with
+the name of the previous OSD3 file, so we can edit it.
+
+....
+systemctl disable --now ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef@osd.0.service
+....
+
+*4. Make a backup/copy of the unit.run file for OSD 0
+
+----
+# cp -p /var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/osd.0/unit.run /root/unit.run.backup
+----
+
+
+*5. Edit `/var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/osd.0/unit.run` unit file*
+
+* Add `-it --entrypoint /usr/bin/bash` option to the second podman command.
+* Remove everything after the container image definition.
+
+....
+# /var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/osd.0/unit.run
+set -e
+/bin/install -d -m0770 -o 167 -g 167 /var/run/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef
+# LVM OSDs use ceph-volume lvm activate
+! /bin/podman rm -f ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd.0-activate 2> /dev/null
+! /bin/podman rm -f ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd-0-activate 2> /dev/null
+! /bin/podman rm -f --storage ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd-0-activate 2> /dev/null
+! /bin/podman rm -f --storage ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd.0-activate 2> /dev/null
+/bin/podman run --rm --ipc=host --stop-signal=SIGTERM --authfile=/etc/ceph/podman-auth.json --net=host --entrypoint /usr/sbin/ceph-volume --privileged --group-add=disk --init --name ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd-0-activate -e CONTAINER_IMAGE=registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:04c39425bc9e05e667ebe23513847b905b5998994cc95572c6a4549b8826bd81 -e NODE_NAME=ceph-node01 -e CEPH_USE_RANDOM_NONCE=1 -e CEPH_VOLUME_SKIP_RESTORECON=yes -e CEPH_VOLUME_DEBUG=1 -v /var/run/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef:/var/run/ceph:z -v /var/log/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef:/var/log/ceph:z -v /var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/crash:/var/lib/ceph/crash:z -v /var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/osd.0:/var/lib/ceph/osd/ceph-0:z -v /var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/osd.0/config:/etc/ceph/ceph.conf:z -v /dev:/dev -v /run/udev:/run/udev -v /sys:/sys -v /run/lvm:/run/lvm -v /run/lock/lvm:/run/lock/lvm -v /:/rootfs registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:04c39425bc9e05e667ebe23513847b905b5998994cc95572c6a4549b8826bd81 activate --osd-id 0 --osd-uuid 2bef24fb-bb2e-43aa-9cf3-fceeabee206c --no-systemd --no-tmpfs
+# osd.0
+! /bin/podman rm -f ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd.0 2> /dev/null
+! /bin/podman rm -f ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd-0 2> /dev/null
+! /bin/podman rm -f --storage ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd-0 2> /dev/null
+! /bin/podman rm -f --storage ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd.0 2> /dev/null
+/bin/podman run --rm --ipc=host --stop-signal=SIGTERM --authfile=/etc/ceph/podman-auth.json --net=host -it --entrypoint /usr/bin/bash --privileged --group-add=disk --init --name ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd-0 -d --log-driver journald --conmon-pidfile /run/ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef@osd.0.service-pid --cidfile /run/ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef@osd.0.service-cid --cgroups=split -e CONTAINER_IMAGE=registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:04c39425bc9e05e667ebe23513847b905b5998994cc95572c6a4549b8826bd81 -e NODE_NAME=ceph-node01 -e CEPH_USE_RANDOM_NONCE=1 -e TCMALLOC_MAX_TOTAL_THREAD_CACHE_BYTES=134217728 -v /var/run/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef:/var/run/ceph:z -v /var/log/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef:/var/log/ceph:z -v /var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/crash:/var/lib/ceph/crash:z -v /var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/osd.0:/var/lib/ceph/osd/ceph-0:z -v /var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/osd.0/config:/etc/ceph/ceph.conf:z -v /dev:/dev -v /run/udev:/run/udev -v /sys:/sys -v /run/lvm:/run/lvm -v /run/lock/lvm:/run/lock/lvm -v /:/rootfs registry.redhat.io/rhceph/rhceph-5-rhel8@sha256:04c39425bc9e05e667ebe23513847b905b5998994cc95572c6a4549b8826bd81
+....
+
+*6. Login to container associated with our OSD*
+
+....
+# podman exec -it ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd-0 bash
+....
+
+*7. Run `ceph-objectstore-tool` or `ceph-bluestore-tool` commands*
+
+....
+$ ceph-objectstore-tool --data-path /var/lib/ceph/osd/ceph-0 --op list
+$ ceph-bluestore-tool show-label --dev /dev/ceph-a54942f0-a335-4a5f-9028-27825e779605/osd-data-a4a8734e-0222-4c7c-933e-73da01938c59 
+{
+    "/dev/ceph-a54942f0-a335-4a5f-9028-27825e779605/osd-data-a4a8734e-0222-4c7c-933e-73da01938c59": {
+        "osd_uuid": "8a398b35-aa13-4363-9652-e2aa6dd1fb8d",
+        "size": 32208060416,
+        "btime": "2021-01-25 07:02:17.277679",
+        "description": "main",
+        "bluefs": "1",
+        "ceph_fsid": "d8a34408-3b5a-4ee3-bd12-b32f6f466c60",
+        "kv_backend": "rocksdb",
+        "magic": "ceph osd volume v026",
+        "mkfs_done": "yes",
+        "osd_key": "AQBHsw5glhbhNhAAXGDN2BdMkXan71OFduMrRA==",
+        "ready": "ready",
+        "require_osd_release": "14",
+        "whoami": "0"
+    }
+}
+$ exit
+....
+
+== Restore steps
+
+*1. Copy `/root/unit.run.backup` unit file from `/root` directory to
+`/var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/osd.0/unit.run`
+
+....
+# cp -p /root/unit.run.backup /var/lib/ceph/910c8bb8-95bc-11ed-b7d6-2cc26078e4ef/osd.0/unit.run 
+....
+
+*2. Enable and start the OSD 0 process with Systemd
+
+....
+# systemctl enable --now ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef@osd.0.service
+Created symlink /etc/systemd/system/ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef.target.wants/ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef@osd.0.service → /etc/systemd/system/ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef@.service.
+....
+
+*3. Unset `noout` flag on Ceph cluster*
+
+....
+$  ceph osd unset noout
+noout is unset
+....
+
+*4. Ensure Ceph status is in `HEALTH_OK`*
+
+....
+$  ceph -s
+  cluster:
+    id:     d8a34408-3b5a-4ee3-bd12-b32f6f466c60
+    health: HEALTH_OK
+ 
+  services:
+    mon: 3 daemons, quorum ceph-node01,ceph2,ceph3 (age 27h)
+    mgr: ceph2(active, since 27h), standbys: ceph-node01, ceph3
+    osd: 6 osds: 6 up (since 80s), 6 in (since 80s)
+    rgw: 3 daemons active (ceph-node01.rgw0, ceph2.rgw0, ceph3.rgw0)
+ 
+  task status:
+ 
+  data:
+    pools:   18 pools, 264 pgs
+    objects: 1.24k objects, 56 KiB
+    usage:   6.4 GiB used, 174 GiB / 180 GiB avail
+    pgs:     264 active+clean
+ 
+  io:
+    client:   341 B/s rd, 0 op/s rd, 0 op/s wr
+....

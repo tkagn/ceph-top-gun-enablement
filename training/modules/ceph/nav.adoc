@@ -11,7 +11,7 @@
 * xref:ceph_deploy_basic.adoc[Deploy Ceph with Cephadm]
 * xref:ceph_cli_intro.adoc[Ceph CLI basic commands]
 * xref:ceph_pools.adoc[Ceph storage pools config]
-* xref:ceph_bluestore.adoc[OSD Bluestore]
+* xref:ceph_bluestore.adoc[Ceph OSD Bluestore]
 * xref:ceph_recovery.adoc[Ceph OSD Failure/Recovery]
 * xref:ceph-upgrades_cephadm.adoc[Upgrade Ceph with Cephadm]
 
@@ -43,6 +43,7 @@
 
 .Ceph Troubleshooting 
 * xref:trouble-shooting-nearfull-osds.adoc[Troubleshooting nearfull OSDs]
+* xref:troubleshooting_bluestore.adoc[Troubleshooting Bluestore issues]
 
 .Ceph Benchmarking
 * xref:ceph_performance_example.adoc[Setting the Inital Baseline]
