@@ -22,6 +22,7 @@
 .CephFS Shared FileSystem
 * xref:cephfs_intro.adoc[CephFS introduction & Deployment]
 * xref:cephfs_advanced.adoc[CephFS Deep Dive]
+* xref:ceph_cephfs_challenge.adoc[Challenge.Cephfs]
  
 .Ceph RadosGW
 * xref:radosgw_intro.adoc[RGW Introduction & Deployment]
