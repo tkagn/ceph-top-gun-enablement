@@ -1,0 +1,96 @@
+----
+#!/bin/bash
+
+python=$(which python3)
+health=$($python ceph_health.py | jq -er '.health[] | select(.[] == "LARGE_OMAP_OBJECTS") | "True"')
+if [ $health == "True" ]; then
+    echo "We have some Large omap object in Cluster"
+else
+    echo "No any Large omap object in Cluster"
+    exit 0
+fi
+
+ceph=$(which ceph)
+large_omap_object_key_threshold=$($ceph tell mon.0 config show | grep -i osd_deep_scrub_large_omap_object_key_threshold | grep -o "[0-9]*")
+
+if [ "$1" == "" ] || [ $# -gt 1 ]; then
+    echo "Pool not set!"
+    exit 0
+fi
+
+echo " ======== Details ======="
+
+# Get pool name from user
+POOL=$1
+
+# Find all namespaces in pool
+namespaces=$(radosgw-admin zone get | jq -r '.[] | values' | grep $POOL | cut -d':' -f2 | grep -v $POOL)
+echo "Get Namespaces in $POOL :"
+for namespace in $namespaces
+do
+    echo -e "\tNameSpace $namespace Found in $POOL"
+done
+
+echo " ======== Details ======="
+PGS=$(ceph pg ls-by-pool $POOL | grep -v NOTE | tail -n +2 | awk '{print $1}')
+for i in $PGS
+do 
+    NUM_LARGE=$(ceph pg $i query | jq  '.info.stats.stat_sum | select(.num_large_omap_objects > 0) | .num_large_omap_objects')
+    if [[ $NUM_LARGE ]]; then
+        printf "\033[2K\rFound $NUM_LARGE Large omap in PG $i\n"
+        for namespace in $namespaces
+        do
+            printf "\033[2K\r[CHECK] Search for Large omap objects in pool '$POOL', PG '$i' and NameSpace '$namespace' ... \033[2k\r"
+	    find_large="False"
+            objects=$(rados -p $POOL --pgid $i ls -N $namespace -f json | jq -r '.[].name')
+	    for obj in $objects
+	    do
+	        omap_in_obj=$(rados -p $POOL --pgid $i listomapkeys $obj -N $namespace | wc -l)
+	        if [[ $omap_in_obj -gt $large_omap_object_key_threshold ]]; then
+	            find_large="True"
+		    printf "\033[2K\rObject : $obj\tOmap Counts : $omap_in_obj \033[0k\n"
+	        fi
+	    done
+	    if [ $find_large == "True" ]; then
+	        echo "----------------------------------------------"
+	    fi
+	done
+    fi
+done
+----
+
+
+# bash find_large_omap.sh default.rgw.log
+
+We have some Large omap object in Cluster
+ ======== Details =======
+Get Namespaces in default.rgw.log :
+	NameSpace gc Found in default.rgw.log
+	NameSpace lc Found in default.rgw.log
+	NameSpace intent Found in default.rgw.log
+	NameSpace usage Found in default.rgw.log
+	NameSpace reshard Found in default.rgw.log
+	NameSpace notif Found in default.rgw.log
+ ======== Details =======
+Found 2 Large omap in PG 11.1
+Object : XXXXX.53	Omap Counts : 228490
+Object : YYYYY.57	Omap Counts : 212454
+----------------------------------------------
+Found 1 Large omap in PG 12.3
+Object : ZZZZZ.39	Omap Counts : 242606
+----------------------------------------------
+Found 1 Large omap in PG 91.17
+Object : AAAAA.63	Omap Counts : 292816
+----------------------------------------------
+Found 1 Large omap in PG 91.1b
+Object : AAAAA.45	Omap Counts : 277856
+----------------------------------------------
+Found 1 Large omap in PG 91.1d
+Object : AAAAA.48	Omap Counts : 342000
+----------------------------------------------
+Found 1 Large omap in PG 91.1e
+Object : AAAAA.42	Omap Counts : 328980
+----------------------------------------------
+Found 1 Large omap in PG 91.1f
+Object : AAAAA.38	Omap Counts : 251720
+----------------------------------------------

@@ -332,3 +332,273 @@ This happens for each replica. So when using the default three copies of data (3
 ====
 Note that this BlueStore attribute takes effect only at OSD creation; if changed later, a given OSD’s behavior will not change unless / until it is destroyed and redeployed with the appropriate option value(s). Upgrading to a later Ceph release will not change the value used by OSDs deployed under older releases or with other settings.
 ====
+
+== Configuring OSDs with a separate device for Block and Block.DB
+
+Assuming you have 3 spare/free drives on each of your ceph cluster nodes, like
+in this example:
+
+----
+# ceph orch device ls | grep Yes
+ceph-node01  /dev/vdc  hdd   e17487cd-a216-43db-a  10.7G  Yes        6s ago
+ceph-node01  /dev/vdd  hdd   df8a0981-87f2-4fb0-9  10.7G  Yes        6s ago
+ceph-node01  /dev/vde  hdd   07526583-dc65-4d07-8  10.7G  Yes        6s ago
+ceph-node02  /dev/vdc  hdd   ee4d2082-8ae1-4f6c-8  10.7G  Yes        6s ago
+ceph-node02  /dev/vdd  hdd   19dadf78-4369-4bbb-8  10.7G  Yes        6s ago
+ceph-node02  /dev/vde  hdd   c3972ab4-7ebb-4f22-b  10.7G  Yes        6s ago
+ceph-node03  /dev/vdc  hdd   70ad190e-46a2-44df-8  10.7G  Yes        6s ago
+ceph-node03  /dev/vdd  hdd   2ae6c11a-8b4b-480d-8  10.7G  Yes        6s ago
+ceph-node03  /dev/vde  hdd   5a556d98-0ec5-4242-b  10.7G  Yes        6s ago
+----
+
+There are many ways in which you can define what drive will be used for each
+partition, you can take a look at examples in this https://docs.ceph.com/en/quincy/cephadm/services/osd/#advanced-osd-service-specifications[link]
+
+In our case first it would not make sense to separate in different drives our db and
+wal devices, because all of our disks are the same, but just for the sake of
+training let's use `vde` as our flash disk and `vdc,vdd` as the HDD drives.
+
+To make things more complicated we can't filter our disk for block.db using the
+rotation/non-rotational flags, because all our disks are the same.
+
+So our best option is using direct paths filtering option, here is an example
+spec to get it working
+
+----
+# cat osd-path-spec.yaml
+---
+service_type: osd
+service_id: osd_using_paths
+placement:
+  host_pattern: 'ceph-node0[1-3]'
+data_devices:
+  paths:
+    - /dev/vdc
+    - /dev/vdd
+db_devices:
+  paths:
+    - /dev/vde
+----
+
+We can use the `dry-run` parameter to check what actions will be take by cephadm
+
+----
+# ceph orch apply -i osd-path-spec.yaml --dry-run
+Preview data is being generated.. Please re-run this command in a bit.
+# ceph orch apply -i osd-path-spec.yaml --dry-run
+################
+OSDSPEC PREVIEWS
+################
++---------+-----------------+-------------+----------+----------+-----+
+|SERVICE  |NAME             |HOST         |DATA      |DB        |WAL  |
++---------+-----------------+-------------+----------+----------+-----+
+|osd      |osd_using_paths  |ceph-node01  |/dev/vdc  |/dev/vde  |-    |
+|osd      |osd_using_paths  |ceph-node01  |/dev/vdd  |/dev/vde  |-    |
+|osd      |osd_using_paths  |ceph-node02  |/dev/vdc  |/dev/vde  |-    |
+|osd      |osd_using_paths  |ceph-node02  |/dev/vdd  |/dev/vde  |-    |
+|osd      |osd_using_paths  |ceph-node03  |/dev/vdc  |/dev/vde  |-    |
+|osd      |osd_using_paths  |ceph-node03  |/dev/vdd  |/dev/vde  |-    |
++---------+-----------------+-------------+----------+----------+-----+
+----
+
+The actions that will take place are looking good, so we can go ahead and apply
+the new OSD spec file.
+
+----
+# ceph orch apply -i osd-path-spec.yaml --dry-run
+Scheduled osd.osd_using_paths update...
+----
+
+Lets, check if the OSDs are getting configured, we now have no free disks
+
+----
+# ceph orch device ls | grep Yes
+#
+----
+
+With ceph orch, we can see the OSD service created and the daemons running:
+
+----
+# ceph orch ls | grep osd
+osd.all-available-devices                     3  34s ago    2d   label:osd
+osd.osd_using_paths                           6  34s ago    2m   ceph-node0[1-3]
+# ceph orch ps | grep osd
+osd.1                            ceph-node02               running (32m)    46s ago   2d     183M    4096M  16.2.10-94.el8cp  34880245f74a  da5d207fe102
+osd.10                           ceph-node03               running (2m)     46s ago   2m    98.6M    4096M  16.2.10-94.el8cp  34880245f74a  b316ff73688c
+osd.2                            ceph-node03               running (32m)    46s ago   2d     177M    4096M  16.2.10-94.el8cp  34880245f74a  e9323a455610
+osd.4                            ceph-node01               running (31m)    46s ago  13h     107M    4096M  16.2.10-94.el8cp  34880245f74a  395c45a7aff0
+osd.5                            ceph-node01               running (2m)     46s ago   2m    69.4M    4096M  16.2.10-94.el8cp  34880245f74a  a4827a6ebbc3
+osd.6                            ceph-node02               running (2m)     46s ago   2m    90.0M    4096M  16.2.10-94.el8cp  34880245f74a  f45ddb8c8f4c
+osd.7                            ceph-node03               running (2m)     46s ago   2m    71.3M    4096M  16.2.10-94.el8cp  34880245f74a  da22f34fecf7
+osd.8                            ceph-node01               running (2m)     46s ago   2m    68.6M    4096M  16.2.10-94.el8cp  34880245f74a  fdb82f45e2d7
+osd.9                            ceph-node02               running (2m)     46s ago   2m    67.5M    4096M  16.2.10-94.el8cp  34880245f74a  aeed575262aa
+----
+
+With the `ceph osd tree` command we can check the osds are up+in the cluster
+
+----
+# ceph osd tree
+ID  CLASS  WEIGHT   TYPE NAME                 STATUS  REWEIGHT  PRI-AFF
+-1         0.14619  root default
+-3         0.14619      datacenter DC1
+-2         0.06825          host ceph-node01
+ 4    hdd  0.00980              osd.4             up   1.00000  1.00000
+ 5    hdd  0.01459              osd.5             up   1.00000  1.00000
+ 8    hdd  0.01459              osd.8             up   1.00000  1.00000
+-4         0.03897          host ceph-node02
+ 1    hdd  0.00980              osd.1             up   1.00000  1.00000
+ 6    hdd  0.01459              osd.6             up   1.00000  1.00000
+ 9    hdd  0.01459              osd.9             up   1.00000  1.00000
+-5         0.03897          host ceph-node03
+ 2    hdd  0.00980              osd.2             up   1.00000  1.00000
+ 7    hdd  0.01459              osd.7             up   1.00000  1.00000
+10    hdd  0.01459              osd.10            up   1.00000  1.00000
+----
+
+We can check with lvm and `ceph-volume lvm list` that we are actually using different
+devices for each new OSD that we just deployed
+
+----
+# podman exec -it ceph-910c8bb8-95bc-11ed-b7d6-2cc26078e4ef-osd-8 ceph-volume lvm list
+====== osd.4 =======
+
+  [block]       /dev/ceph-45cf10cf-2149-4517-bb8d-25809fb29bbd/osd-block-319ded07-60bd-4715-9f1a-50cdf1872cb6
+
+      block device              /dev/ceph-45cf10cf-2149-4517-bb8d-25809fb29bbd/osd-block-319ded07-60bd-4715-9f1a-50cdf1872cb6
+      block uuid                X1ascR-kGpJ-cdAG-VDjm-JYVu-Bghz-6Ie5NK
+      cephx lockbox secret
+      cluster fsid              910c8bb8-95bc-11ed-b7d6-2cc26078e4ef
+      cluster name              ceph
+      crush device class
+      encrypted                 0
+      osd fsid                  319ded07-60bd-4715-9f1a-50cdf1872cb6
+      osd id                    4
+      osdspec affinity          all-available-devices
+      type                      block
+      vdo                       0
+      devices                   /dev/vdb
+
+====== osd.5 =======
+
+  [block]       /dev/ceph-6b54b025-2567-4197-b4a9-42d85cfb80b9/osd-block-c40763ca-486a-437f-b881-a49d622c69a8
+
+      block device              /dev/ceph-6b54b025-2567-4197-b4a9-42d85cfb80b9/osd-block-c40763ca-486a-437f-b881-a49d622c69a8
+      block uuid                1WfFtJ-8lAO-SCWC-Q9JD-FDeD-O4iy-fox5N4
+      cephx lockbox secret
+      cluster fsid              910c8bb8-95bc-11ed-b7d6-2cc26078e4ef
+      cluster name              ceph
+      crush device class
+      db device                 /dev/ceph-84eee3e3-e8cb-46b1-a980-63c91906cc80/osd-db-e2e64b9d-eeb9-4513-93cf-f6cb0c2e97e6
+      db uuid                   4wbS1C-mAy1-E8NZ-X38T-nSe7-RU5F-BNia2w
+      encrypted                 0
+      osd fsid                  c40763ca-486a-437f-b881-a49d622c69a8
+      osd id                    5
+      osdspec affinity          osd_using_paths
+      type                      block
+      vdo                       0
+      devices                   /dev/vdc
+
+  [db]          /dev/ceph-84eee3e3-e8cb-46b1-a980-63c91906cc80/osd-db-e2e64b9d-eeb9-4513-93cf-f6cb0c2e97e6
+
+      block device              /dev/ceph-6b54b025-2567-4197-b4a9-42d85cfb80b9/osd-block-c40763ca-486a-437f-b881-a49d622c69a8
+      block uuid                1WfFtJ-8lAO-SCWC-Q9JD-FDeD-O4iy-fox5N4
+      cephx lockbox secret
+      cluster fsid              910c8bb8-95bc-11ed-b7d6-2cc26078e4ef
+      cluster name              ceph
+      crush device class
+      db device                 /dev/ceph-84eee3e3-e8cb-46b1-a980-63c91906cc80/osd-db-e2e64b9d-eeb9-4513-93cf-f6cb0c2e97e6
+      db uuid                   4wbS1C-mAy1-E8NZ-X38T-nSe7-RU5F-BNia2w
+      encrypted                 0
+      osd fsid                  c40763ca-486a-437f-b881-a49d622c69a8
+      osd id                    5
+      osdspec affinity          osd_using_paths
+      type                      db
+      vdo                       0
+      devices                   /dev/vde
+
+====== osd.8 =======
+
+  [db]          /dev/ceph-84eee3e3-e8cb-46b1-a980-63c91906cc80/osd-db-bcf8b6e9-17ec-48ef-ab77-3d14ab47e51c
+
+      block device              /dev/ceph-930f86f3-2810-44b9-9fee-c550446084cc/osd-block-e0dff673-f64f-4f36-9077-d32ec755a911
+      block uuid                FguIB1-Eo48-WNFM-RnPr-05XW-uxKO-bE1BMk
+      cephx lockbox secret
+      cluster fsid              910c8bb8-95bc-11ed-b7d6-2cc26078e4ef
+      cluster name              ceph
+      crush device class
+      db device                 /dev/ceph-84eee3e3-e8cb-46b1-a980-63c91906cc80/osd-db-bcf8b6e9-17ec-48ef-ab77-3d14ab47e51c
+      db uuid                   CXUPGU-gek0-Kncw-bkWe-MqXo-YJcN-qMd812
+      encrypted                 0
+      osd fsid                  e0dff673-f64f-4f36-9077-d32ec755a911
+      osd id                    8
+      osdspec affinity          osd_using_paths
+      type                      db
+      vdo                       0
+      devices                   /dev/vde
+
+  [block]       /dev/ceph-930f86f3-2810-44b9-9fee-c550446084cc/osd-block-e0dff673-f64f-4f36-9077-d32ec755a911
+
+      block device              /dev/ceph-930f86f3-2810-44b9-9fee-c550446084cc/osd-block-e0dff673-f64f-4f36-9077-d32ec755a911
+      block uuid                FguIB1-Eo48-WNFM-RnPr-05XW-uxKO-bE1BMk
+      cephx lockbox secret
+      cluster fsid              910c8bb8-95bc-11ed-b7d6-2cc26078e4ef
+      cluster name              ceph
+      crush device class
+      db device                 /dev/ceph-84eee3e3-e8cb-46b1-a980-63c91906cc80/osd-db-bcf8b6e9-17ec-48ef-ab77-3d14ab47e51c
+      db uuid                   CXUPGU-gek0-Kncw-bkWe-MqXo-YJcN-qMd812
+      encrypted                 0
+      osd fsid                  e0dff673-f64f-4f36-9077-d32ec755a911
+      osd id                    8
+      osdspec affinity          osd_using_paths
+      type                      block
+      vdo                       0
+      devices                   /dev/vdd
+
+# lvs
+  LV                                             VG                                        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  osd-block-319ded07-60bd-4715-9f1a-50cdf1872cb6 ceph-45cf10cf-2149-4517-bb8d-25809fb29bbd -wi-ao---- <10.00g                                                    
+  osd-block-c40763ca-486a-437f-b881-a49d622c69a8 ceph-6b54b025-2567-4197-b4a9-42d85cfb80b9 -wi-ao---- <10.00g                                                    
+  osd-db-bcf8b6e9-17ec-48ef-ab77-3d14ab47e51c    ceph-84eee3e3-e8cb-46b1-a980-63c91906cc80 -wi-ao----  <5.00g                                                    
+  osd-db-e2e64b9d-eeb9-4513-93cf-f6cb0c2e97e6    ceph-84eee3e3-e8cb-46b1-a980-63c91906cc80 -wi-ao----  <5.00g                                                    
+  osd-block-e0dff673-f64f-4f36-9077-d32ec755a911 ceph-930f86f3-2810-44b9-9fee-c550446084cc -wi-ao---- <10.00g   
+----
+
+As a final exercise, how would you remove the osds we just created?. We need
+the OSDs out of the ceph-cluster and all the devices in a clean state to be
+re-used.
+
+[TIP]
+====
+First get rid of the OSDs at the Ceph Level, make sure you don't loose data!
+
+The Cephadm approach to deleting OSDs
+----
+# ceph orch osd rm 5
+Scheduled OSD(s) for removal
+# ceph orch osd rm status
+OSD  HOST         STATE     PGS  REPLACE  FORCE  ZAP    DRAIN STARTED AT
+5    ceph-node01  draining    1  False    False  False  2023-01-19 08:19:27.551848
+# ceph orch osd rm status
+No OSD remove/replace operations reported
+# ceph orch device zap ceph-node01 /dev/vdc --force
+zap successful for /dev/vdc on ceph-node01
+----
+
+Example of deleting the osd without the cephadm orchestrator(only use if cephadm leaves
+things behind)
+----
+ceph osd out osd.11
+ceph osd down osd.11
+ceph osd rm osd.11
+ceph osd crush rm osd.11
+ceph auth del osd.11
+----
+====
+
+[TIP]
+====
+If the unmanaged flag is unset, cephadm automatically deploys drives that match the OSDSpec. For example, if you use the all-available-devices option when creating OSDs, when you zap a device the cephadm orchestrator automatically creates a new OSD in the device.
+
+it’s best to modify the drivegroup spec before removal. Setting the unmanaged:
+true to the OSD spec.
+====
