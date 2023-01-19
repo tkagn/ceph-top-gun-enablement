@@ -27,14 +27,14 @@
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link" href="#">Get Help</a>
           <div class="navbar-dropdown">
-            <a class="navbar-item" href="https://access.redhat.com/documentation/en-us/red_hat_openshift_container_storage" target="_blank">Ceph Documentation</a>
+            <a class="navbar-item" href="https://access.redhat.com/documentation/zh-cn/red_hat_ceph_storage/5" target="_blank">Ceph Documentation</a>
             <a class="navbar-item" href="https://bugzilla.redhat.com/describecomponents.cgi?product=Red%20Hat%20OpenShift%20Container%20Storage" target="_blank">Browse Bugs</a>
           </div>
         </div>
         <div class="navbar-item has-dropdown is-hoverable">
           <a class="navbar-link" href="#">Improve Guides</a>
           <div class="navbar-dropdown">
-            <a class="navbar-item" href="https://github.com/red-hat-storage/ocs-training/issues/new/choose" target="_blank">Open Issue</a>
+            <a class="navbar-item" href="https://github.com/likid0/ceph-top-gun-enablement/issues/new/choose" target="_blank">Open Issue</a>
           </div>
         </div>
         <div class="navbar-item has-dropdown is-hoverable">
@@ -42,7 +42,7 @@
           <div class="navbar-dropdown">
             <a class="navbar-item" href="https://www.redhat.com/en/blog/channel/red-hat-storage" target="_blank">Our Blog</a>
             <a class="navbar-item" href="https://www.youtube.com/channel/UCoyG8VyvB-XUxQl1mD3T3Gw" target="_blank">Youtube</a>
-            <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">OCS Technology</a>
+            <a class="navbar-item" href="https://docs.ceph.com/en/latest/" target="_blank">Ceph Storage Technology</a>
           </div>
         </div>
       </div>
@@ -320,10 +320,19 @@ Ceph Storage from 5.0 and higher</p>
 </li>
 </ul>
 </div>
-<div class="listingblock">
-<div class="content">
-<pre>If you specify parameters that upgrade daemons out of order, the upgrade command blocks and notes which daemons you need to upgrade before you proceed.</pre>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>If you specify parameters that upgrade daemons out of order, the upgrade command blocks and notes which daemons you need to upgrade before you proceed.</p>
 </div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -335,12 +344,19 @@ Ceph Storage from 5.0 and higher</p>
 available you will get 5.3, to deploy with the specific 5.2 container image
 tag you need to specify the <code>--image</code> parameter in the bootstrap command</p>
 </div>
-<div class="exampleblock">
-<div class="content">
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
 <div class="paragraph">
 <p>Cephadm version and the ceph image version have to be the same for the deployment to work correctly</p>
 </div>
-</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="content">

@@ -314,7 +314,7 @@ node-exporter.ceph-node01           ceph-node01.example.com  *:9100       runnin
 prometheus.ceph-node01              ceph-node01.example.com  *:9095       running (66m)  26s ago    66m  2.18.1   de242295e225  2f2e63ecb350
 -----
 
-== Add New Hosts to the Ceph Clustger
+== Add New Hosts to the Ceph Cluster
 
 Bootstrapping the installation of Red Hat Ceph Storage creates a basic single-node storage cluster, consisting of one Monitor daemon and one Manager daemon. You can use `cephadm` to add more hosts to the newly created storage cluster.
 
