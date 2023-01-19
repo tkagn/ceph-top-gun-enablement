@@ -14,6 +14,7 @@
 * xref:ceph_bluestore.adoc[Ceph OSD Bluestore]
 * xref:ceph_recovery.adoc[Ceph OSD Failure/Recovery]
 * xref:ceph-upgrades_cephadm.adoc[Upgrade Ceph with Cephadm]
+* xref:ceph_deployment_challenge.adoc[Challenge.Ceph Deployment]
 
 .Ceph RADOS Block Device
 * xref:cephrbd_intro.adoc[RADOS Block Device introduction]
