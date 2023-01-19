@@ -9,8 +9,15 @@
 // Activate experimental attribute for Keyboard Shortcut keys
 :experimental:
 
+== Goals
 
-Tasks:
+* Review the the Ceph deployment with Cephadm
+* Setting specific cpu/memory targets for the ceph containers
+* Review the Pool and replica concepts.
+* Review scaling-out the cluster with mode nodes
+* Review PG autoscaler configuration
+* Review the configuration of segregated physicall pools
+
 
 == Deploy a Ceph Cluster
 
@@ -23,6 +30,7 @@ Tasks:
 nodes during initial bootstrap
 ** Only one OSD per Node is required
 ** Limit the amount of memory an osd can consume to 2GB
+** Limit the amount of resources the MGR can use: 1cpu/1gb of Ram
 *** The nodes will belong to a crushmap location of `RACK` called `RACK1`
 
 == Create RBD Pools
