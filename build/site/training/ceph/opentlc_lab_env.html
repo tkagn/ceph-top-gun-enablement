@@ -196,6 +196,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="troubleshooting_bluestore.html">Troubleshooting Bluestore issues</a>
   </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="trouble-shooting-large-omap-objects.html">Troubleshooting Large Omap Objects</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -647,6 +650,11 @@ this file to your needs:</p>
 <pre># bash cephadm-ansible-run.sh &amp;&amp; bash zap-disks.sh &amp;&amp; bash cluster-install.sh &amp;&amp;
 bash cluster-postinstall.sh</pre>
 </div>
+</div>
+<div class="paragraph">
+<p>This will provide a ceph cluster with 1 OSD per node, and with the RGW and MDS
+services running, also the observability stack will be moved to a specific node
+tagged in ansible inside the mgr group</p>
 </div>
 </div>
 </div>

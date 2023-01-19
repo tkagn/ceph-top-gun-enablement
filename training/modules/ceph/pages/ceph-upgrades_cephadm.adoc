@@ -40,9 +40,9 @@ Cephadm strictly enforces an order for the upgrade of daemons that is still pres
 * Ceph NFS nodes
 
 [NOTE]
-----
+====
 If you specify parameters that upgrade daemons out of order, the upgrade command blocks and notes which daemons you need to upgrade before you proceed.
-----
+====
 
 == Lab pre-req
 
@@ -50,7 +50,7 @@ You will need to have a running 5.2 cluster, if you use the latest image
 available you will get 5.3, to deploy with the specific 5.2 container image
 tag you need to specify the `--image` parameter in the bootstrap command
 
-[WARN]
+[WARNING]
 ====
 Cephadm version and the ceph image version have to be the same for the deployment to work correctly
 ====
