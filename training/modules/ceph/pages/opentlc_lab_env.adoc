@@ -225,3 +225,7 @@ For a fully automated deployment of Ceph in the lab, we can run:
 bash cluster-postinstall.sh
 ----
 
+This will provide a ceph cluster with 1 OSD per node, and with the RGW and MDS
+services running, also the observability stack will be moved to a specific node
+tagged in ansible inside the mgr group
+

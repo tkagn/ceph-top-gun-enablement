@@ -154,6 +154,13 @@ accessible by any node that uses the storage cluster.
 The Ceph dashboard must be accessed by using the Public IP of the `ceph-node01` host by running `curl ifconfig.co` or by checking the email message you received for the URL to the lab console.
 =====
 
+[WARNING]
+====
+Currently the OpenTLC ENV only has the 8443 port open to the external world for
+the ceph-mon0X clusters, if we want to access the dashboard for the ceph-node0X
+cluster we have to use SSH tunneling.
+====
+
 Get the Public IP address of `ceph-node01` to access the dashboard from your browser:
 
 [source,sh]
