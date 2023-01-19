@@ -263,15 +263,35 @@
 </aside>
 <article class="doc">
 <h1 class="page">Ceph Deployment Challenge</h1>
-<div id="preamble">
+<div class="sect1">
+<h2 id="_goals"><a class="anchor" href="#_goals"></a>1. Goals</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>Tasks:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Review the the Ceph deployment with Cephadm</p>
+</li>
+<li>
+<p>Setting specific cpu/memory targets for the ceph containers</p>
+</li>
+<li>
+<p>Review the Pool and replica concepts.</p>
+</li>
+<li>
+<p>Review scaling-out the cluster with mode nodes</p>
+</li>
+<li>
+<p>Review PG autoscaler configuration</p>
+</li>
+<li>
+<p>Review the configuration of segregated physicall pools</p>
+</li>
+</ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_deploy_a_ceph_cluster"><a class="anchor" href="#_deploy_a_ceph_cluster"></a>1. Deploy a Ceph Cluster</h2>
+<h2 id="_deploy_a_ceph_cluster"><a class="anchor" href="#_deploy_a_ceph_cluster"></a>2. Deploy a Ceph Cluster</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -304,6 +324,9 @@ nodes during initial bootstrap</p>
 </li>
 <li>
 <p>Limit the amount of memory an osd can consume to 2GB</p>
+</li>
+<li>
+<p>Limit the amount of resources the MGR can use: 1cpu/1gb of Ram</p>
 <div class="ulist">
 <ul>
 <li>
@@ -320,7 +343,7 @@ nodes during initial bootstrap</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_create_rbd_pools"><a class="anchor" href="#_create_rbd_pools"></a>2. Create RBD Pools</h2>
+<h2 id="_create_rbd_pools"><a class="anchor" href="#_create_rbd_pools"></a>3. Create RBD Pools</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -342,7 +365,7 @@ nodes during initial bootstrap</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_scale_out_the_cluster"><a class="anchor" href="#_scale_out_the_cluster"></a>3. Scale out the Cluster</h2>
+<h2 id="_scale_out_the_cluster"><a class="anchor" href="#_scale_out_the_cluster"></a>4. Scale out the Cluster</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -367,7 +390,7 @@ nodes during initial bootstrap</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_create_ec_cephfs_pool"><a class="anchor" href="#_create_ec_cephfs_pool"></a>4. Create EC cephfs Pool</h2>
+<h2 id="_create_ec_cephfs_pool"><a class="anchor" href="#_create_ec_cephfs_pool"></a>5. Create EC cephfs Pool</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -379,7 +402,7 @@ nodes during initial bootstrap</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_create_a_cephfs_pool"><a class="anchor" href="#_create_a_cephfs_pool"></a>5. Create a cephfs Pool</h2>
+<h2 id="_create_a_cephfs_pool"><a class="anchor" href="#_create_a_cephfs_pool"></a>6. Create a cephfs Pool</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -391,7 +414,7 @@ nodes during initial bootstrap</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_autoscale_pools"><a class="anchor" href="#_autoscale_pools"></a>6. Autoscale Pools</h2>
+<h2 id="_autoscale_pools"><a class="anchor" href="#_autoscale_pools"></a>7. Autoscale Pools</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
@@ -419,7 +442,7 @@ nodes during initial bootstrap</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_add_osds_to_the_cluster"><a class="anchor" href="#_add_osds_to_the_cluster"></a>7. Add OSDs to the cluster</h2>
+<h2 id="_add_osds_to_the_cluster"><a class="anchor" href="#_add_osds_to_the_cluster"></a>8. Add OSDs to the cluster</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
