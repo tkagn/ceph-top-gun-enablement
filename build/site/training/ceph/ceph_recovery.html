@@ -98,7 +98,7 @@
     <a class="nav-link" href="ceph_pools.html">Ceph storage pools config</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="ceph_bluestore.html">OSD Bluestore</a>
+    <a class="nav-link" href="ceph_bluestore.html">Ceph OSD Bluestore</a>
   </li>
   <li class="nav-item is-current-page" data-depth="1">
     <a class="nav-link" href="ceph_recovery.html">Ceph OSD Failure/Recovery</a>
@@ -192,6 +192,9 @@
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="trouble-shooting-nearfull-osds.html">Troubleshooting nearfull OSDs</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="troubleshooting_bluestore.html">Troubleshooting Bluestore issues</a>
   </li>
 </ul>
   </li>
@@ -343,7 +346,41 @@ the self-healing process triggers (default
 <p>There are several parameters we can use to control the recovery process, we are going to briefly mention some of the most important parameters available, there are more knobs to control the recovery process.</p>
 </div>
 <div class="sect2">
-<h3 id="_priorities"><a class="anchor" href="#_priorities"></a>4.1. Priorities</h3>
+<h3 id="_recovery_and_backfill"><a class="anchor" href="#_recovery_and_backfill"></a>4.1. Recovery and Backfill</h3>
+<div class="paragraph">
+<p>Within Ceph, there are two methods of synchronizing data among OSDs within the cluster, recovery and backfill. While both of these methods achieve the same end goal, there are slight differences in these two processes as outlined below.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Ceph OSD processes maintain a log per Placement Group ( PG ) called pglog, which includes details on the last 3,000 to 10,000 changes in that PG.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>The quantity of log entries is adjustable using osd_min_pg_log_entries and osd_max_pg_log_entries parameters.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>The max entry is the number of entries to keep when the PG is not active+clean.</p>
+</li>
+<li>
+<p>The min entry is the number of entries to keep when the PG is active+clean.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>If An OSD was down but is now up and fewer than the available pglog updates
+have occurred to a given PG on that OSD then recovery is used for that PG, Else backfill is used for that PG.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_priorities"><a class="anchor" href="#_priorities"></a>4.2. Priorities</h3>
 <div class="paragraph">
 <p>We can specify priorities for the client and recovery operations, by default the client has the maximum priority configured, and the recovery operations the least.</p>
 </div>
@@ -362,7 +399,7 @@ the self-healing process triggers (default
 </div>
 </div>
 <div class="sect2">
-<h3 id="_controlling_the_recovery_operations"><a class="anchor" href="#_controlling_the_recovery_operations"></a>4.2. Controlling the  Recovery Operations.</h3>
+<h3 id="_controlling_the_recovery_operations"><a class="anchor" href="#_controlling_the_recovery_operations"></a>4.3. Controlling the  Recovery Operations.</h3>
 <div class="paragraph">
 <p><strong>Recovery</strong>, this is log-based recovery ,where we  compare the PG logs and move over the objects which have changed. There are several parameters that help us  control the impact the recovery operations will have in our client IOPs.</p>
 </div>
@@ -378,7 +415,7 @@ the self-healing process triggers (default
 </div>
 </div>
 <div class="sect2">
-<h3 id="_controlling_the_backfill_recovery_operations"><a class="anchor" href="#_controlling_the_backfill_recovery_operations"></a>4.3. Controlling the Backfill Recovery Operations.</h3>
+<h3 id="_controlling_the_backfill_recovery_operations"><a class="anchor" href="#_controlling_the_backfill_recovery_operations"></a>4.4. Controlling the Backfill Recovery Operations.</h3>
 <div class="paragraph">
 <p><strong>Backfill</strong>, requires us to incrementally move through the entire PG&#8217;s hash space and compare the source PG’s with the destination PG’s</p>
 </div>
@@ -397,7 +434,7 @@ the self-healing process triggers (default
 </div>
 </div>
 <div class="sect2">
-<h3 id="_delaying_the_recoverybackfill_operations"><a class="anchor" href="#_delaying_the_recoverybackfill_operations"></a>4.4. Delaying the recovery/backfill Operations.</h3>
+<h3 id="_delaying_the_recoverybackfill_operations"><a class="anchor" href="#_delaying_the_recoverybackfill_operations"></a>4.5. Delaying the recovery/backfill Operations.</h3>
 <div class="paragraph">
 <p>There is a parameter that introduces a sleep time between recovery operations, by default the recovery_sleep is 0 for ssds, but if we are running very sensitive workloads and we wan’t to severely reduce the impact on client IO we can use this parameter, it’s highly granular as we can configure sleep in decimals for example: 0.00001.</p>
 </div>
@@ -409,10 +446,77 @@ the self-healing process triggers (default
 </ul>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_prevent_recovery_or_backfill_from_hapenning"><a class="anchor" href="#_prevent_recovery_or_backfill_from_hapenning"></a>4.6. Prevent Recovery or Backfill from hapenning</h3>
+<div class="paragraph">
+<p>We have nobackfill and norecover flags.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph osd set nobackfill
+# ceph osd set norecover</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>If you want to re-enable backfill and recovery, you can unset the flags.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell"># ceph osd unset nobackfill
+# ceph osd unset norecover</code></pre>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_small_ceph_cluster_reduce_io_freezeosd_failure_detection"><a class="anchor" href="#_small_ceph_cluster_reduce_io_freezeosd_failure_detection"></a>5. Small Ceph Cluster. Reduce I/O Freeze(OSD Failure Detection)</h2>
+<h2 id="_osd_peering"><a class="anchor" href="#_osd_peering"></a>5. OSD Peering</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Once an OSD is up again, it will peer with other OSDs to get up to date on the
+state of the PGs.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>peering is the process by which OSDs compare PG states to determine the proper current state of a PG.</p>
+</li>
+<li>
+<p>peering also makes note of which OSDs have the most recent data and metadata for various objects within the PG.</p>
+</li>
+<li>
+<p>peering occurs when an OSD is brought up (either a new OSD, or a previously down OSD) or down.</p>
+</li>
+<li>
+<p>Data access is blocked for the entire PG while peering is ongoing</p>
+</li>
+<li>
+<p>This prevents changes requested by client IO from invalidating the peering process.</p>
+</li>
+<li>
+<p>Once peering is complete, the PG will enter either backfill_wait or recovery_wait state.</p>
+</li>
+<li>
+<p>The PG should move from the wait state to backfilling or recovering as slots for these operations become available on the target OSD.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Agreeing on the state does not mean that they all have the latest contents. This is what backfill and recovery accomplish.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_small_ceph_cluster_reduce_io_freezeosd_failure_detection"><a class="anchor" href="#_small_ceph_cluster_reduce_io_freezeosd_failure_detection"></a>6. Small Ceph Cluster. Reduce I/O Freeze(OSD Failure Detection)</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>One of the main things we seen when executing HA tests in Small clusters(3
@@ -611,7 +715,7 @@ Support Exception (through a support case) is needed in order to change
 these parameters in Ceph.</p>
 </div>
 <div class="sect2">
-<h3 id="_how_to_prevent_flapping_osd_to_come_back_to_the_cluster"><a class="anchor" href="#_how_to_prevent_flapping_osd_to_come_back_to_the_cluster"></a>5.1. How to prevent flapping OSD to come back to the cluster</h3>
+<h3 id="_how_to_prevent_flapping_osd_to_come_back_to_the_cluster"><a class="anchor" href="#_how_to_prevent_flapping_osd_to_come_back_to_the_cluster"></a>6.1. How to prevent flapping OSD to come back to the cluster</h3>
 <div class="paragraph">
 <p>Sometimes some of our OSDs may have problems and will flap in and out in the Ceph cluster. This is controlled by two parameters in Ceph:</p>
 </div>
