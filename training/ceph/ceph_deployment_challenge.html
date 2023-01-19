@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Ceph Confguration Parameters :: Ceph Top Gun Enablement</title>
-    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/ceph_configuration.html">
+    <title>Ceph Deployment Challenge :: Ceph Top Gun Enablement</title>
+    <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/ceph_deployment_challenge.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
     <script>var uiRootPath = '../../_'</script>
@@ -106,7 +106,7 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="ceph-upgrades_cephadm.html">Upgrade Ceph with Cephadm</a>
   </li>
-  <li class="nav-item" data-depth="1">
+  <li class="nav-item is-current-page" data-depth="1">
     <a class="nav-link" href="ceph_deployment_challenge.html">Challenge.Ceph Deployment</a>
   </li>
 </ul>
@@ -251,78 +251,198 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
-    <li><a href="ceph_configuration.html">Ceph Confguration Parameters</a></li>
+    <li>Core Ceph</li>
+    <li><a href="ceph_deployment_challenge.html">Challenge.Ceph Deployment</a></li>
   </ul>
 </nav>
-  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/ceph_configuration.adoc">Edit this Page</a></div>
+  <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/ceph_deployment_challenge.adoc">Edit this Page</a></div>
 </div>
   <div class="content">
 <aside class="toc sidebar" data-title="Contents" data-levels="2">
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Ceph Confguration Parameters</h1>
+<h1 class="page">Ceph Deployment Challenge</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
-<p>Every Ceph daemon, process, and library accesses its configuration from one of these sources:
-* The compiled-in default value
-* The centralized configuration database
-* Configuration file that is stored on the local host</p>
+<p>Tasks:</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_ceph_configuration_sections"><a class="anchor" href="#_ceph_configuration_sections"></a>Ceph Configuration Sections</h2>
+<h2 id="_deploy_a_ceph_cluster"><a class="anchor" href="#_deploy_a_ceph_cluster"></a>1. Deploy a Ceph Cluster</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>Ceph organizes configuration settings into groups, whether stored in the configuration file or in
-the configuration database, using sections called for the daemons or clients to which they apply.</p>
-</div>
 <div class="ulist">
 <ul>
 <li>
-<p>The [global] section stores general configuration that is common to all daemons or any
-process that reads the configuration, including clients. You can override [global] parameters
-by creating called sections for individual daemons or clients.</p>
+<p>Deploy a Ceph cluster with 4 Nodes: ceph-mon01, ceph-mon02, ceph-mon03, proxy02</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Bootstrap node will be ceph-mon01</p>
 </li>
 <li>
-<p>The [mon] section stores configuration for the Monitors (MON).</p>
+<p>The cluster needs to have segregated networks, public and private network</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Public will be: <code>192.168.56.0/24</code></p>
 </li>
 <li>
-<p>The [osd] section stores configuration for the OSD daemons.</p>
+<p>Private/Replication will be: <code>172.16.7.0/24</code></p>
+</li>
+</ul>
+</div>
 </li>
 <li>
-<p>The [mgr] section stores configuration for the Managers (MGR).</p>
+<p>The cluster will be deployed using a specification file, to include the 4
+nodes during initial bootstrap</p>
 </li>
 <li>
-<p>The [mds] section stores configuration for the Metadata Servers (MDS).</p>
+<p>Only one OSD per Node is required</p>
 </li>
 <li>
-<p>The [client] section stores configuration that applies to all the Ceph clients.</p>
+<p>Limit the amount of memory an osd can consume to 2GB</p>
+<div class="ulist">
+<ul>
+<li>
+<p>The nodes will belong to a crushmap location of <code>RACK</code> called <code>RACK1</code></p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_using_the_ceph_centralized_configuration_database"><a class="anchor" href="#_using_the_ceph_centralized_configuration_database"></a>Using the Ceph centralized configuration database</h2>
+<h2 id="_create_rbd_pools"><a class="anchor" href="#_create_rbd_pools"></a>2. Create RBD Pools</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>The MON cluster manages and stores the centralized configuration database on the MON nodes.
-You can either change a setting temporarily, until the daemons restart, or configure a setting
-permanently and store it in the database. You can change most configuration settings while the
-cluster is running.</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Once the Ceph cluster is deployed we have to create two pools</p>
+<div class="ulist">
+<ul>
+<li>
+<p>pool1 called <code>rbdreplica2</code> with replica 2</p>
+</li>
+<li>
+<p>pool2 called <code>rbdreplica3</code> with replica 3</p>
+</li>
+</ul>
 </div>
-<div class="paragraph">
-<p>Use ceph config commands to query the database and view configuration information.
-* ceph config ls, to list all possible configuration settings.
-* ceph config help setting, for help with a particular configuration setting.
-* ceph config dump, to show the cluster configuration database settings.
-* ceph config show $type.$id, to show the database settings for a specific daemon. Use
-show-with-defaults to include default settings.
-* ceph config get $type.$id, to get a specific configuration setting.
-* ceph config set $type.$id, to set a specific configuration setting.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_scale_out_the_cluster"><a class="anchor" href="#_scale_out_the_cluster"></a>3. Scale out the Cluster</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>We have to add nodes <code>ceph-node01,ceph-node02,ceph-node03,proxy01</code> to the cluster</p>
+<div class="ulist">
+<ul>
+<li>
+<p>The new nodes will belong to a datacenter crushmap location of <code>RACK</code> called <code>RACK2</code></p>
+</li>
+<li>
+<p>Nodes <code>ceph-node01,ceph-node02,ceph-node03</code> will configure one OSD per node</p>
+</li>
+<li>
+<p>Move the manager services so we have one MGR on each DC.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_create_ec_cephfs_pool"><a class="anchor" href="#_create_ec_cephfs_pool"></a>4. Create EC cephfs Pool</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Create a new pool for cephfs data called <code>cephfsec</code> with EC replication 4+2, set the failure domain to host</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_create_a_cephfs_pool"><a class="anchor" href="#_create_a_cephfs_pool"></a>5. Create a cephfs Pool</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Create a new pool for cephfs called <code>cephfsreplica2</code> with PG count 16, replica 2, and the failure domain set to Datacenter</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_autoscale_pools"><a class="anchor" href="#_autoscale_pools"></a>6. Autoscale Pools</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Enable autoscale mode on all pools, and configure the target size ratio with the following ratios:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>rbdreplica2. 10%</p>
+</li>
+<li>
+<p>rbdreplica3. 20%</p>
+</li>
+<li>
+<p>cephfsreplica2 20%</p>
+</li>
+<li>
+<p>cephfsec 50%</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_add_osds_to_the_cluster"><a class="anchor" href="#_add_osds_to_the_cluster"></a>7. Add OSDs to the cluster</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>We need to add a dedicated data pool for RGW, that has to be physically segregated from the rest of cluster data</p>
+<div class="ulist">
+<ul>
+<li>
+<p>We need to add 2 new drives from nodes <code>ceph-node01,ceph-node02 and ceph-node03</code></p>
+</li>
+<li>
+<p>We will configure 2 OSD&#8217;s per drive, With Encryption enabled at the OSD level.</p>
+</li>
+<li>
+<p>We need to use a specific device class for the new osds that we wan to segregate (take a look at <code>ceph osd crush class</code>, cephadm in 5.3 doesn&#8217;t support specifiying a class during bootstrap)</p>
+</li>
+<li>
+<p>Create a pool called <code>rgw-security</code> with <code>replica 3</code> , it will use a rule that uses the new device classes we created</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
 </div>
 </div>
 </div>
