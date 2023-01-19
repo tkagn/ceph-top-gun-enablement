@@ -23,10 +23,10 @@
 
 * Deploy a Ceph cluster with 4 Nodes: ceph-mon01, ceph-mon02, ceph-mon03, proxy02
 ** Bootstrap node will be ceph-mon01
-** The cluster needs to have segregated networks, public and private network
-*** Public will be: `192.168.56.0/24`
-*** Private/Replication will be: `172.16.7.0/24`
-** The cluster will be deployed using a specification file, to include the 4
+** The cluster needs to have segregated networks, public and cluster network
+*** Public Network will be: `192.168.56.0/24`
+*** Cluster Network will be: `172.16.7.0/24`
+** The cluster will be deployed using a specification file, to include the four
 nodes during initial bootstrap
 ** Only one OSD per Node is required
 ** Limit the amount of memory an osd can consume to 2GB
