@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Ceph CephFS Challenge :: Ceph Top Gun Enablement</title>
+    <title>Ceph RadosGW Challenge :: Ceph Top Gun Enablement</title>
     <link rel="canonical" href="https://likid0.github.io/ceph-top-gun-enablement/training/ceph/ceph_rgw_challenge.html">
     <meta name="generator" content="Antora 3.0.1">
     <link rel="stylesheet" href="../../_/css/site.css">
@@ -190,6 +190,9 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="radosgw_bucket_notification.html">RGW bucket Notification</a>
   </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="ceph_rgw_challenge.html">Challenge RGW</a>
+  </li>
 </ul>
   </li>
   <li class="nav-item" data-depth="0">
@@ -254,7 +257,8 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">Ceph Top-Gun Enablement</a></li>
-    <li><a href="ceph_rgw_challenge.html">Ceph CephFS Challenge</a></li>
+    <li>Ceph RadosGW</li>
+    <li><a href="ceph_rgw_challenge.html">Challenge RGW</a></li>
   </ul>
 </nav>
   <div class="edit-this-page"><a href="file:///antora/training/modules/ceph/pages/ceph_rgw_challenge.adoc">Edit this Page</a></div>
@@ -264,94 +268,73 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Ceph CephFS Challenge</h1>
+<h1 class="page">Ceph RadosGW Challenge</h1>
 <div class="sect1">
 <h2 id="_goals"><a class="anchor" href="#_goals"></a>1. Goals</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p>Deploy CephFS with HA</p>
+<p>Deploy RGW in HA mode</p>
 </li>
 <li>
-<p>Assing dedicated pools to folders</p>
+<p>Work with Placement Targets and Storage Classes</p>
 </li>
 <li>
-<p>Increase the Number of Active MDS</p>
+<p>Use Life Cycle policies to transition object to other tiers</p>
 </li>
 <li>
-<p>Work with and schedule snapshots</p>
+<p>Work with bucket policies</p>
 </li>
 <li>
-<p>Work with Quotas</p>
-</li>
-</ul>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_deploy_a_cephfs_filesystem"><a class="anchor" href="#_deploy_a_cephfs_filesystem"></a>2. Deploy a CephFS Filesystem</h2>
-<div class="sectionbody">
-<div class="ulist">
-<ul>
-<li>
-<p>Deploy a Ceph CephFS filesystem called <code>newfs</code></p>
-<div class="ulist">
-<ul>
-<li>
-<p>The newfs filesystem will have 2 stand-by mds servers</p>
+<p>Configure basic STS authentication</p>
 </li>
 <li>
-<p>One of the stand-by MDS servers has to be configured as Standby-replay</p>
+<p>Secure the RGW endpoint with SSL</p>
 </li>
 <li>
-<p>Mount the Filesystem with a client on the <code>workstation</code> and create the
-following tree</p>
-<div class="ulist">
-<ul>
-<li>
-<p>/data</p>
-<div class="ulist">
-<ul>
-<li>
-<p>/data/archive</p>
+<p>Audit all S3 operations in RGW</p>
 </li>
 <li>
-<p>/data/work</p>
-</li>
-<li>
-<p>/data/users</p>
-</li>
-<li>
-<p>/data/critical</p>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
-</li>
-</ul>
-</div>
+<p>Configure a Multisite Replicated</p>
 </li>
 </ul>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_add_dedicate_a_pool_to_a_specific_directory"><a class="anchor" href="#_add_dedicate_a_pool_to_a_specific_directory"></a>3. Add dedicate a pool to a specific directory</h2>
+<h2 id="_deploy_rgw_services"><a class="anchor" href="#_deploy_rgw_services"></a>2. Deploy RGW services</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p>The <code>/data/archive</code> folder is going to be used for long lived file archival,very low number of metadata operations required, performance is not an issue.</p>
+<p>Create a realm called <code>single</code> , add a zonegroup called <code>singlezg</code> , and a master zone called <code>singlezone</code></p>
+</li>
+<li>
+<p>Deploy two RGW services, using the above mentioned realm and zone, on port 8080</p>
+</li>
+<li>
+<p>Create a test user called <code>user1</code>, and test rgw setup by creating a bucket * called <code>bucket1</code> and object with S3 client</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_deploy_a_securedssl_ingress_service_to_provide_ha"><a class="anchor" href="#_deploy_a_securedssl_ingress_service_to_provide_ha"></a>3. Deploy a secured(SSL) Ingress service to provide HA</h2>
+<div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p>Create a new EC pool called <code>fs_data_archive_ec</code> with 2+1 and host failure domain</p>
+<p>Deploy an ingress service using ip <code>192.168.56.100</code> that will loadbalance client requests between both of the deployed RGW services</p>
 </li>
 <li>
-<p>Assing the new EC pool <code>fs_data_archive_ec</code> to folder <code>/data/archive</code></p>
+<p>Configure SSL, the SSL termination must be done at the Ingress/HAproxy level</p>
+<div class="ulist">
+<ul>
+<li>
+<p>You can use certificates available on /root/certificates of the admin nodes,
+or create your own custom certicates, the SAN of the provided certs covers <code>s3.example.com</code> and <code>s3zone1.example.com</code></p>
 </li>
 </ul>
 </div>
@@ -361,19 +344,39 @@ following tree</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_add_another_active_mds_daemon"><a class="anchor" href="#_add_another_active_mds_daemon"></a>4. Add another Active MDS daemon</h2>
+<h2 id="_add_a_new_placement_target_to_zonegroup_singlezg"><a class="anchor" href="#_add_a_new_placement_target_to_zonegroup_singlezg"></a>4. Add a new placement target to zonegroup <code>singlezg</code></h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p>The <code>/data/work</code> folder has a high count of create/delete operations, it&#8217;s not performing as expected</p>
+<p>Create dedicated EC pools for the placement target</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Add a new Active MDS daemon and manually ping it to the <code>/data/work</code></p>
+<p>Create a new EC pool called <code>singlezone.rgw.ssd.buckets.data</code> pg count 32, with 2+1 EC and host failure domain</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Enable Bluestore compression: aggressive, snappy</p>
+</li>
+</ul>
+</div>
 </li>
 <li>
-<p>Double the size of the assgined MDS Daemon Cache</p>
+<p>Create a new replicated pool <code>singlezone.rgw.ssd.buckets.index</code> pg count: 8, replica 3 and host failure domain</p>
+</li>
+<li>
+<p>Create a new replicated pool <code>singlezone.rgw.ssd.buckets.non-ec</code> pg count: 8, replica 3 and host failure domain</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Create a Placement target called rgwec</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Users should be able to store data on the new placement target using a reference tag when they create their vuckets</p>
 </li>
 </ul>
 </div>
@@ -383,16 +386,35 @@ following tree</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_configure_a_scheduled_snapshot"><a class="anchor" href="#_configure_a_scheduled_snapshot"></a>5. Configure a scheduled snapshot</h2>
+<h2 id="_configure_a_lifecycle_policy_to_transition_objects_to_a_cold_storage_class"><a class="anchor" href="#_configure_a_lifecycle_policy_to_transition_objects_to_a_cold_storage_class"></a>5. Configure a LifeCycle policy to transition objects to a COLD Storage Class</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p>The <code>/data/critical</code> folder has important information, periodic snapshots for the folder have to be configured</p>
+<p>Create a new RGW data pool used for storing Cold Data</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Create a schedule snapshot policy for the <code>/data/critical</code> that runs every 3 hours.</p>
+<p>Create a new EC pool called <code>singlezone.rgw.cold.buckets.data</code> pg count 16, with 2+1 EC and host failure domain</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Create a new Storage Class called <code>COLD</code> in the DEFAULT Placement Group</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Create a new bucket called <code>data1</code></p>
+</li>
+<li>
+<p>Configure a Life Cycle policy that will transition objects to the <code>COLD</code> Storage class after 10 days</p>
+</li>
+<li>
+<p>Apply the LCP to the <code>data1</code> bucket</p>
+</li>
+<li>
+<p>Upload some objects and test the LCP is working(Remember rgw_lc_debug_interval to speed things up)</p>
 </li>
 </ul>
 </div>
@@ -402,25 +424,192 @@ following tree</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_create_quotas"><a class="anchor" href="#_create_quotas"></a>6. Create Quotas</h2>
+<h2 id="_create_a_bucket_life_cycle_policy"><a class="anchor" href="#_create_a_bucket_life_cycle_policy"></a>6. Create a Bucket Life Cycle policy</h2>
 <div class="sectionbody">
 <div class="ulist">
 <ul>
 <li>
-<p>We need to give <code>user1</code> priviledges to configure quotas on the <code>/data/users</code> folder</p>
+<p>Create a new user called <code>user2</code>, create a bucket called <code>policy</code> with the following layout:</p>
 <div class="ulist">
 <ul>
 <li>
-<p>Create user1 and assinged the needed client caps to assign quotas</p>
+<p>Policy</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Policy/reads</p>
 </li>
 <li>
-<p>As user1 set the quota to 100MB for the <code>/data/users</code> folder</p>
+<p>Policy/write</p>
+</li>
+</ul>
+</div>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p>As <code>user2</code> mount the folder and check the quota limit is working.</p>
+<p>Create a Bucket policy that will give <code>user1</code> the following access to bucket <code>policy</code></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Policy/ &#8592;  list objects(not read/GET)</p>
+</li>
+<li>
+<p>Policy/reads &#8592; read(GET)</p>
+</li>
+<li>
+<p>Policy/write &#8592;  write(PUT/DELETE)</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_configure_local_database_stsusing_assumerole"><a class="anchor" href="#_configure_local_database_stsusing_assumerole"></a>7. Configure Local Database STS(using AssumeRole)</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>We need to allow <code>user1</code> and <code>user2</code> to assume a IAM role called <code>role1</code> that will give them full access to a bucket called <code>admin</code></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Create a new RGW <code>admin</code> user</p>
+<div class="ulist">
+<ul>
+<li>
+<p>With the <code>admin</code> user create and <code>admin</code> bucket and add 1 object</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Enable the STS endpoint in the RGW services</p>
+</li>
+<li>
+<p>Create a new IAM role called <code>admin</code></p>
+</li>
+<li>
+<p>Create a Role Policy Document that will allow <code>user1</code> and <code>user2</code> to assume <code>role1</code></p>
+</li>
+<li>
+<p>Create a new role policy that allows <code>user1</code> and <code>user2</code> full access to bucket <code>admin</code></p>
+</li>
+<li>
+<p>Using an AWS client assume the IAM <code>admin</code> role using STS</p>
+</li>
+<li>
+<p>USe the temporal token created to access the <code>admin</code> bucket</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_audit_all_s3_operations"><a class="anchor" href="#_audit_all_s3_operations"></a>8. Audit all S3 operations</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Configure the opslog, so all S3 operations get stored in * /var/log/ceph/<code>FSID</code>/opslog.log</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_configure_a_new_realm_that_has_multisite_replication"><a class="anchor" href="#_configure_a_new_realm_that_has_multisite_replication"></a>9. Configure a new realm that has multisite replication</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>New Realm/Zonegroup/Zone</p>
+<div class="ulist">
+<ul>
+<li>
+<p>On site1 the one we already have configured, we need to create:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>A realm called: <code>multi</code></p>
+</li>
+<li>
+<p>A zonegroup called: <code>singlezg1</code></p>
+</li>
+<li>
+<p>A zone called: <code>singlezone1</code></p>
+</li>
+<li>
+<p>New RGW instances and pools for this Realm</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>We need a second Ceph Cluster configured</p>
+<div class="ulist">
+<ul>
+<li>
+<p>The second site ceph deployment needs:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>A realm called: <code>multi</code></p>
+</li>
+<li>
+<p>A zonegroup called: <code>singlezg2</code></p>
+</li>
+<li>
+<p>A zone called: <code>singlezone2</code></p>
+</li>
+<li>
+<p>RGW instances and pools for this Realm</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>Test that the Multisite replication is working between sites.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_enable_per_bucket_replication"><a class="anchor" href="#_enable_per_bucket_replication"></a>10. Enable per-bucket replication</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p>Disable Full zonegroup replication</p>
+</li>
+<li>
+<p>Create a new bucket called <code>sync1</code></p>
+</li>
+<li>
+<p>Configure symmetrical replication for bucket <code>sync1</code></p>
+</li>
+<li>
+<p>Create a new bucket called <code>sync2</code></p>
+</li>
+<li>
+<p>Configure uni-directional replication from zone <code>singlezone1</code> to <code>singlezone2</code></p>
+</li>
+<li>
+<p>Test bucket granular replication</p>
 </li>
 </ul>
 </div>

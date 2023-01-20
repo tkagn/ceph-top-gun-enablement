@@ -42,6 +42,7 @@
 * xref:radosgw_presignedurl.adoc[RGW presigned URL]
 * xref:radosgw_opslog.adoc[RGW Opslog]
 * xref:radosgw_bucket_notification.adoc[RGW bucket Notification]
+* xref:ceph_rgw_challenge.adoc[Challenge RGW]
 
 .Ceph Troubleshooting 
 * xref:trouble-shooting-nearfull-osds.adoc[Troubleshooting nearfull OSDs]
