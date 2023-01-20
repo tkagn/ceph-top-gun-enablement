@@ -77,6 +77,10 @@ image::gateway-realm.png[RGW Realm,740,580]
 
 Due to the limited number of OSDs in the lab environment, the `mon_max_pg_per_osd` configuration setting is lower than required. When you create more than seven pools each of PGs and PGPs, with the pool size being 32, you must increase the value of `mon_max_pg_per_osd` from `256` to `512` to create the additional pools.
 
+The Realm/Zonegroup/Zone Layout in our Lab:
+
+image::single-ms.png[Lab RGW layout]
+
 . Update the value of the `mon_max_pg_per_osd` configuration variable to `512`:
 +
 [source,sh]

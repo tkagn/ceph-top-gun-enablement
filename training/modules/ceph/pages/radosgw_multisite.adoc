@@ -64,6 +64,10 @@ provides disaster recovery for the zone group should one of the zones
 experience a significant failure. Each zone is active and may receive write
 operations.
 
+The next diagram has a layout of RGW multisite in our Lab.
+
+image::multi_multi.jpeg[RGW multisite Lab Layout]
+
 === Configure the Master Realm, Zonegroup and Zone.
 
 [TIP]
