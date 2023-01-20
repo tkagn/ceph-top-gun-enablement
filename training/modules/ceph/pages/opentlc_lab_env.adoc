@@ -3,7 +3,6 @@
 .Goals
 * Provision the lab environment
 * Become familiar with the lab environment
-* Review server access considerations
 * Install Ceph Storage using the `cephadm` utility
 
 :numbered:
@@ -71,7 +70,7 @@ While you have root access to all of the systems, including the workstation node
 .Example Command
 [source,sh]
 -----
-# ssh username@workstation-67a5.dynamic.opentlc.com
+# ssh username@workstation-67b8.dynamic.opentlc.com
 -----
 * It may take up to 30 minutes for your lab environment to be ready. If you cannot connect to your administration host, continue to try periodically until your connection succeeds.
 
@@ -91,11 +90,11 @@ escalate into
 root,  we are going to
 run a playbook to get the prereqs for the labs in place.
 
-Clone the cephadm automation repo. You will need to authenticate to get access,
+Clone the cephadm automation repo. You will need to authenticate with your key to get access,
 in this example, we use a private key to authenticate against GitHub.
 
 ----
-GIT_SSH_COMMAND="ssh -i key.rsa" git clone git@github.com:likid0/cephadmdeploy.git
+GIT_SSH_COMMAND="ssh -i key.rsa" git clone git@github.ibm.com:dparkes/cephadmdeploy.git
 ----
 
 We then run the client/workstation playbook.
@@ -113,6 +112,9 @@ have eight servers available, four per ceph cluster.
 *Ceph Cluster1:* ceph-node01,ceph-node02,ceph-node03,proxy01
 
 *Ceph Cluster2:* ceph-mon01,ceph-mon02,ceph-mon03,proxy02
+
+image::opentlc_lab.jpg[Opentcl Diagram]
+
 
 The previous client playbook created two inventory files for us.
 

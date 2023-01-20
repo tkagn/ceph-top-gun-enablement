@@ -281,9 +281,6 @@
 <p>Become familiar with the lab environment</p>
 </li>
 <li>
-<p>Review server access considerations</p>
-</li>
-<li>
 <p>Install Ceph Storage using the <code>cephadm</code> utility</p>
 </li>
 </ul>
@@ -442,7 +439,7 @@ The lab environment is cloud-based, so that you can access it over the Internet 
 <div class="listingblock">
 <div class="title">Example Command</div>
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ssh username@workstation-67a5.dynamic.opentlc.com</code></pre>
+<pre class="highlightjs highlight"><code class="language-sh hljs" data-lang="sh"># ssh username@workstation-67b8.dynamic.opentlc.com</code></pre>
 </div>
 </div>
 <div class="ulist">
@@ -487,12 +484,12 @@ root,  we are going to
 run a playbook to get the prereqs for the labs in place.</p>
 </div>
 <div class="paragraph">
-<p>Clone the cephadm automation repo. You will need to authenticate to get access,
+<p>Clone the cephadm automation repo. You will need to authenticate with your key to get access,
 in this example, we use a private key to authenticate against GitHub.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre>GIT_SSH_COMMAND="ssh -i key.rsa" git clone git@github.com:likid0/cephadmdeploy.git</pre>
+<pre>GIT_SSH_COMMAND="ssh -i key.rsa" git clone git@github.ibm.com:dparkes/cephadmdeploy.git</pre>
 </div>
 </div>
 <div class="paragraph">
@@ -516,6 +513,11 @@ have eight servers available, four per ceph cluster.</p>
 </div>
 <div class="paragraph">
 <p><strong>Ceph Cluster2:</strong> ceph-mon01,ceph-mon02,ceph-mon03,proxy02</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="_images/opentlc_lab.jpg" alt="Opentcl Diagram">
+</div>
 </div>
 <div class="paragraph">
 <p>The previous client playbook created two inventory files for us.</p>
