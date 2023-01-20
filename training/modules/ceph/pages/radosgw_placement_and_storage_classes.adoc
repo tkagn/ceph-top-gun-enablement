@@ -755,14 +755,6 @@ s3://test-bucket-storage-class/test-file-SSD (object):
 
 [TODO]
 
-[WARNING]
-====
-As we have verified, it seems a bug is affecting Lifecycle
-Configuration Policies and RadosGW multi-site configuration, we have
-opened a https://access.redhat.com/support/cases/#/case/03025020[support
-case] for further investigation.
-====
-
 
 == Additional considerations regarding placement targets and storage classes
 

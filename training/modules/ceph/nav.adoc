@@ -14,7 +14,7 @@
 * xref:ceph_bluestore.adoc[Ceph OSD Bluestore]
 * xref:ceph_recovery.adoc[Ceph OSD Failure/Recovery]
 * xref:ceph-upgrades_cephadm.adoc[Upgrade Ceph with Cephadm]
-* xref:ceph_deployment_challenge.adoc[Challenge.Ceph Deployment]
+* xref:ceph_deployment_challenge.adoc[Challenge Ceph Deployment]
 
 .Ceph RADOS Block Device
 * xref:cephrbd_intro.adoc[RADOS Block Device introduction]
@@ -22,7 +22,7 @@
 .CephFS Shared FileSystem
 * xref:cephfs_intro.adoc[CephFS introduction & Deployment]
 * xref:cephfs_advanced.adoc[CephFS Deep Dive]
-* xref:ceph_cephfs_challenge.adoc[Challenge.Cephfs]
+* xref:ceph_cephfs_challenge.adoc[Challenge Cephfs]
  
 .Ceph RadosGW
 * xref:radosgw_intro.adoc[RGW Introduction & Deployment]

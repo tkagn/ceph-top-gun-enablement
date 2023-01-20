@@ -1,0 +1,56 @@
+= Ceph CephFS Challenge
+
+:toc:
+:toclevels: 3
+:icons: font
+:source-highlighter: pygments
+:source-language: shell
+:numbered:
+// Activate experimental attribute for Keyboard Shortcut keys
+:experimental:
+
+== Goals
+
+* Deploy CephFS with HA
+* Assing dedicated pools to folders
+* Increase the Number of Active MDS
+* Work with and schedule snapshots
+* Work with Quotas
+
+
+== Deploy a CephFS Filesystem
+
+* Deploy a Ceph CephFS filesystem called `newfs`
+** The newfs filesystem will have 2 stand-by mds servers
+** One of the stand-by MDS servers has to be configured as Standby-replay
+** Mount the Filesystem with a client on the `workstation` and create the
+following tree
+*** /data 
+**** /data/archive
+**** /data/work
+**** /data/users
+**** /data/critical
+
+== Add dedicate a pool to a specific directory
+
+* The `/data/archive` folder is going to be used for long lived file archival,very low number of metadata operations required, performance is not an issue.
+** Create a new EC pool called `fs_data_archive_ec` with 2+1 and host failure domain
+** Assing the new EC pool `fs_data_archive_ec` to folder `/data/archive`  
+
+== Add another Active MDS daemon
+
+* The `/data/work` folder has a high count of create/delete operations, it's not performing as expected
+** Add a new Active MDS daemon and manually ping it to the `/data/work`
+** Double the size of the assgined MDS Daemon Cache
+
+== Configure a scheduled snapshot
+
+* The `/data/critical` folder has important information, periodic snapshots for the folder have to be configured
+** Create a schedule snapshot policy for the `/data/critical` that runs every 3 hours.
+
+== Create Quotas
+
+* We need to give `user1` priviledges to configure quotas on the `/data/users` folder
+** Create user1 and assinged the needed client caps to assign quotas
+** As user1 set the quota to 100MB for the `/data/users` folder
+* As `user2` mount the folder and check the quota limit is working.
